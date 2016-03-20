@@ -3,16 +3,32 @@ wfile
      (elements : WLibraryElement whitespace)*
 
 Import
-	= IMPORT_KW whitespace1 QualifiedNameWithWildcard semicolon?
-
-IMPORT_KW =
-  whitespace "import"i
+	= KW_IMPORT whitespace1 QualifiedNameWithWildcard semicolon?
 
 WLibraryElement
-	= (OBJECT_KW whitespace1 ID)
+	= WPackage / WClass / WNamedObject / WMixin
 
-OBJECT_KW
-	= whitespace "object"i 
+WPackage
+	= KW_PACKAGE whitespace1 QualifiedName
+
+WClass
+	= KW_CLASS whitespace1 ID
+
+WNamedObject
+	= KW_OBJECT whitespace1 (name: ID) (whitespace1 lcurlybracket
+		rcurlybracket)?
+
+	{
+		return { 
+			name : name
+		}
+	}
+
+WMixin
+	= KW_MIXIN whitespace1 ID
+
+WVariableDeclaration
+	= KW_VAR whitespace1 ID
 
 // BASICS
 
@@ -24,7 +40,14 @@ ID =
   str:[A-Za-z0-9_]+
   { return str.join('') }
 
+// KEYWORDS
 
+KW_IMPORT = whitespace "import"i
+KW_PACKAGE = whitespace "package"i
+KW_OBJECT = whitespace "object"i 
+KW_CLASS = whitespace "class"i 
+KW_MIXIN = whitespace "mixin"i 
+KW_VAR = whitespace "var"i 
 
 // tokens
 
@@ -35,6 +58,8 @@ whitespace1 =
   [ \t\n\r]+
 
 semicolon = ';'
+lcurlybracket = '{'
+rcurlybracket = '}'
 
 // arithmetic example
 

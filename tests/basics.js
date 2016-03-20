@@ -27,6 +27,15 @@ content = parser.parse("import a.b.c.d.e.f.g.h.*")
 
 
 
+
 content = parser.parse("object pepita")
+console.log(JSON.stringify(content))
+
+content = parser.parse("object pepita {}")
+
+
+
+content = parser.parse("package unpaquete")
+content = parser.parse(" package unpaquete ")
 
 
