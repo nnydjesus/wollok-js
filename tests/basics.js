@@ -1,6 +1,27 @@
 var parser = require('../wollok')
 
+var chai = require('chai');
+var should = chai.should();
+var expect = chai.expect;
+
+function expectParsing(text, ast) {
+	expect(parser.parse(text)).to.deep.equal(ast);
+}
+
+
+describe('Parsing', function() {
+  
+  describe('imports', function() {
+  	it('for simple import must create a single element', function(done) {
+		expectParsing("import a", { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] })
+		done()
+	})
+  })
+
+})
+
 var content = parser.parse("import a")
+
 var content = parser.parse("import a;")
 content = parser.parse(" import a")
 content = parser.parse(" import a ")

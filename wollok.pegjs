@@ -4,9 +4,8 @@
 	}
 }
 
-
 wfile
-   = (imports: (Import whitespace)*)
+   = (imports: (i:Import whitespace {return i})*)
      (elements : (WLibraryElement whitespace)*)
      {
      	return {
@@ -16,7 +15,12 @@ wfile
      }
 
 Import
-	= KW_IMPORT whitespace1 QualifiedNameWithWildcard semicolon?
+	= KW_IMPORT whitespace1 name:QualifiedNameWithWildcard semicolon? {
+		return {
+			fqn : name.fqn.elements,
+			isWildcard : name.isWildcard
+		}
+	}
 
 WLibraryElement
 	= WPackage / WClass / WNamedObject / WMixin
@@ -68,9 +72,20 @@ WVariableRightSide
 
 // BASICS
 
-QualifiedName = ID ('.' ID)*
+QualifiedName = name:ID elements:('.' ID)* {
+	var e = [name]
+	elements.forEach(function(e) { e.push(e) })
+	return {
+		elements: e
+	}
+}
 
-QualifiedNameWithWildcard = QualifiedName ('.' '*')?;
+QualifiedNameWithWildcard = fqn:QualifiedName wildcard:('.' '*')? {
+	return {
+		fqn : fqn,
+		isWildcard : !!wildcard
+	}
+}
 
 ID =
   str:[A-Za-z0-9_]+
