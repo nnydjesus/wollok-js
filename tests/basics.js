@@ -12,20 +12,27 @@ function expectParsing(text, ast) {
 describe('Parsing', function() {
   
   describe('imports', function() {
-  	it('for simple import must create a single element', function(done) {
-		expectParsing("import a", { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] })
-		done()
-	})
+  	var tests = {
+  		"import a" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		"import a;" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		" import a" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		" import a " : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		" import a   " : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		"import a; import b" : { imports : [ { fqn : ['a'], isWildcard:false }, { fqn : ['b'], isWildcard:false } ], elements: [] }
+  	}
+
+
+  	Object.keys(tests).forEach(function(text) {
+  		it(text, function(done) {
+			expectParsing(text, tests[text])
+			done()
+		})
+  	})
+  	
   })
 
 })
 
-var content = parser.parse("import a")
-
-var content = parser.parse("import a;")
-content = parser.parse(" import a")
-content = parser.parse(" import a ")
-content = parser.parse(" import a   ")
 // ERROR content = parser.parse(" import ")
 // ERROR content = parser.parse("import")
 
