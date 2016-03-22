@@ -8,52 +8,44 @@ function expectParsing(text, ast) {
 	expect(parser.parse(text)).to.deep.equal(ast);
 }
 
-
-describe('Parsing', function() {
-  
-  describe('imports', function() {
-  	var tests = {
-  		"import a" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
-  		"import a;" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
-  		" import a" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
-  		" import a " : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
-  		" import a   " : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
-  		"import a; import b" : { imports : [ { fqn : ['a'], isWildcard:false }, { fqn : ['b'], isWildcard:false } ], elements: [] }
-  	}
-
-
-  	Object.keys(tests).forEach(function(text) {
+function createTests(tests) {
+	Object.keys(tests).forEach(function(text) {
   		it(text, function(done) {
 			expectParsing(text, tests[text])
 			done()
 		})
   	})
-  	
+}
+
+
+describe('Parsing', function() {
+  
+  describe('simple imports', function() {
+  	createTests({
+  		"import a" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		"import a;" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		" import a" : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		" import a " : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		" import a   " : { imports : [ { fqn : ['a'], isWildcard:false } ], elements: [] },
+  		"import a; import b" : { imports : [ { fqn : ['a'], isWildcard:false }, { fqn : ['b'], isWildcard:false } ], elements: [] },
+  		"import a\nimport b" : { imports : [ { fqn : ['a'], isWildcard:false }, { fqn : ['b'], isWildcard:false } ], elements: [] },
+  		"import a\nimport b\nimport c" : { imports : [ { fqn : ['a'], isWildcard:false }, { fqn : ['b'], isWildcard:false }, { fqn : ['c'], isWildcard:false } ], elements: [] }
+  	})
+  })
+
+  describe('nested imports', function() {
+  	createTests({
+  		"import a.b" : { imports : [ { fqn : ['a', 'b'], isWildcard:false } ], elements: [] },
+  		"import a.b.c.d.e.f.g.h.*" : { imports : [ { fqn : ['a','b','c','d','e','f','g','h'], isWildcard:true } ], elements: [] }
+  	})
   })
 
 })
 
 // ERROR content = parser.parse(" import ")
 // ERROR content = parser.parse("import")
-
-
-var content = parser.parse("import a; import b")
-
-content = parser.parse("import a\nimport b")
-content = parser.parse("import a\nimport b\nimport c")
-
-
-content = parser.parse("import a.b")
-content = parser.parse("import a.b.c")
-content = parser.parse("import a.b.c.d.e.f.g.h")
 // ERROR content = parser.parse("import a.b.c.")
-
-
-content = parser.parse("import a.*")
-content = parser.parse("import a.b.c.d.e.f.g.h.*")
 // ERROR content = parser.parse("import *")
-
-
 
 
 content = parser.parse("object pepita")

@@ -72,11 +72,13 @@ WVariableRightSide
 
 // BASICS
 
-QualifiedName = name:ID elements:('.' ID)* {
-	var e = [name]
-	elements.forEach(function(e) { e.push(e) })
+QualifiedName = name:ID elements:('.' i:ID { return i })* {
+	var parts = [name]
+	elements.forEach(function(e) {
+		parts.push(e)
+	})
 	return {
-		elements: e
+		elements: parts
 	}
 }
 
