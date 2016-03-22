@@ -6,8 +6,14 @@
 
 
 wfile
-   = (imports: Import whitespace)*
-     (elements : WLibraryElement whitespace)*
+   = (imports: (Import whitespace)*)
+     (elements : (WLibraryElement whitespace)*)
+     {
+     	return {
+     		imports : imports,
+     		elements : elements
+     	}
+     }
 
 Import
 	= KW_IMPORT whitespace1 QualifiedNameWithWildcard semicolon?
@@ -24,23 +30,23 @@ WClass
 WNamedObject
 	= (
 		KW_OBJECT whitespace1 (name: ID) 
-		(structBody : WNamedObjectBody?)
+		(body : WNamedObjectBody?)
 	)
 	{
 		return { 
 			name : name,
-			body : structBody
+			members : body ? body.members : undefined
 		}
 	}
 
 WNamedObjectBody
 	= (
 		whitespace1 lcurlybracket
-		(instanceVariables: (WVariableDeclaration*))
+		(instanceVariables: WVariableDeclaration*)
 		whitespace rcurlybracket
 	  ) {
 	    var members = []
-	    members.push(instanceVariables)
+	    instanceVariables.forEach(function(i) { members.push(i) })
 		return { members : members }
 	  }
 
@@ -48,11 +54,16 @@ WMixin
 	= KW_MIXIN whitespace1 ID
 
 WVariableDeclaration
-	= KW_VAR whitespace1 (name:ID) {
+	= KW_VAR whitespace1 (name:ID) (right : WVariableRightSide?) {
 		return {
-			name : name
-			// initialValue
+			name : name,
+			initValue : right ? right.initValue : undefined
 		}
+	}
+
+WVariableRightSide
+	= whitespace SYM_ASSIGNMENT whitespace (initValue:ID) {
+		return { initValue: initValue }
 	}
 
 // BASICS
@@ -73,6 +84,10 @@ KW_OBJECT = whitespace "object"i
 KW_CLASS = whitespace "class"i 
 KW_MIXIN = whitespace "mixin"i 
 KW_VAR = whitespace "var"i 
+
+// SYMBOLS
+
+SYM_ASSIGNMENT = '='
 
 // tokens
 
