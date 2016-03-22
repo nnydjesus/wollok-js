@@ -32,7 +32,8 @@ content = parser.parse("object pepita")
 console.log(JSON.stringify(content))
 
 content = parser.parse("object pepita {}")
-
+content = parser.parse("object pepita { var energia }")
+console.log(JSON.stringify(content))
 
 
 content = parser.parse("package unpaquete")

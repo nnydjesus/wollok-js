@@ -1,3 +1,10 @@
+{
+	function s(obj, property) {
+		return obj.hasOwnProperty(property) ? obj[property] : undefined 
+	}
+}
+
+
 wfile
    = (imports: Import whitespace)*
      (elements : WLibraryElement whitespace)*
@@ -15,20 +22,38 @@ WClass
 	= KW_CLASS whitespace1 ID
 
 WNamedObject
-	= KW_OBJECT whitespace1 (name: ID) (whitespace1 lcurlybracket
-		rcurlybracket)?
-
+	= (
+		KW_OBJECT whitespace1 (name: ID) 
+		(structBody : WNamedObjectBody?)
+	)
 	{
 		return { 
-			name : name
+			name : name,
+			body : structBody
 		}
 	}
+
+WNamedObjectBody
+	= (
+		whitespace1 lcurlybracket
+		(instanceVariables: (WVariableDeclaration*))
+		whitespace rcurlybracket
+	  ) {
+	    var members = []
+	    members.push(instanceVariables)
+		return { members : members }
+	  }
 
 WMixin
 	= KW_MIXIN whitespace1 ID
 
 WVariableDeclaration
-	= KW_VAR whitespace1 ID
+	= KW_VAR whitespace1 (name:ID) {
+		return {
+			name : name
+			// initialValue
+		}
+	}
 
 // BASICS
 
