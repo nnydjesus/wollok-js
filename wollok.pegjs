@@ -6,7 +6,7 @@
 
 wfile
    = (imports: (i:Import whitespace {return i})*)
-     (elements : (WLibraryElement whitespace)*)
+     (elements : (e:WLibraryElement whitespace { return e })*)
      {
      	return {
      		imports : imports,
@@ -32,23 +32,22 @@ WClass
 	= KW_CLASS whitespace1 ID
 
 WNamedObject
-	= (
-		KW_OBJECT whitespace1 (name: ID) 
-		(body : WNamedObjectBody?)
-	)
+	=	KW_OBJECT whitespace1 name:ID
+		body:WNamedObjectBody?
 	{
-		return { 
+		return {
+			type : 'object',
 			name : name,
 			members : body ? body.members : undefined
 		}
 	}
 
 WNamedObjectBody
-	= (
-		whitespace1 lcurlybracket
-		(instanceVariables: WVariableDeclaration*)
-		whitespace rcurlybracket
-	  ) {
+	= 
+	  whitespace1 lcurlybracket
+	  instanceVariables:WVariableDeclaration*
+	  whitespace rcurlybracket
+	  {
 	    var members = []
 	    instanceVariables.forEach(function(i) { members.push(i) })
 		return { members : members }
@@ -58,7 +57,7 @@ WMixin
 	= KW_MIXIN whitespace1 ID
 
 WVariableDeclaration
-	= KW_VAR whitespace1 (name:ID) (right : WVariableRightSide?) {
+	= KW_VAR whitespace1 name:ID right:WVariableRightSide? {
 		return {
 			name : name,
 			initValue : right ? right.initValue : undefined

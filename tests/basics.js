@@ -40,6 +40,12 @@ describe('Parsing', function() {
   	})
   })
 
+  describe('objects', function() {
+  	createTests({
+  		"object pepita" : { imports : [], elements: [ { type:'object', name:'pepita', members:[] }] }
+  	})
+  })
+
 })
 
 // ERROR content = parser.parse(" import ")
@@ -47,9 +53,6 @@ describe('Parsing', function() {
 // ERROR content = parser.parse("import a.b.c.")
 // ERROR content = parser.parse("import *")
 
-
-content = parser.parse("object pepita")
-console.log(JSON.stringify(content))
 
 content = parser.parse("object pepita {}")
 content = parser.parse("object pepita { var energia }")
