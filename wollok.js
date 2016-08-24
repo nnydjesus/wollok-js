@@ -54,7 +54,7 @@ module.exports = (function() {
         		return {
         			type : 'object',
         			name : name,
-        			members : body ? body.members : undefined
+        			members : body ? body.members : []
         		}
         	},
         peg$c5 = function(instanceVariables) {
