@@ -58,6 +58,8 @@ WMixin
 WVariableDeclaration
 	= KW_VAR whitespace1 name:ID right:WVariableRightSide? {
 		return {
+		    type : 'reference',
+		    mutable : true,
 			name : name,
 			initValue : right ? right.initValue : undefined
 		}

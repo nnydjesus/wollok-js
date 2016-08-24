@@ -65,6 +65,8 @@ module.exports = (function() {
         	  },
         peg$c7 = function(name, right) {
         		return {
+        		    type : 'reference',
+        		    mutable : true,
         			name : name,
         			initValue : right ? right.initValue : undefined
         		}
