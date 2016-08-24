@@ -8,8 +8,15 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "gulp": "^3.9.1",
+    "gulp-help": "^1.6.1",
+    "gulp-mocha": "^3.0.1",
+    "gulp-pegjs": "0.0.1",
+    "gulp-util": "^3.0.7",
     "mocha": "^2.4.5",
-    "should": "^4.4.4"
+    "object-assign": "^4.1.0",
+    "should": "^4.4.4",
+    "through2": "^2.0.1"
   },
   "author": "Javier Fernandes",
   "license": "ISC",

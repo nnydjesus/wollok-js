@@ -1,24 +1,6 @@
-var parser = require('../wollok')
+var createTests = require('./test-utils')
 
-var chai = require('chai');
-var should = chai.should();
-var expect = chai.expect;
-
-function expectParsing(text, ast) {
-	expect(parser.parse(text)).to.deep.equal(ast);
-}
-
-function createTests(tests) {
-	Object.keys(tests).forEach(function(text) {
-  		it(text, function(done) {
-			expectParsing(text, tests[text])
-			done()
-		})
-  	})
-}
-
-
-describe('Parsing', function() {
+describe('Parsing Imports', function() {
   
   describe('simple imports', function() {
   	createTests({
@@ -40,21 +22,6 @@ describe('Parsing', function() {
   	})
   })
 
-  describe('objects', function() {
-  	createTests({
-  		"object pepita" : { imports : [], elements: [ { type:'object', name:'pepita', members:[] }] }
-  	})
-  })
-
 })
-
-// ERROR content = parser.parse(" import ")
-// ERROR content = parser.parse("import")
-// ERROR content = parser.parse("import a.b.c.")
-// ERROR content = parser.parse("import *")
-
-
-content = parser.parse("object pepita {}")
-console.log(JSON.stringify(content))
 
 
