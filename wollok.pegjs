@@ -46,9 +46,11 @@ WNamedObject
 WNamedObjectBody
 	=
 	  instanceVariables : WVariableDeclaration*
+	  constructors : WConstructor*
 	  {
 	    var members = []
 	    instanceVariables.forEach(function(i) { members.push(i) })
+	    constructors.forEach(function(i) { members.push(i) })
 		return { members : members }
 	  }
 
@@ -65,10 +67,28 @@ WVariableDeclaration
 		}
 	}
 
+WConstructor
+    = KW_CONSTRUCTOR
+    lparenthesis params:WParameterList? rparenthesis {
+        return {
+            type : 'constructor',
+            parameters : params ? params : []
+        }
+    }
+WParameterList
+    = p:WParameter rest:(whitespace comma o:WParameter)* {
+        var a = p ? [p] : []
+        return rest ? a.concat(rest) : a
+    }
+
 WVariableRightSide
 	= whitespace SYM_ASSIGNMENT whitespace (initValue:ID) {
 		return { initValue: initValue }
 	}
+
+WParameter = name:ID {
+    return { name : name }
+}
 
 // BASICS
 
@@ -100,7 +120,8 @@ KW_PACKAGE = whitespace "package"i
 KW_OBJECT = whitespace "object"i 
 KW_CLASS = whitespace "class"i 
 KW_MIXIN = whitespace "mixin"i 
-KW_VAR = whitespace "var"i 
+KW_VAR = whitespace "var"i
+KW_CONSTRUCTOR = whitespace "constructor"i
 
 // SYMBOLS
 
@@ -117,6 +138,9 @@ whitespace1 =
 semicolon = ';'
 lcurlybracket = '{'
 rcurlybracket = '}'
+lparenthesis = '('
+rparenthesis = ')'
+comma = ','
 
 // arithmetic example
 

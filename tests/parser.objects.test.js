@@ -21,6 +21,22 @@ describe('Parsing Objects', function() {
                     }
                 ]
             }] },
+            "object pepita {\nconstructor()}" : { imports : [], elements: [ {
+                type:'object',
+                name:'pepita',
+                members:[{
+                    type: 'constructor',
+                    parameters : []
+                }]
+            }] },
+            "object pepita {\nconstructor(a)}" : { imports : [], elements: [ {
+                type:'object',
+                name:'pepita',
+                members:[{
+                    type: 'constructor',
+                    parameters : [ {name:"a"} ]
+                }]
+            }] }
         })
     })
 
