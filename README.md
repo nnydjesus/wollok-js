@@ -2,9 +2,11 @@
 Wollok Parser and Interpreter for Javascript
 
 
-## Building
+## Changing the Grammar
 
-Every time you change the **wollok.pegjs** grammar file you need to run
+Every time you change the **wollok.pegjs** grammar file you **regenerate the parser** 
+There are two ways, manually:
+
 
 ```bash
 pegjs wollok.pegjs
@@ -12,18 +14,24 @@ pegjs wollok.pegjs
 
 This will generate **wollok.js** parser.
 
-## Testing
-
-TODO: current tests are just smoke tests for the parser.
-Eventually we would need to add mocha or some other framework with Grunt.
+Or through gulp
 
 ```bash
-npm test
+gulp generate:parser
 ```
 
-Which runs
+## Testing
+
+To test run gulp
+
 ```bash
-moch tests
+gulp test
+```
+
+The **default** gulp tasks generates the parser and runs the test
+
+```bash
+gulp
 ```
 
 
