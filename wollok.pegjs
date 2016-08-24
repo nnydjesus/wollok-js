@@ -4,7 +4,7 @@
 	}
 }
 
-wfile
+WFile
    = (imports: (i:Import whitespace { return i })*)
      (elements : (e:WLibraryElement whitespace { return e })*)
      {

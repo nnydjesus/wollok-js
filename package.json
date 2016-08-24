@@ -15,6 +15,7 @@
     "gulp-util": "^3.0.7",
     "mocha": "^2.4.5",
     "object-assign": "^4.1.0",
+    "run-sequence": "^1.2.2",
     "should": "^4.4.4",
     "through2": "^2.0.1"
   },

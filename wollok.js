@@ -33,8 +33,8 @@ module.exports = (function() {
 
         peg$FAILED = {},
 
-        peg$startRuleFunctions = { wfile: peg$parsewfile },
-        peg$startRuleFunction  = peg$parsewfile,
+        peg$startRuleFunctions = { WFile: peg$parseWFile },
+        peg$startRuleFunction  = peg$parseWFile,
 
         peg$c0 = function(i) { return i },
         peg$c1 = function(imports, e) { return e },
@@ -316,7 +316,7 @@ module.exports = (function() {
       );
     }
 
-    function peg$parsewfile() {
+    function peg$parseWFile() {
       var s0, s1, s2, s3, s4, s5;
 
       s0 = peg$currPos;
