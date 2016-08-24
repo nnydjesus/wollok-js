@@ -8,7 +8,9 @@ describe('Parsing Objects', function() {
             // TODO: MUST FAIL "object pepita" : { imports : [], elements: [ { type:'object', name:'pepita', members:[] }] },
 
             "object pepita {}" : { imports : [], elements: [ { type:'object', name:'pepita', members:[] }] },
+
             "object pepita {\n}" : { imports : [], elements: [ { type:'object', name:'pepita', members:[] }] },
+
             "object pepita {\nvar energy = 100}" : { imports : [], elements: [ {
                 type:'object',
                 name:'pepita',
@@ -21,6 +23,7 @@ describe('Parsing Objects', function() {
                     }
                 ]
             }] },
+
             "object pepita {\nconstructor()}" : { imports : [], elements: [ {
                 type:'object',
                 name:'pepita',
@@ -29,12 +32,22 @@ describe('Parsing Objects', function() {
                     parameters : []
                 }]
             }] },
+
             "object pepita {\nconstructor(a)}" : { imports : [], elements: [ {
                 type:'object',
                 name:'pepita',
                 members:[{
                     type: 'constructor',
                     parameters : [ {name:"a"} ]
+                }]
+            }] },
+
+            "object pepita {\nconstructor(a, b)}" : { imports : [], elements: [ {
+                type:'object',
+                name:'pepita',
+                members:[{
+                    type: 'constructor',
+                    parameters : [ {name:"a"}, {name: "b"} ]
                 }]
             }] }
         })

@@ -76,7 +76,7 @@ WConstructor
         }
     }
 WParameterList
-    = p:WParameter rest:(whitespace comma o:WParameter)* {
+    = p:WParameter rest:(whitespace comma whitespace o:WParameter {return o})* {
         var a = p ? [p] : []
         return rest ? a.concat(rest) : a
     }
