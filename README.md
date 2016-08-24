@@ -17,6 +17,15 @@ This will generate **wollok.js** parser.
 TODO: current tests are just smoke tests for the parser.
 Eventually we would need to add mocha or some other framework with Grunt.
 
+```bash
+npm test
+```
+
+Which runs
+```bash
+moch tests
+```
+
 
 ## Links
 
