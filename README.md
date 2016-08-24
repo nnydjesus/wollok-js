@@ -1,4 +1,4 @@
-# wollok-js
+# Wollok JS [![Build Status](https://travis-ci.org/uqbar-project/wollok-js.svg?branch=master)](https://travis-ci.org/uqbar-project/wollok-js)
 Wollok Parser and Interpreter for Javascript
 
 
