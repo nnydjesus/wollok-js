@@ -69,17 +69,65 @@ WVariableDeclaration
 
 WConstructor
     = KW_CONSTRUCTOR
-    lparenthesis params:WParameterList? rparenthesis {
-        return {
+    lparenthesis params:WParameterList? rparenthesis
+    delegation : WConstructorDelegation?
+    {
+        var r = {
             type : 'constructor',
-            parameters : params ? params : []
+            parameters : params ? params : [],
+
         }
+        if (delegation)
+            r.delegation = delegation
+        return r
     }
+
 WParameterList
     = p:WParameter rest:(whitespace comma whitespace o:WParameter {return o})* {
         var a = p ? [p] : []
         return rest ? a.concat(rest) : a
     }
+
+WConstructorDelegation
+    = whitespace assignment whitespace call:WConstructorDelegationCall {
+        return call
+    }
+
+WConstructorDelegationCall
+    = target: (WSelfDelegatingConstructorCall / WSuperDelegatingConstructorCall)
+    whitespace lparenthesis args:WArgumentList? rparenthesis {
+           var r = {
+               target : target
+           }
+           if (args) r.args = args
+           return r
+       }
+
+WSelfDelegatingConstructorCall = KW_SELF { return 'self' }
+
+WSuperDelegatingConstructorCall = KW_SUPER { return 'super' }
+
+
+WArgumentList
+    = p:WExpression rest:(whitespace comma whitespace o:WExpression {return o})* {
+        var a = p ? [p] : []
+        return rest ? a.concat(rest) : a
+    }
+
+WExpression
+    = WVariableReference
+
+WVariableReference
+    = ref:WReferenciable {
+        return {
+            type: 'reference',
+            to: ref.name
+        }
+    }
+
+// more work needed here, currently can only reference a parameter
+WReferenciable
+    = WParameter
 
 WVariableRightSide
 	= whitespace SYM_ASSIGNMENT whitespace (initValue:ID) {
@@ -122,6 +170,8 @@ KW_CLASS = whitespace "class"i
 KW_MIXIN = whitespace "mixin"i 
 KW_VAR = whitespace "var"i
 KW_CONSTRUCTOR = whitespace "constructor"i
+KW_SELF = whitespace "self"i
+KW_SUPER = whitespace "super"i
 
 // SYMBOLS
 
@@ -141,6 +191,7 @@ rcurlybracket = '}'
 lparenthesis = '('
 rparenthesis = ')'
 comma = ','
+assignment = '='
 
 // arithmetic example
 
