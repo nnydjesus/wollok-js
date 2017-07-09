@@ -317,6 +317,7 @@ const fixture = {
   featureCall: {
     'a.m()': FeatureCall(Variable('a'), 'm')(),
     'a.m(p)': FeatureCall(Variable('a'), 'm')(Variable('p')),
+    'a.m{p => p}': FeatureCall(Variable('a'), 'm')(Closure(Parameter('p'))(Variable('p'))),
     'a.m(p, q)': FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')),
     'a?.m(p, q)': FeatureCall(Variable('a'), 'm', true)(Variable('p'), Variable('q')),
     'a.m(p, q).n().o(r)': FeatureCall(FeatureCall(FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')), 'n')(), 'o')(Variable('r')),

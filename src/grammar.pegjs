@@ -39,6 +39,8 @@
   } = require(path.resolve('./src/model.js')) // THIS PATH HERE IS NOT GOOD, but pegjs sucks
 }
 
+DEFAULT = file
+
 //-------------------------------------------------------------------------------------------------------------------------------
 // BASICS
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +103,7 @@ methodBody = 'native'
 // MEMBERS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-memberDeclaration = member:(variableDeclaration / methodDeclaration) (_';'_)? { return member }
+memberDeclaration = member:(variableDeclaration / methodDeclaration) _ ';'? _ { return member }
 
 variableDeclaration = 'var' __ variable:variable _ value:variableInitialization? { return VariableDeclaration(variable, true, value || NullLiteral) }
                     / 'const' __ variable:variable _ value:variableInitialization { return VariableDeclaration(variable, false, value) }
@@ -109,7 +111,7 @@ variableInitialization = '=' _ value:expression { return value }
 
 methodDeclaration = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return MethodDeclaration(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
 
-constructorDeclaration = 'constructor' _ parameters:parameters _ base:('=' _ (self/super) _ arguments)? _ sentences:block? {return ConstructorDeclaration(...parameters)(base ? base[2] : undefined, base ? base[4] : undefined)(...sentences||[])}
+constructorDeclaration = 'constructor' _ parameters:parameters _ base:('=' _ (self/super) _ arguments)? _ sentences:block? _ ';'? _ {return ConstructorDeclaration(...parameters)(base ? base[2] : undefined, base ? base[4] : undefined)(...sentences||[])}
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
@@ -145,7 +147,7 @@ multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefix
 prefixUnaryExpression    = op:preOp _ exp:prefixUnaryExpression { return UnaryOp(op, exp) }
                          / postfixUnaryExpression
 postfixUnaryExpression   = exp:featureCall op:postOp? { return op ? UnaryOp(op, exp) : exp }
-featureCall              = left:primaryExpression tail:(('.'/'?.') id arguments)* { return tail.reduce((target,[nullSafe,key,params])=> FeatureCall(target,key,nullSafe === '?.')(...params), left) }
+featureCall              = left:primaryExpression tail:(('.'/'?.') id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> FeatureCall(target,key,nullSafe === '?.')(...params), left) }
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp
 orOp    = '||' / 'or'
