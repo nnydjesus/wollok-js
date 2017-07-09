@@ -59,7 +59,9 @@
     "radix": 0,
     "brace-style": "warn",
     "curly": "warn",
-    "no-nested-ternary": 0
+    "no-nested-ternary": 0,
+    "guard-for-in": "off",
+    "no-restricted-syntax": "off"
   }
 }
 

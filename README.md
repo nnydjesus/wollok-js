@@ -5,6 +5,7 @@ A JS environment for the [Wollok language](https://github.com/uqbar-project/woll
 ## Developing
 
 Just run initially
+
 ```
 yarn install
 # or npm install
@@ -14,13 +15,14 @@ And then to run tests
 
 ```bash
 yarn gulp test
-# or just yarn gulp
+# or npm test
 ```
 
 To lint the code
 
 ```bash
 yarn gulp lint
+# or npm run lint
 ```
 
 

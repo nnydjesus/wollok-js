@@ -4,9 +4,13 @@
   "description": "JS based Wollok engine",
   "repository": "uqbar-project/wollok-js",
   "scripts": {
-    "test": "mocha --recursive --compilers js:babel-register **/*.test.js"
+    "test": "yarn gulp test",
+    "lint": "yarn gulp lint"
   },
   "license": "ISC",
+  "dependencies": {
+    "pegjs": "^0.10.0"
+  },
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-eslint": "^7.2.3",
@@ -24,7 +28,7 @@
     "gulp-mocha": "^4.3.1",
     "gulp-pegjs": "^0.1.0",
     "mocha": "^3.4.2",
-    "pegjs": "^0.10.0"
+    "yarn": "^0.27.5"
   },
   "babel": {
     "presets": [
