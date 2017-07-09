@@ -2,7 +2,7 @@
   "name": "wollokjs",
   "version": "1.0.0",
   "description": "JS based Wollok engine",
-  "repository": "nscarcella/wollok-js",
+  "repository": "uqbar-project/wollok-js",
   "scripts": {
     "test": "mocha --recursive --compilers js:babel-register **/*.test.js"
   },
