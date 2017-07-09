@@ -1,40 +1,28 @@
 # Wollok JS [![Build Status](https://travis-ci.org/uqbar-project/wollok-js.svg?branch=master)](https://travis-ci.org/uqbar-project/wollok-js)
-Wollok Parser and Interpreter for Javascript
 
+A JS environment for the [Wollok language](https://github.com/uqbar-project/wollok).
 
-## Changing the Grammar
+## Developing
 
-Every time you change the **wollok.pegjs** grammar file you **regenerate the parser** 
-There are two ways, manually:
+Just run initially
 
-
-```bash
-pegjs wollok.pegjs
+```
+yarn install
+# or npm install
 ```
 
-This will generate **wollok.js** parser.
-
-Or through gulp
+And then to run tests
 
 ```bash
-gulp generate:parser
+yarn gulp test
+# or npm test
 ```
 
-## Testing
-
-To test run gulp
+To lint the code
 
 ```bash
-gulp test
-```
-
-The **default** gulp tasks generates the parser and runs the test
-
-```bash
-gulp
+yarn gulp lint
+# or npm run lint
 ```
 
 
-## Links
-
-See SQL example in PEG grammar https://github.com/alsotang/sql.pegjs/blob/master/lib/sql.pegjs
