@@ -117,7 +117,9 @@ constructorDeclaration = 'constructor' _ parameters:parameters _ base:('=' _ (se
 // SENTENCES
 //-------------------------------------------------------------------------------------------------------------------------------
 
-sentence = _ sentence:( variableDeclaration / assignment / expression) _ ';'? _ { return sentence }
+sentence = _ sentence:( variableDeclaration / return / assignment / expression) _ ';'? _ { return sentence }
+
+return = 'return' _ expression:expression { return Return(expression) }
 
 assignment = left:variable _ '='    _ right:expression { return Assignment(left, right) }
            / left:variable _ '+='   _ right:expression { return Assignment(left, BinaryOp('+',   left, right)) }
@@ -128,6 +130,7 @@ assignment = left:variable _ '='    _ right:expression { return Assignment(left,
            / left:variable _ '<<='  _ right:expression { return Assignment(left, BinaryOp('<<',  left, right)) }
            / left:variable _ '>>='  _ right:expression { return Assignment(left, BinaryOp('>>',  left, right)) }
            / left:variable _ '>>>=' _ right:expression { return Assignment(left, BinaryOp('>>>', left, right)) }
+
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // EXPRESSIONS
@@ -166,7 +169,6 @@ primaryExpression = literal
                   / ifExpression
                   / tryExpression
                   / throwExpression
-                  / returnExpression
                   / self
                   / variable
                   / '(' _ exp:expression _ ')' { return exp }
@@ -177,8 +179,6 @@ tryExpression = 'try' _ body:blockOrSentence _ catches:catch* _ always:('then al
 catch = _ 'catch' __ variable:variable _ type:(':' _ qualifiedName)? _ handler:blockOrSentence { return Catch(variable,type?type[2]:undefined)(...handler) }
 
 throwExpression = 'throw' _ exception:expression { return Throw(exception) }
-
-returnExpression = 'return' _ expression:expression { return Return(expression) }
 
 superInvocation = super _ args:arguments { return Super(...args) }
 

@@ -213,6 +213,11 @@ const fixture = {
     'object O {}': FAIL
   },
 
+  return: {
+    'return e': Return(Variable('e')),
+    return: FAIL
+  },
+
   assignment: {
     'a = b': Assignment(Variable('a'), Variable('b')),
     'a += b': Assignment(Variable('a'), BinaryOp('+', Variable('a'), Variable('b'))),
@@ -391,12 +396,6 @@ const fixture = {
     'throw e': Throw(Variable('e')),
     throw: FAIL
   },
-
-  returnExpression: {
-    'return e': Return(Variable('e')),
-    return: FAIL
-  },
-
 
   //-------------------------------------------------------------------------------------------------------------------------------
   // LITERALS
