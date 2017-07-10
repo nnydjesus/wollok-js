@@ -111,6 +111,28 @@ describe('linker', () => {
       `)
     })
 
+    describe('method scoping', () => {
+      it('links a ref to a method parameter', () => {
+        expectNoLinkageError(`
+          object pepita {
+            method willConsume(meters) {
+              return meters * 0.5
+            }
+          }
+        `)
+      })
+
+      it('detects a wrong ref in a method', () => {
+        expectUnresolvedVariable('meteoro', `
+          object pepita {
+            method willConsume(meters) {
+              return meteoro * 0.5
+            }
+          }
+        `)
+      })
+    })
+
   })
 
 })

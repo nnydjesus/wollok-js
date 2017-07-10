@@ -22,7 +22,16 @@ export const link = (node) => {
   const push = c => context.push(c)
   const pop = c => context.pop(c)
 
+  const addToContext = (referenciable, name) => {
+    const current = context.peek()
+    current.context = {
+      ...(current && current.context),
+      [name]: referenciable
+    }
+  }
+
   visitor({
+    // contexts
     visitProgram: push,
     afterProgram: pop,
 
@@ -32,16 +41,17 @@ export const link = (node) => {
     visitNamedObjectDeclaration: push,
     afterNamedObjectDeclaration: pop,
 
-    visitVariableDeclaration(declaration) {
-      const current = context.peek()
-      current.context = {
-        ...(current && current.context),
-        [declaration.variable.name]: declaration
-      }
-    },
+    visitMethodMethodDeclaration: push,
+    afterMethodDeclaration: pop,
+
+    // variables
+    visitVariableDeclaration(declaration) { addToContext(declaration, declaration.variable.name) },
+    visitParam(param) { addToContext(param, param.name) },
+
+    // checks
     visitVariable(variable) {
       // TODO go up in the context or throw unresolved variable (?)
-      const value = context.peek().context[variable.name]
+      const value = context.peek().context && context.peek().context[variable.name]
       if (!value) {
         throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
       }
