@@ -63,6 +63,7 @@ describe('linker', () => {
       expect(() => link(parser.parse(code)))
         .to.throw(LinkerError, `Cannot resolve reference to '${variable}' at ???`)
 
+    const expectNoLinkageError = code => link(parser.parse(code))
 
     it('links a simple Variable ref in a Program', () => {
       const linked = link(parser.parse(`
@@ -83,7 +84,7 @@ describe('linker', () => {
       `)
     })
 
-    it('links simple Variable ref in a Program', () => {
+    it('links a ref to a class instance variable', () => {
       const linked = link(parser.parse(`
         class Bird {
           var energy = 20
@@ -97,6 +98,17 @@ describe('linker', () => {
       const flyMethod = Bird.members.find(m => m.name === 'fly')
       const assignment = flyMethod.sentences[0]
       expect(assignment.variable.link).to.deep.equal(energyInstVar)
+    })
+
+    it('links a ref to an WKO instance variable', () => {
+      expectNoLinkageError(`
+        object pepita {
+          var energy = 20
+          method fly() {
+            energy -= 1
+          }
+        }
+      `)
     })
 
   })

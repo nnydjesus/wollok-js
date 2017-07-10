@@ -27,7 +27,10 @@ export const link = (node) => {
     afterProgram: pop,
 
     visitClassDeclaration: push,
-    aftetClassDeclaration: pop,
+    afterClassDeclaration: pop,
+
+    visitNamedObjectDeclaration: push,
+    afterNamedObjectDeclaration: pop,
 
     visitVariableDeclaration(declaration) {
       const current = context.peek()
