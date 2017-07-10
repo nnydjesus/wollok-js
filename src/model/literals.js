@@ -1,8 +1,8 @@
 import { Node } from './node'
 
-export const NullLiteral = Symbol('null')
-export const SelfLiteral = Symbol('self')
-export const SuperLiteral = Symbol('super')
+export const NullLiteral = Node('NullLiteral')({})
+export const SelfLiteral = Node('SelfLiteral')({})
+export const SuperLiteral = Node('SuperLiteral')({})
 
 const ValueLiteral = name => value => Node(`${name}Literal`)({ value })
 export const BooleanLiteral = ValueLiteral('Boolean')

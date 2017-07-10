@@ -9,6 +9,7 @@
   },
   "license": "ISC",
   "dependencies": {
+    "color-log": "0.0.2",
     "pegjs": "^0.10.0"
   },
   "devDependencies": {
