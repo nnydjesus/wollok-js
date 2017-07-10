@@ -26,8 +26,8 @@ const compiler = {
 
   compileClassDeclaration: ({ name, superclass, mixins, members }) => {
     const constructorDeclaration = compileConstructor(
-      members.filter(m => m.nodeType === 'VariableDeclaration' && m.value),
-      members.filter(m => m.nodeType === 'ConstructorDeclaration')
+      findByType(members, 'VariableDeclaration', m => m.value),
+      findByType(members, 'ConstructorDeclaration')
     )
     const memberDeclarations = members
       .filter(m => m.nodeType !== 'ConstructorDeclaration')
@@ -186,7 +186,8 @@ const compileSentenceSequence = (sentences) => {
   return compiledSentences.join('')
 }
 
-const findByType = (content, type) => content.filter(c => c.nodeType === type)
+const findByType = (content, type, extraCondition = () => true) => 
+  content.filter(c => c.nodeType === type && extraCondition(c))
 
 // TODO: Imports
 const compileFile = ({ content }) => {
