@@ -5,7 +5,10 @@
   "repository": "uqbar-project/wollok-js",
   "scripts": {
     "test": "yarn gulp test",
-    "lint": "yarn gulp lint"
+    "lint": "yarn gulp lint",
+    "coverage-test": "NODE_ENV=test nyc --require babel-core/register mocha --compilers js:babel-register --recursive tests/**/*.test.js",
+    "coverage-report": "nyc report --reporter=lcov",
+    "coverage-upload": "codecov"
   },
   "license": "ISC",
   "dependencies": {
@@ -20,6 +23,7 @@
     "babel-preset-env": "^1.6.0",
     "babel-register": "^6.24.1",
     "chai": "^4.0.2",
+    "codecov": "^2.2.0",
     "eslint-config-airbnb-base": "^11.2.0",
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-mocha": "^4.11.0",
@@ -30,6 +34,7 @@
     "gulp-mocha": "^4.3.1",
     "gulp-pegjs": "^0.1.0",
     "mocha": "^3.4.2",
+    "nyc": "^11.0.3",
     "yarn": "^0.27.5"
   },
   "babel": {

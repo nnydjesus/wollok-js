@@ -1,3 +1,10 @@
 language: node_js
 node_js:
   - "7.10.0"
+
+script:
+  - npm run coverage-test
+
+after_success:
+  - npm run coverage-report
+  - npm run coverage-upload
