@@ -65,53 +65,59 @@ describe('linker', () => {
 
     const expectNoLinkageError = code => link(parser.parse(code))
 
-    it('links a simple Variable ref in a Program', () => {
-      const linked = link(parser.parse(`
-        program prueba {
-          const a = 23
-          const b = a
-        }
-      `))
-      const [a, b] = linked.content[0].sentences
-      expect(b.value.link).to.deep.equal(a)
-    })
+    describe('program', () => {
 
-    it('fails if a variable cannot be resolved in a program', () => {
-      expectUnresolvedVariable('a', `
-        program prueba {
-          const b = a
-        }
-      `)
-    })
-
-    it('links a ref to a class instance variable', () => {
-      const linked = link(parser.parse(`
-        class Bird {
-          var energy = 20
-          method fly() {
-            energy -= 1
+      it('links a simple Variable ref in a Program', () => {
+        const linked = link(parser.parse(`
+          program prueba {
+            const a = 23
+            const b = a
           }
-        }
-      `))
-      const Bird = linked.content[0]
-      const energyInstVar = Bird.members.find(m => m.variable && m.variable.name === 'energy')
-      const flyMethod = Bird.members.find(m => m.name === 'fly')
-      const assignment = flyMethod.sentences[0]
-      expect(assignment.variable.link).to.deep.equal(energyInstVar)
-    })
+        `))
+        const [a, b] = linked.content[0].sentences
+        expect(b.value.link).to.deep.equal(a)
+      })
 
-    it('links a ref to an WKO instance variable', () => {
-      expectNoLinkageError(`
-        object pepita {
-          var energy = 20
-          method fly() {
-            energy -= 1
+      it('fails if a variable cannot be resolved in a program', () => {
+        expectUnresolvedVariable('a', `
+          program prueba {
+            const b = a
           }
-        }
-      `)
+        `)
+      })
+
     })
 
     describe('method scoping', () => {
+
+      describe('instance variables', () => {
+        it('links a ref to a class instance variable', () => {
+          const linked = link(parser.parse(`
+            class Bird {
+              var energy = 20
+              method fly() {
+                energy -= 1
+              }
+            }
+          `))
+          const Bird = linked.content[0]
+          const energyInstVar = Bird.members.find(m => m.variable && m.variable.name === 'energy')
+          const flyMethod = Bird.members.find(m => m.name === 'fly')
+          const assignment = flyMethod.sentences[0]
+          expect(assignment.variable.link).to.deep.equal(energyInstVar)
+        })
+
+        it('links a ref to an WKO instance variable', () => {
+          expectNoLinkageError(`
+            object pepita {
+              var energy = 20
+              method fly() {
+                energy -= 1
+              }
+            }
+          `)
+        })
+      })
 
       describe('params', () => {
         it('links a ref to a method parameter within an object', () => {
@@ -171,6 +177,18 @@ describe('linker', () => {
         })
 
       })
+
+    })
+
+    describe('closure scoping', () => {
+      it('resolves a reference to a closure parameter')
+    })
+
+    describe('nesting', () => {
+      it('method => class(instance var)')
+      it('closure => method')
+      it('closure => method => class(instance var)')
+      it('closure => method => wko')
     })
 
   })
