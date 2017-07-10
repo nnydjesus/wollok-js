@@ -197,6 +197,66 @@ const compileLiteral = (literal) => {
   }
 }
 
+// TODO: Handle mixin inclusion
+const compileElement = (element) => {
+
+  if(element.nodeType === 'Package') {
+    const { name, elements } = element
+    //TODO
+  }
+
+  if(element.nodeType === 'ClassDeclaration') {
+    const { name, superclass, mixins, members } = element
+    const constructorDeclaration = compileConstructor(
+      members.filter(m => m.nodeType === 'VariableDeclaration' && m.value),
+      members.filter(m => m.nodeType === 'ConstructorDeclaration')
+    )
+    const memberDeclarations = members
+      .filter(m => m.nodeType !== 'ConstructorDeclaration')
+      .map(compileMember)
+      .join(';')
+
+    return `class ${name} extends ${superclass.name} { ${constructorDeclaration} ${memberDeclarations} }`
+  }
+
+  if(element.nodeType === 'MixinDeclaration') {
+    const { name, members } = element
+    //TODO
+  }
+
+  if(element.nodeType === 'ObjectDeclaration') {
+    const { name, superclass, mixins, members } = element
+    return `const ${name} = new class extends ${superclass.name}{
+      constructor(){super(${superclass.parameters.map(compileExpression).join()})};${members.map(compileMember).join(';')}
+    };`
+  }
+
+}
+
+const compileMember = (member) => {
+  if(member.nodeType === 'VariableDeclaration'){
+    const { variable, writeable, value } = member
+    const getter = `get ['${variable.name}']() {return this['___${variable.name}___']}`
+    const setter = `set ['${variable.name}'](___value___) {this['___${variable.name}___'] = ___value___}`
+  }
+  
+  if(member.nodeType === 'MethodDeclaration') { //TODO: override? Native?
+    const { name, override, native, parameters, sentences } = member
+    return `['${name}'](${parameters.map(compileParameter).join(',')}){${compileSentenceSequence(sentences)}}`
+  }
+}
+
+const compileConstructor = (constructors, variableDeclarations) => {
+
+  const constructorFunctions = constructors.map(({ parameters, sentences, baseTarget, baseArguments }) =>
+    `___cons___[${baseArguments.length}] = (${parameters.map(compileParameter).join(',')}) => {
+      ${baseTarget === SelfLiteral ? `___cons___['${baseArguments.length}']` : 'super'}(${baseArguments.map(compileParameter).join(',')});
+      ${compileSentenceSequence(sentences)}
+    }`
+  )
+  
+  return `constructor(...___args___){___cons___ = {};${constructorFunctions.join(';')}; ___cons___[___args___.length](...___args___)}`
+}  
 
 const compileParameter = ({name, varArg}) => varArg ? '...' + name : name
 
@@ -208,7 +268,8 @@ const compileSentenceSequence = (sentences) => {
 }
 
 
-export default (ast) => {
-  const jsCode = compileSentence(ast)
-  return eval(jsCode)
-}
+
+export const interpretSentence = (ast) => eval(compileSentence(ast))
+export const interpretElement = (ast) => eval(compileElement(ast))
+
+export default (ast) => null//TODO: interpretFile

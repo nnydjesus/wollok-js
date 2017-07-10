@@ -3,7 +3,7 @@ import { describe, it } from 'mocha'
 import { expect } from 'chai'
 import { readFileSync } from 'fs'
 import parser from '../src/parser'
-import interpret from '../src/interpreter'
+import {interpretSentence, interpretElement} from '../src/interpreter'
 import {
   Assignment,
   BinaryOp,
@@ -41,7 +41,7 @@ import {
   VariableDeclaration
 } from '../src/model'
 
-const fixture = new Map([
+const sentencesFixture = new Map([
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
@@ -135,16 +135,30 @@ const fixture = new Map([
 
 ])
 
+//-------------------------------------------------------------------------------------------------------------------------------
+// LIBRARY ELEMENTS
+//-------------------------------------------------------------------------------------------------------------------------------
+const elementFixture = new Map([
+  //TODO: Test Classes
+  //TODO: Test Objects
+])
+
+const fixtures = new Map([
+  [sentencesFixture, interpretSentence],
+  [elementFixture, interpretElement]
+])
+
 describe('Wollok interpreter', () => {
+  for (const [fixture, interpret] of fixtures) {
+    for (const [ast, expected] of fixture.entries()) {
+      const result = () => interpret(ast)
 
-  for (const [ast, expected] of fixture.entries()) {
-    const result = () => interpret(ast)
-
-    it(`should interpret ${JSON.stringify(ast)}`, () => {
-      if(expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
-      else if(typeof expected === 'function') expect( result().toString().replace(/[\n ]/g,'') ).to.equal( expected.toString().replace(/[\n ]/g,'') )
-      else expect(result()).to.deep.equal(expected)
-    })
+      it(`should interpret ${JSON.stringify(ast)}`, () => {
+        if(expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
+        else if(typeof expected === 'function') expect( result().toString().replace(/[\n ]/g,'') ).to.equal( expected.toString().replace(/[\n ]/g,'') )
+        else expect(result()).to.deep.equal(expected)
+      })
+    }
   }
 
 })

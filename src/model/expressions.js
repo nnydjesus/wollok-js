@@ -10,4 +10,5 @@ export const Super = (...parameters) => Node('Super')({ parameters })
 export const If = (condition) => (...thenSentences) => (...elseSentences) => Node('If')({ condition, thenSentences, elseSentences })
 export const Try = (...sentences) => (...catches) => (...always) => Node('Try')({ sentences, catches, always })
 export const Throw = (exception) => Node('Throw')({ exception })
-export const Return = (result) => Node('Return')({ result })
+
+export const Catch = (variable, type) => (...handler) => Node('Catch')({ variable, type, handler })
