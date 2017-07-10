@@ -98,8 +98,10 @@ const sentencesFixture = new Map([
   [ UnaryOp('not', BooleanLiteral(true)) , false                                  ],
   //TODO: prefix +: WTF does it do???
   
-  // TODO: InstanceOf
-  // TODO: New
+  [ InstanceOf(SetLiteral(), 'Set') , true ],
+  
+  [ New('Set')(ListLiteral(NumberLiteral(1), NumberLiteral(2))) , new Set([1,2]) ],
+  
   // TODO: Super
 
   [ If(BooleanLiteral(true))(NumberLiteral(1))(NumberLiteral(2))  , 1 ],

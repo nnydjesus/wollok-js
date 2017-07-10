@@ -103,22 +103,22 @@ const compileExpression = (expression) => {
   
   if(expression.nodeType === 'InstanceOf') {
     const { left, right } = expression
-    //TODO
+    return `${compileExpression(left)} instanceof ${right}`
   }
   
   if(expression.nodeType === 'FeatureCall') { //TODO: nullSafe
     const { target, key, nullSafe, parameters } = expression
-    return `${compileExpression(target)}["${key}"](${parameters.map(compileExpression).join()})`
+    return `${compileExpression(target)}["${key}"](${compileArguments(parameters)})`
   }
   
   if(expression.nodeType === 'New') {
     const { target, parameters } = expression
-    //TODO
+    return `new ${target}(${compileArguments(parameters)})`
   }
   
   if(expression.nodeType === 'Super') {
     const { parameters } = expression
-    //TODO
+    return `super(${compileArguments(parameters)})`
   }
   
   if(expression.nodeType === 'If') {
@@ -193,7 +193,7 @@ const compileLiteral = (literal) => {
     const compiledSentences = sentences.map(compileSentence)
     if(compiledSentences.length) compiledSentences[compiledSentences.length - 1] = 'return ' + compiledSentences[compiledSentences.length - 1]
 
-    return `(function (${ parameters.map(compileParameter).join() }) {${ compileSentenceSequence(sentences) }})`
+    return `(function (${ compileParameters(parameters) }) {${ compileSentenceSequence(sentences) }})`
   }
 }
 
@@ -227,7 +227,7 @@ const compileElement = (element) => {
   if(element.nodeType === 'ObjectDeclaration') {
     const { name, superclass, mixins, members } = element
     return `const ${name} = new class extends ${superclass.name}{
-      constructor(){super(${superclass.parameters.map(compileExpression).join()})};${members.map(compileMember).join(';')}
+      constructor(){super(${superclass.compileArguments(parameters)})};${members.map(compileMember).join(';')}
     };`
   }
 
@@ -242,15 +242,15 @@ const compileMember = (member) => {
   
   if(member.nodeType === 'MethodDeclaration') { //TODO: override? Native?
     const { name, override, native, parameters, sentences } = member
-    return `['${name}'](${parameters.map(compileParameter).join(',')}){${compileSentenceSequence(sentences)}}`
+    return `['${name}'](${compileParameters(parameters)}){${compileSentenceSequence(sentences)}}`
   }
 }
 
 const compileConstructor = (constructors, variableDeclarations) => {
 
   const constructorFunctions = constructors.map(({ parameters, sentences, baseTarget, baseArguments }) =>
-    `___cons___[${baseArguments.length}] = (${parameters.map(compileParameter).join(',')}) => {
-      ${baseTarget === SelfLiteral ? `___cons___['${baseArguments.length}']` : 'super'}(${baseArguments.map(compileParameter).join(',')});
+    `___cons___[${baseArguments.length}] = (${compileParameters(parameters)}) => {
+      ${baseTarget === SelfLiteral ? `___cons___['${baseArguments.length}']` : 'super'}(${compileArguments(baseArguments)});
       ${compileSentenceSequence(sentences)}
     }`
   )
@@ -258,7 +258,9 @@ const compileConstructor = (constructors, variableDeclarations) => {
   return `constructor(...___args___){___cons___ = {};${constructorFunctions.join(';')}; ___cons___[___args___.length](...___args___)}`
 }  
 
-const compileParameter = ({name, varArg}) => varArg ? '...' + name : name
+const compileParameters = (params) => params.map(({name, varArg}) => varArg ? '...' + name : name).join()
+
+const compileArguments = (args) => args.map(compileExpression).join()
 
 const compileSentenceSequence = (sentences) => {
   const compiledSentences = sentences.map(compileSentence)
@@ -267,9 +269,34 @@ const compileSentenceSequence = (sentences) => {
   return compiledSentences.join('')
 }
 
+//TODO: Imports
+const compileFile = ({content}) => {
+  const imports = content.filter(c => c.nodeType === 'Import')
+  const programs = content.filter(c => c.nodeType === 'Program')
+  const tests = content.filter(c => c.nodeType === 'Test')
+  const elements = content.filter(c => c.nodeType !== 'Test' && c.nodeType !== 'Program' && c.nodeType != 'Import')
+
+  if(!programs.length && !tests.length) {
+    log.error(`There is no program or tests to run!`)
+    process.exit(1)
+  }
+  
+  const compiledElements = elements.map(compileElement).join(';')
+
+  if(programs.length) {
+    if(programs.length > 1) log.warn(`There is more than one program! Only ${programs[0].name} will be run.`)
+    const { name, sentences } = programs[0]
+    return compiledElements + `;(()=>{${compileSentenceSequence(sentences)}})()`
+  } else {
+    //TODO: Run tests
+    tests.map(({ description, sentences }) => {
+    })
+  }
+}
 
 
 export const interpretSentence = (ast) => eval(compileSentence(ast))
 export const interpretElement = (ast) => eval(compileElement(ast))
+export const interpretFile = (ast) => eval(compileFile(ast))
 
-export default (ast) => null//TODO: interpretFile
+export default interpretFile
