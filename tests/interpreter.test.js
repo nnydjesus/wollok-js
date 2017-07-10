@@ -1,9 +1,7 @@
-import path from 'path'
+
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import { readFileSync } from 'fs'
-import parser from '../src/parser'
-import {interpretSentence, interpretElement} from '../src/interpreter'
+import { interpretElement } from '../src/interpreter'
 import {
   Assignment,
   BinaryOp,
@@ -141,12 +139,12 @@ const sentencesFixture = new Map([
 // LIBRARY ELEMENTS
 //-------------------------------------------------------------------------------------------------------------------------------
 const elementFixture = new Map([
-  //TODO: Test Classes
-  //TODO: Test Objects
+  // TODO: Test Classes
+  // TODO: Test Objects
 ])
 
 const fixtures = new Map([
-  [sentencesFixture, interpretSentence],
+  [sentencesFixture, interpretElement],
   [elementFixture, interpretElement]
 ])
 
@@ -157,10 +155,19 @@ describe('Wollok interpreter', () => {
 
       it(`should interpret ${JSON.stringify(ast)}`, () => {
         if(expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
-        else if(typeof expected === 'function') expect( result().toString().replace(/[\n ]/g,'') ).to.equal( expected.toString().replace(/[\n ]/g,'') )
-        else expect(result()).to.deep.equal(expected)
+        else if(typeof expected === 'function') {
+          expect(escapeCode(result()))
+            .to.equal(escapeCode(expected))
+        }
+        else expect(result(), `intepreting ${fixture}`).to.deep.equal(expected)
       })
     }
   }
 
 })
+
+function escapeCode(code) {
+  return code
+    .toString()
+    .replace(/[\n\t ]/g,'', '')
+}
