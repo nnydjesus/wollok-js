@@ -112,9 +112,19 @@ describe('linker', () => {
     })
 
     describe('method scoping', () => {
-      it('links a ref to a method parameter', () => {
+      it('links a ref to a method parameter within an object', () => {
         expectNoLinkageError(`
           object pepita {
+            method willConsume(meters) {
+              return meters * 0.5
+            }
+          }
+        `)
+      })
+
+      it('links a ref to a method parameter within a class', () => {
+        expectNoLinkageError(`
+          class Golondrina {
             method willConsume(meters) {
               return meters * 0.5
             }
