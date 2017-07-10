@@ -55,13 +55,53 @@ const compileSentence = (sentence) => {
 
 
 const compileExpression = (expression) => {
-  if (expression.nodeType === 'Variable') {
-    const { name } = expression
-    return ` ${name} `
+  // generic dispatch
+  const methodName = `compile${expression.nodeType}`
+  if (compiler[methodName]) {
+    return compiler[methodName](expression)
   }
-  
-  if (expression.nodeType === 'BinaryOp') {
-    const { op, left, right } = expression
+}
+
+// we can eventually move this out to a 
+const compiler = {
+
+  // **********************
+  // ** elements
+  // **********************
+
+  compilePackage: ({ name, elements }) => {
+    // TODO
+  },
+
+  compileClassDeclaration: ({ name, superclass, mixins, members }) => {
+    const constructorDeclaration = compileConstructor(
+      members.filter(m => m.nodeType === 'VariableDeclaration' && m.value),
+      members.filter(m => m.nodeType === 'ConstructorDeclaration')
+    )
+    const memberDeclarations = members
+      .filter(m => m.nodeType !== 'ConstructorDeclaration')
+      .map(compileMember)
+      .join(';')
+
+    return `class ${name} extends ${superclass.name} { ${constructorDeclaration} ${memberDeclarations} }`
+  },
+
+  compileMixinDeclaration: ({ name, members }) => {
+    // TODO
+  },
+
+  compileObjectDeclaration: ({ name, superclass, mixins, members }) => 
+    `const ${name} = new class extends ${superclass.name}{
+      constructor(){super(${superclass.compileArguments(parameters)})};${members.map(compileMember).join(';')}
+    };`,
+
+  // **********************
+  // ** expressions
+  // **********************
+
+  compileVariable: ({ name }) => ` ${name} `,
+
+  compileBinaryOp: ({ op, left, right }) => {
     const leftOperand = compileExpression(left)
     const rightOperand = compileExpression(right)
 
@@ -85,21 +125,10 @@ const compileExpression = (expression) => {
       case '/'  :
       case '%'  : return `(${leftOperand} ${op} ${rightOperand})`
     }
-
-  }
-
-  // generic dispatch
-  const methodName = `compile${expression.nodeType}`
-  if (compiler[methodName]) {
-    return compiler[methodName](expression)
-  }
-}
-
-const compiler = {
+  },
 
   compileUnaryOp: ({ op, target }) => {
     const operand = compileExpression(target)
-
     switch (op) {
       case 'not':
       case '!' : return `!${operand}`
@@ -161,39 +190,7 @@ const compiler = {
 }
 
 // TODO: Handle mixin inclusion
-const compileElement = (element) => {
-  if (element.nodeType === 'Package') {
-    const { name, elements } = element
-    // TODO
-  }
 
-  if (element.nodeType === 'ClassDeclaration') {
-    const { name, superclass, mixins, members } = element
-    const constructorDeclaration = compileConstructor(
-      members.filter(m => m.nodeType === 'VariableDeclaration' && m.value),
-      members.filter(m => m.nodeType === 'ConstructorDeclaration')
-    )
-    const memberDeclarations = members
-      .filter(m => m.nodeType !== 'ConstructorDeclaration')
-      .map(compileMember)
-      .join(';')
-
-    return `class ${name} extends ${superclass.name} { ${constructorDeclaration} ${memberDeclarations} }`
-  }
-
-  if (element.nodeType === 'MixinDeclaration') {
-    const { name, members } = element
-    // TODO
-  }
-
-  if (element.nodeType === 'ObjectDeclaration') {
-    const { name, superclass, mixins, members } = element
-    return `const ${name} = new class extends ${superclass.name}{
-      constructor(){super(${superclass.compileArguments(parameters)})};${members.map(compileMember).join(';')}
-    };`
-  }
-
-}
 
 const compileMember = (member) => {
   if (member.nodeType === 'VariableDeclaration') {
