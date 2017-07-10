@@ -9,7 +9,7 @@ export const visit = (node, fn, after = () => {}) => {
     const value = node[key]
     const list = Array.isArray(value) ? value : [value]
     list.filter(e => e.nodeType).forEach((e, i) => {
-      winston.error(`visiting ${node.nodeType}.${key}[${i}]`)
+      winston.silly(`visiting ${node.nodeType}.${key}[${i}]`)
       visit(e, fn, after)
     })
   })

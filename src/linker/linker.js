@@ -1,24 +1,14 @@
 import { visitor } from '../../src/model/visiting'
 
-// simple for now
-const typeOf = e => (Array.isArray(e) ? 'array' : typeof e)
-
 export const linkParent = (node, parent) => {
-  switch (typeOf(node)) {
-    case 'array': {
-      node.forEach(e => linkParent(e, parent))
-      break
+  if (Array.isArray(node)) {
+    node.forEach(e => linkParent(e, parent))
+  //
+  } else if ((typeof node) === 'object') {
+    Object.keys(node).forEach(key => linkParent(node[key], node))
+    if (parent) {
+      node.parent = parent
     }
-    case 'object': {
-      Object.keys(node).forEach(key => {
-        linkParent(node[key], node)
-      })
-      if (parent) {
-        node.parent = parent
-      }
-      break;
-    }
-    default:
   }
   return node
 }
