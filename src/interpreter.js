@@ -65,7 +65,7 @@ const compileExpression = (expression) => {
     const leftOperand = compileExpression(left)
     const rightOperand = compileExpression(right)
 
-    switch(op) { //TODO: Other Ops: '..<' / '>..' / '..' / '->' / '>>>' / '>>' / '<<<' / '<<' / '<=>' / '<>' / '?:'
+    switch(op) { // TODO: Other Ops: '..<' / '>..' / '..' / '->' / '>>>' / '>>' / '<<<' / '<<' / '<=>' / '<>' / '?:'
       case 'or' : return `(${leftOperand} || ${rightOperand})`
       case 'and': return `(${leftOperand} && ${rightOperand})`
       case '===': return `Object.is(${leftOperand},${rightOperand})`
@@ -87,49 +87,47 @@ const compileExpression = (expression) => {
     }
 
   }
-  
-  if (expression.nodeType === 'UnaryOp') {
-    const { op, target } = expression
+
+  // generic dispatch
+  const methodName = `compile${expression.nodeType}`
+  if (compiler[methodName]) {
+    return compiler[methodName](expression)
+  }
+}
+
+const compiler = {
+
+  compileUnaryOp: ({ op, target }) => {
     const operand = compileExpression(target)
 
-    switch(op) {
+    switch (op) {
       case 'not':
-      case '!'  : return `!${operand}`
-      case '-'  : return `-${operand}`
+      case '!' : return `!${operand}`
+      case '-' : return `-${operand}`
       case '++' : return `${operand}++`
       case '--' : return `${operand}--`
-      //case '+': TODO: WTF does this do?
+      // case '+': TODO: WTF does this do?
     }
-  }
+  },
+
+  //
+
+  compileInstanceOf: ({ left, right }) => `${compileExpression(left)} instanceof ${right}`,
+
+  compileFeatureCall: ({ target, key, nullSafe, parameters }) => `${compileExpression(target)}["${key}"](${compileArguments(parameters)})`,
+
+  compileNew: ({ target, parameters }) => `new ${target}(${compileArguments(parameters)})`,
+  compileSuper: ({ parameters }) => `super(${compileArguments(parameters)})`,
+
+  // flow control
+
+  compileIf: ({ condition, thenSentences, elseSentences }) => 
+    `(() => { if (${compileExpression(condition)}) {${compileSentenceSequence(thenSentences)}} else {${compileSentenceSequence(elseSentences)}}})()`,
+
+  compileReturn: ({ result }) => `return ${compileExpression(result)}`,
+  compileThrow: ({ exception }) => `(() => { throw ${compileExpression(exception)} })()`,
   
-  if (expression.nodeType === 'InstanceOf') {
-    const { left, right } = expression
-    return `${compileExpression(left)} instanceof ${right}`
-  }
-  
-  if (expression.nodeType === 'FeatureCall') { //TODO: nullSafe
-    const { target, key, nullSafe, parameters } = expression
-    return `${compileExpression(target)}["${key}"](${compileArguments(parameters)})`
-  }
-  
-  if (expression.nodeType === 'New') {
-    const { target, parameters } = expression
-    return `new ${target}(${compileArguments(parameters)})`
-  }
-
-  if (expression.nodeType === 'Super') {
-    const { parameters } = expression
-    return `super(${compileArguments(parameters)})`
-  }
-
-  if (expression.nodeType === 'If') {
-    const { condition, thenSentences, elseSentences } = expression
-    return `(()=>{if (${compileExpression(condition)}){${ compileSentenceSequence(thenSentences) }}else{${ compileSentenceSequence(elseSentences) }}})()`
-  }
-
-  if (expression.nodeType === 'Try') {
-    const { sentences, catches, always } = expression
-
+  compileTry: ({ sentences, catches, always }) => {
     const handlers = catches.map(({variable, type, handler}) => {
       const evaluation = `const ${variable.name} = ___ERROR___;${compileSentenceSequence(handler)}`
       return type ? `if (___ERROR___ instanceof ${type}){${evaluation}}` : evaluation
@@ -139,22 +137,10 @@ const compileExpression = (expression) => {
     const alwaysBlock = always.length ? `finally{${compileSentenceSequence(always)}}` : ''
 
     return `(()=>{try{${compileSentenceSequence(sentences)}}${catchBlock}${alwaysBlock}})()`
-  }
+  },
 
-  if (expression.nodeType === 'Throw') {
-    const { exception } = expression
-    return `(()=>{throw ${compileExpression(exception)}})()`
-  }
+  // literals
 
-  if (expression.nodeType === 'Return') {
-    const { result } = expression
-    return `return ${compileExpression(result)}`
-  }
-
-  return compileLiteral(expression)
-}
-
-const compiler = {
   compileNullLiteral: () => 'null',
   compileSelfLiteral: () => 'this',
 
@@ -171,13 +157,6 @@ const compiler = {
     if (compiledSentences.length) compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
 
     return `(function (${compileParameters(parameters)}) {${compileSentenceSequence(sentences)}})`
-  }
-}
-
-const compileLiteral = (literal) => {
-  const methodName = `compile${literal.nodeType}`
-  if (compiler[methodName]) {
-    return compiler[methodName](literal)
   }
 }
 
