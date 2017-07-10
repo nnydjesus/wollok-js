@@ -1,4 +1,5 @@
 import { visitor } from '../../src/model/visiting'
+import { ExtendableError } from '../../src/utils/error'
 
 export const linkParent = (node, parent) => {
   if (Array.isArray(node)) {
@@ -13,18 +14,21 @@ export const linkParent = (node, parent) => {
   return node
 }
 
+class LinkerError extends ExtendableError { }
 
 export const link = (node) => {
   const context = [];
   context.peek = () => (context.length > 0 ? context[context.length - 1] : undefined)
+  const push = c => context.push(c)
+  const pop = c => context.pop(c)
 
   visitor({
-    visitProgram(program) {
-      context.push(program)
-    },
-    afterProgram() {
-      context.pop()
-    },
+    visitProgram: push,
+    afterProgram: pop,
+
+    visitClassDeclaration: push,
+    aftetClassDeclaration: pop,
+
     visitVariableDeclaration(declaration) {
       const current = context.peek()
       current.context = {
@@ -34,7 +38,11 @@ export const link = (node) => {
     },
     visitVariable(variable) {
       // TODO go up in the context or throw unresolved variable (?)
-      variable.link = context.peek().context[variable.name]
+      const value = context.peek().context[variable.name]
+      if (!value) {
+        throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
+      }
+      variable.link = value
     }
   })(node)
   return node
