@@ -13,7 +13,7 @@ const doCompile = (expression) => {
   throw new Error(`Unsupported ast node type <<${expression.nodeType}>>: ${expression}`)
 }
 
-// we can eventually move this out to a 
+// we can eventually move this out to a separated "compiler.js" file
 const compiler = {
 
   // **********************
