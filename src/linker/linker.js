@@ -1,4 +1,4 @@
-import { visitor } from '../../src/model/browsing'
+import { visitor } from '../../src/model/visiting'
 
 // simple for now
 const typeOf = e => (Array.isArray(e) ? 'array' : typeof e)
