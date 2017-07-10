@@ -112,34 +112,64 @@ describe('linker', () => {
     })
 
     describe('method scoping', () => {
-      it('links a ref to a method parameter within an object', () => {
-        expectNoLinkageError(`
-          object pepita {
-            method willConsume(meters) {
-              return meters * 0.5
+
+      describe('params', () => {
+        it('links a ref to a method parameter within an object', () => {
+          expectNoLinkageError(`
+            object pepita {
+              method willConsume(meters) {
+                return meters * 0.5
+              }
             }
-          }
-        `)
+          `)
+        })
+
+        it('links a ref to a method parameter within a class', () => {
+          expectNoLinkageError(`
+            class Golondrina {
+              method willConsume(meters) {
+                return meters * 0.5
+              }
+            }
+          `)
+        })
+
+        it('detects a wrong ref in a method', () => {
+          expectUnresolvedVariable('meteoro', `
+            object pepita {
+              method willConsume(meters) {
+                return meteoro * 0.5
+              }
+            }
+          `)
+        })
       })
 
-      it('links a ref to a method parameter within a class', () => {
-        expectNoLinkageError(`
-          class Golondrina {
-            method willConsume(meters) {
-              return meters * 0.5
-            }
-          }
-        `)
-      })
+      describe('local vars', () => {
 
-      it('detects a wrong ref in a method', () => {
-        expectUnresolvedVariable('meteoro', `
-          object pepita {
-            method willConsume(meters) {
-              return meteoro * 0.5
+        it('links a ref to a local variable within a method', () => {
+          expectNoLinkageError(`
+            object pepita {
+              method willConsume(meters) {
+                const factor = 23
+                return meters * factor
+              }
             }
-          }
-        `)
+          `)
+        })
+
+        it('detects a reference to a variable that is not yet declared', () => {
+          expectUnresolvedVariable('factor', `
+            object pepita {
+              method willConsume(meters) {
+                const result = meters * factor
+                const factor = 0.5
+                return result
+              }
+            }
+          `)
+        })
+
       })
     })
 
