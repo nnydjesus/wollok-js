@@ -154,23 +154,19 @@ const compileExpression = (expression) => {
   return compileLiteral(expression)
 }
 
+const compiler = {
+  compileNullLiteral: () => 'null',
+  compileSelfLiteral: () => 'this',
 
-const compileLiteral = (literal) => {
-  const rules = {
-    NullLiteral: () => 'null',
-    SelfLiteral: () => 'this',
-    BooleanLiteral: ({ value }) => `${value}`,
-    NumberLiteral: ({ value }) => `${value}`,
-    StringLiteral: ({ value }) => `"${value}"`,
-    SetLiteral: ({ values }) => `new Set([ ${values.map(compileExpression).join()} ])`,
-    ListLiteral: ({ values }) => `[ ${values.map(compileExpression).join()} ]`
-  }
-  if (rules[literal.nodeType]) {
-    return rules[literal.nodeType](literal)
-  }
+  compileBooleanLiteral: ({ value }) => `${value}`,
+  compileNumberLiteral: ({ value }) => `${value}`,
+  compileStringLiteral: ({ value }) => `"${value}"`,
 
-  if (literal.nodeType === 'Closure') {
-    const { parameters, sentences } = literal
+  compileSetLiteral: ({ values }) => `new Set([ ${values.map(compileExpression).join()} ])`,
+
+  compileListLiteral: ({ values }) => `[ ${values.map(compileExpression).join()} ]`,
+
+  compileClosure: ({ parameters, sentences }) => {
     const compiledSentences = sentences.map(compileSentence)
     if (compiledSentences.length) compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
 
@@ -178,9 +174,15 @@ const compileLiteral = (literal) => {
   }
 }
 
+const compileLiteral = (literal) => {
+  const methodName = `compile${literal.nodeType}`
+  if (compiler[methodName]) {
+    return compiler[methodName](literal)
+  }
+}
+
 // TODO: Handle mixin inclusion
 const compileElement = (element) => {
-
   if (element.nodeType === 'Package') {
     const { name, elements } = element
     // TODO
