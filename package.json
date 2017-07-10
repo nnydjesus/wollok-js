@@ -10,7 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "color-log": "0.0.2",
-    "pegjs": "^0.10.0"
+    "pegjs": "^0.10.0",
+    "winston": "^2.3.1"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
