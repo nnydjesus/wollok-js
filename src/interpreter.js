@@ -1,65 +1,16 @@
 import log from 'color-log'
-import {
-  Assignment,
-  BinaryOp,
-  BooleanLiteral,
-  Catch,
-  ClassDeclaration,
-  Closure,
-  ConstructorDeclaration,
-  FeatureCall,
-  If,
-  Import,
-  InstanceOf,
-  ListLiteral,
-  MethodDeclaration,
-  MixinDeclaration,
-  New,
-  NullLiteral,
-  NumberLiteral,
-  ObjectDeclaration,
-  Package,
-  Parameter,
-  Program,
-  Return,
-  SelfLiteral,
-  SetLiteral,
-  StringLiteral,
-  Super,
-  SuperLiteral,
-  SuperType,
-  Test,
-  Throw,
-  Try,
-  UnaryOp,
-  Variable,
-  VariableDeclaration
-} from './model'
+import { SelfLiteral } from './model'
 
 // This interpreter compiles the AST to a string representing JS code and then evals it.
 // I know, I know... But this is not meant to be nice or final code. Just a quick rough approach to get a better feeling on the AST shape.
 
-const compileSentence = (sentence) => {
-  switch (sentence.nodeType) {
-    case 'VariableDeclaration': {
-      const { variable, writeable, value } = sentence
-      return ` ${writeable ? 'let' : 'const'} ${variable.name} = ${compileExpression(value)} ;`
-    }
-    case 'Assignment': {
-      const { variable, value } = sentence
-      return ` ${variable.name} = ${compileExpression(value)} ;`
-    }
-    default: return `${compileExpression(sentence)};`
-  }
-}
-
-
-const compileExpression = (expression) => {
-  // generic dispatch
+const doCompile = (expression) => {
   const methodName = `compile${expression.nodeType}`
   if (compiler[methodName]) {
     return compiler[methodName](expression)
   }
+
+  throw new Error(`Unsupported ast node type <<${expression.nodeType}>>: ${expression}`)
 }
 
 // we can eventually move this out to a 
@@ -85,6 +36,7 @@ const compiler = {
 
     return `class ${name} extends ${superclass.name} { ${constructorDeclaration} ${memberDeclarations} }`
   },
+  
 
   compileMixinDeclaration: ({ name, members }) => {
     // TODO
@@ -96,14 +48,22 @@ const compiler = {
     };`,
 
   // **********************
+  // ** sentence
+  // **********************
+
+  compileVariableDeclaration: ({ variable, writeable, value }) => ` ${writeable ? 'let' : 'const'} ${variable.name} = ${doCompile(value)} ;`,
+
+  compileAssignment: ({ variable, value }) => ` ${variable.name} = ${doCompile(value)} ;`,
+
+  // **********************
   // ** expressions
   // **********************
 
   compileVariable: ({ name }) => ` ${name} `,
 
   compileBinaryOp: ({ op, left, right }) => {
-    const leftOperand = compileExpression(left)
-    const rightOperand = compileExpression(right)
+    const rightOperand = doCompile(right)
+    const leftOperand = doCompile(left)
 
     switch(op) { // TODO: Other Ops: '..<' / '>..' / '..' / '->' / '>>>' / '>>' / '<<<' / '<<' / '<=>' / '<>' / '?:'
       case 'or' : return `(${leftOperand} || ${rightOperand})`
@@ -128,7 +88,7 @@ const compiler = {
   },
 
   compileUnaryOp: ({ op, target }) => {
-    const operand = compileExpression(target)
+    const operand = doCompile(target)
     switch (op) {
       case 'not':
       case '!' : return `!${operand}`
@@ -141,9 +101,9 @@ const compiler = {
 
   //
 
-  compileInstanceOf: ({ left, right }) => `${compileExpression(left)} instanceof ${right}`,
+  compileInstanceOf: ({ left, right }) => `${doCompile(left)} instanceof ${right}`,
 
-  compileFeatureCall: ({ target, key, nullSafe, parameters }) => `${compileExpression(target)}["${key}"](${compileArguments(parameters)})`,
+  compileFeatureCall: ({ target, key, nullSafe, parameters }) => `${doCompile(target)}["${key}"](${compileArguments(parameters)})`,
 
   compileNew: ({ target, parameters }) => `new ${target}(${compileArguments(parameters)})`,
   compileSuper: ({ parameters }) => `super(${compileArguments(parameters)})`,
@@ -151,10 +111,10 @@ const compiler = {
   // flow control
 
   compileIf: ({ condition, thenSentences, elseSentences }) => 
-    `(() => { if (${compileExpression(condition)}) {${compileSentenceSequence(thenSentences)}} else {${compileSentenceSequence(elseSentences)}}})()`,
+    `(() => { if (${doCompile(condition)}) {${compileSentenceSequence(thenSentences)}} else {${compileSentenceSequence(elseSentences)}}})()`,
 
-  compileReturn: ({ result }) => `return ${compileExpression(result)}`,
-  compileThrow: ({ exception }) => `(() => { throw ${compileExpression(exception)} })()`,
+  compileReturn: ({ result }) => `return ${doCompile(result)}`,
+  compileThrow: ({ exception }) => `(() => { throw ${doCompile(exception)} })()`,
   
   compileTry: ({ sentences, catches, always }) => {
     const handlers = catches.map(({variable, type, handler}) => {
@@ -177,20 +137,17 @@ const compiler = {
   compileNumberLiteral: ({ value }) => `${value}`,
   compileStringLiteral: ({ value }) => `"${value}"`,
 
-  compileSetLiteral: ({ values }) => `new Set([ ${values.map(compileExpression).join()} ])`,
+  compileSetLiteral: ({ values }) => `new Set([ ${values.map(doCompile).join()} ])`,
 
-  compileListLiteral: ({ values }) => `[ ${values.map(compileExpression).join()} ]`,
+  compileListLiteral: ({ values }) => `[ ${values.map(doCompile).join()} ]`,
 
   compileClosure: ({ parameters, sentences }) => {
-    const compiledSentences = sentences.map(compileSentence)
+    const compiledSentences = sentences.map(doCompile)
     if (compiledSentences.length) compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
 
     return `(function (${compileParameters(parameters)}) {${compileSentenceSequence(sentences)}})`
   }
 }
-
-// TODO: Handle mixin inclusion
-
 
 const compileMember = (member) => {
   if (member.nodeType === 'VariableDeclaration') {
@@ -213,22 +170,25 @@ const compileConstructor = (constructors, variableDeclarations) => {
     }`
   )
   return `constructor(...___args___){___cons___ = {};${constructorFunctions.join(';')}; ___cons___[___args___.length](...___args___)}`
-}  
+}
 
-const compileParameters = (params) => params.map(({name, varArg}) => varArg ? '...' + name : name).join()
+const compileSentence = expression => `${doCompile(expression)};`
+const compileParameters = (params) => params.map(({ name, varArg }) => varArg ? `...${name}` : name).join()
 
-const compileArguments = (args) => args.map(compileExpression).join()
+const compileArguments = (args) => args.map(doCompile).join()
 
 const compileSentenceSequence = (sentences) => {
   const compiledSentences = sentences.map(compileSentence)
-  if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return'))
+
+  if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
     compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
+  }
   return compiledSentences.join('')
 }
 
 const findByType = (content, type) => content.filter(c => c.nodeType === type)
 
-//TODO: Imports
+// TODO: Imports
 const compileFile = ({ content }) => {
   const imports = findByType(content, 'Import')
   const programs = findByType(content, 'Program')
@@ -240,7 +200,7 @@ const compileFile = ({ content }) => {
     process.exit(1)
   }
 
-  const compiledElements = elements.map(compileElement).join(';')
+  const compiledElements = elements.map(doCompile).join(';')
 
   if (programs.length) {
     if (programs.length > 1) log.warn(`There is more than one program! Only ${programs[0].name} will be run.`)
@@ -248,12 +208,10 @@ const compileFile = ({ content }) => {
     return `${compiledElements} ;(()=>{${compileSentenceSequence(sentences)}})()`
   }
   // TODO: Run tests
-  tests.map(({ description, sentences }) => {
-  })
+  tests.map(({ description, sentences }) => { })
 }
 
-export const interpretSentence = (ast) => eval(compileSentence(ast))
-export const interpretElement = (ast) => eval(compileElement(ast))
+export const interpretElement = (ast) => eval(doCompile(ast))
 export const interpretFile = (ast) => eval(compileFile(ast))
 
 export default interpretFile
