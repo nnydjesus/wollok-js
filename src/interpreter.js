@@ -3,6 +3,8 @@ import { SelfLiteral } from './model'
 
 const { assign } = Object
 
+// TODO: Add a block to the model and replace the compileSentenceSequence with it's compile call
+
 // This interpreter compiles the AST to a string representing JS code and then evals it.
 // I know, I know... But this is not meant to be nice or final code. Just a quick rough approach to get a better feeling on the AST shape.
 
@@ -47,11 +49,11 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
   // TODO: override? Native?
   MethodDeclaration: ({ name, parameters, sentences }) => `['${name}'](${compileParameters(parameters)}){${compileSentenceSequence(sentences)}}`,
 
-  VariableDeclaration: ({ variable, writeable, value }) => ` ${writeable ? 'let' : 'const'} ${variable.name} = ${compile(value)} ;`,
+  VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${variable.name} = ${compile(value)}`,
 
-  Assignment: ({ variable, value }) => ` ${variable.name} = ${compile(value)} ;`,
+  Assignment: ({ variable, value }) => `${variable.name} = ${compile(value)}`,
 
-  Variable: ({ name }) => ` ${name} `,
+  Variable: ({ name }) => `${name}`,
 
   BinaryOp: ({ op, left, right }) => {
     const rightOperand = compile(right)
@@ -95,7 +97,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
 
   InstanceOf: ({ left, right }) => `${compile(left)} instanceof ${right}`,
 
-  // TODO: Nullsafe
+  // TODO: Nullsafe? Do we really want this?
   FeatureCall: ({ target, key, parameters }) => `${compile(target)}["${key}"](${compileArguments(parameters)})`,
 
   New: ({ target, parameters }) => `new ${target}(${compileArguments(parameters)})`,
