@@ -111,11 +111,10 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
 
   Throw: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
 
-  Try: ({ sentences, catches, always }) => {
-    const catchBlock = catches.length ? `catch(___ERROR___){${catches.map(compile).join(';')} throw ___ERROR___}` : ''
-    const alwaysBlock = always.length ? `finally{${compileSentenceSequence(always)}}` : ''
-    return `(()=>{try{${compileSentenceSequence(sentences)}}${catchBlock}${alwaysBlock}})()`
-  },
+  Try: ({ sentences, catches, always }) =>
+    `(()=>{try{${compile(sentences)}}
+    ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';')} throw ___ERROR___}` : ''}
+    ${always.length ? `finally{${compile(always)}}` : ''}})()`,
 
   Catch: ({ variable, type, handler }) => {
     const evaluation = `const ${variable.name} = ___ERROR___;${compile(handler)}`
@@ -169,14 +168,6 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
 const compileParameters = (params) => params.map(({ name, varArg }) => (varArg ? `...${name}` : name)).join()
 
 const compileArguments = (args) => args.map(compile).join()
-
-const compileSentenceSequence = (sentences) => {
-  const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
-  if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
-    compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
-  }
-  return compiledSentences.join(';')
-}
 
 // TODO: Wherever we use this, we should have separate field in the model instead
 const findByType = (content, type, extraCondition = () => true) => content.filter(c => c.nodeType === type && extraCondition(c))

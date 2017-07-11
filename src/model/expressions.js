@@ -9,5 +9,5 @@ export const FeatureCall = (target, key, nullSafe = false) => (...parameters) =>
 export const New = (target) => (...parameters) => Node('New')({ target, parameters })
 export const Super = (...parameters) => Node('Super')({ parameters })
 export const If = (condition) => (...thenSentences) => (...elseSentences) => Node('If')({ condition, thenSentences: Block(...thenSentences), elseSentences: Block(...elseSentences) })
-export const Try = (...sentences) => (...catches) => (...always) => Node('Try')({ sentences, catches, always })
+export const Try = (...sentences) => (...catches) => (...always) => Node('Try')({ sentences: Block(...sentences), catches, always: Block(...always) })
 export const Throw = (exception) => Node('Throw')({ exception })
