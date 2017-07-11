@@ -28,3 +28,13 @@ function methodByConvention(object, node, preffix) {
     method(node)
   }
 }
+
+export const queryNodeByType = (root, type, filter = () => true) => {
+  const matches = []
+  visit(root, node => {
+    if (filter(node)) {
+      matches.push(node)
+    }
+  })
+  return matches
+}

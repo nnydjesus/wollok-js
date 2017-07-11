@@ -1,5 +1,7 @@
 import { expect } from 'chai'
 import { linkParent, link, LinkerError } from '../../src/linker/linker'
+import { queryNodeByType } from '../../src/model/visiting'
+import { ClassDeclaration, MethodDeclaration } from '../../src/model'
 import parser from '../../src/parser'
 
 describe('linker', () => {
@@ -57,7 +59,7 @@ describe('linker', () => {
     })
   })
 
-  describe('Linker', () => {
+  describe('Variable resolution', () => {
 
     const expectUnresolvedVariable = (variable, code) =>
       expect(() => link(parser.parse(code)))
@@ -204,6 +206,40 @@ describe('linker', () => {
       it('closure => method => wko')
     })
 
+  })
+
+  describe.only('Scoping', () => {
+
+    const expectScopeOf = (program, nodeType, findFilter, expected) => {
+      const linked = link(parser.parse(program))
+      const node = queryNodeByType(linked, nodeType.name, findFilter)[0]
+      expect(Object.keys(node.scope)).to.deep.equal(expected)
+    }
+
+    it('Method scope includes parameters and instance variables', () => {
+      expectScopeOf(`
+          class Bird {
+            const energy = 23
+            method fly(kms) {
+              energy -= kms
+            }
+          }
+        `,
+        MethodDeclaration, m => m.name === 'fly',
+        ['kms']
+      )
+    })
+
+    it('Class scope includes instance variables', () => {
+      expectScopeOf(`
+          class Bird {
+            const energy = 23
+          }
+        `,
+        ClassDeclaration, m => m.name === 'Bird',
+        ['energy']
+      )
+    })
   })
 
 })

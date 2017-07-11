@@ -31,6 +31,21 @@ export const link = (node) => {
     }
   }
 
+  const resolve = variable => {
+    winston.silly(`Resolving ${variable.name}`)
+    const value = context.reduceRight((found, { nodeType, scope }) => {
+      winston.silly(`\tLooking for ${variable.name} in ${nodeType}: `, Object.keys(scope))
+      if (!found && scope && scope[variable.name]) {
+        return scope[variable.name]
+      }
+      return found
+    })
+    if (!value) {
+      throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
+    }
+    return value
+  }
+
   visitor({
     // contexts
     visitProgram: push,
@@ -42,7 +57,7 @@ export const link = (node) => {
     visitNamedObjectDeclaration: push,
     afterNamedObjectDeclaration: pop,
 
-    visitMethodMethodDeclaration: push,
+    visitMethodDeclaration: push,
     afterMethodDeclaration: pop,
 
     visitClosure: push,
@@ -52,14 +67,11 @@ export const link = (node) => {
     visitVariableDeclaration(declaration) { addToContext(declaration, declaration.variable.name) },
     visitParam(param) { addToContext(param, param.name) },
 
-    // checks
+    // linking
     visitVariable(variable) {
       winston.silly(`Linking variable ${variable.name}`)
       // TODO go up in the context or throw unresolved variable (?)
-      const value = context.peek().scope && context.peek().scope[variable.name]
-      if (!value) {
-        throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
-      }
+      const value = resolve(variable)
       variable.link = value
       winston.silly('Linked variable to ', value)
     }
