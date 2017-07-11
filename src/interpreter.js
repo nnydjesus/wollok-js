@@ -114,7 +114,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
   Try: ({ sentences, catches, always }) =>
     `(()=>{try{${compile(sentences)}}
     ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';')} throw ___ERROR___}` : ''}
-    ${always.length ? `finally{${compile(always)}}` : ''}})()`,
+    ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
 
   Catch: ({ variable, type, handler }) => {
     const evaluation = `const ${variable.name} = ___ERROR___;${compile(handler)}`
