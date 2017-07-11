@@ -4,12 +4,12 @@ import parser from '../src/parser'
 import {
   Assignment,
   BinaryOp,
-  BooleanLiteral,
   Catch,
   ClassDeclaration,
   Closure,
   ConstructorDeclaration,
   FeatureCall,
+  FieldDeclaration,
   If,
   Import,
   InstanceOf,
@@ -18,15 +18,13 @@ import {
   MixinDeclaration,
   ObjectDeclaration,
   New,
-  NullLiteral,
-  NumberLiteral,
   Package,
   Parameter,
   Program,
   Return,
   SelfLiteral,
   SetLiteral,
-  StringLiteral,
+  Literal,
   Super,
   SuperLiteral,
   SuperType,
@@ -42,9 +40,9 @@ const FAIL = Symbol('FAIL')
 
 const fixture = {
 
-//-------------------------------------------------------------------------------------------------------------------------------
-// BASICS
-//-------------------------------------------------------------------------------------------------------------------------------
+  //-------------------------------------------------------------------------------------------------------------------------------
+  // BASICS
+  //-------------------------------------------------------------------------------------------------------------------------------
 
   id: {
     _foo123: '_foo123',
@@ -74,15 +72,15 @@ const fixture = {
   program: {
     'program name { }': Program('name')(),
     '  program name { }  ': Program('name')(),
-    'program name { const x = a.m(1) }': Program('name')(VariableDeclaration(Variable('x'), false, FeatureCall(Variable('a'), 'm')(NumberLiteral(1)))),
+    'program name { const x = a.m(1) }': Program('name')(VariableDeclaration(Variable('x'), false, FeatureCall(Variable('a'), 'm')(Literal(1)))),
     'program { }': FAIL,
     'program name { ': FAIL,
     'program name': FAIL
   },
 
   test: {
-    'test "name" { }': Test(StringLiteral('name'))(),
-    'test "name" { const x = a.m(1) }': Test(StringLiteral('name'))(VariableDeclaration(Variable('x'), false, FeatureCall(Variable('a'), 'm')(NumberLiteral(1)))),
+    'test "name" { }': Test(Literal('name'))(),
+    'test "name" { const x = a.m(1) }': Test(Literal('name'))(VariableDeclaration(Variable('x'), false, FeatureCall(Variable('a'), 'm')(Literal(1)))),
     'test { }': FAIL,
     'test "name" { ': FAIL,
     'test "name"': FAIL
@@ -103,13 +101,13 @@ const fixture = {
 
   class: {
     'class C { }': ClassDeclaration('C')()(),
-    'class C { var v; method m() }': ClassDeclaration('C')()(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'class C inherits p.S { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')())(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'class C inherits p.S(a,b) { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(Variable('a'), Variable('b')))(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C { var v; method m() }': ClassDeclaration('C')()(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C inherits p.S { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')())(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C inherits p.S(a,b) { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(Variable('a'), Variable('b')))(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'class C inherits p.S mixed with p.M { }': ClassDeclaration('C')(SuperType('p.S')(), 'p.M')(),
-    'class C inherits p.S mixed with p.M { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(), 'p.M')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'class C inherits p.S mixed with p.M and p.N { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(), 'p.M', 'p.N')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'class C mixed with p.M and p.N { var v; method m() }': ClassDeclaration('C')(undefined, 'p.M', 'p.N')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C inherits p.S mixed with p.M { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(), 'p.M')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C inherits p.S mixed with p.M and p.N { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(), 'p.M', 'p.N')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C mixed with p.M and p.N { var v; method m() }': ClassDeclaration('C')(undefined, 'p.M', 'p.N')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'class { var v; method m() }': FAIL,
     'class C': FAIL,
     'class C inherits p.S mixed with p.M': FAIL,
@@ -121,7 +119,7 @@ const fixture = {
 
   mixin: {
     'mixin M { }': MixinDeclaration('M')(),
-    'mixin M { var v; method m() }': MixinDeclaration('M')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'mixin M { var v; method m() }': MixinDeclaration('M')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'mixin { var v; method m() }': FAIL,
     'mixin { constructor() }': FAIL,
     'mixin M': FAIL,
@@ -130,12 +128,12 @@ const fixture = {
 
   namedObject: {
     'object O { }': ObjectDeclaration('O')()(),
-    'object O { var v; method m() }': ObjectDeclaration('O')()(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object O inherits p.S { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')())(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object O inherits p.S(a,b) { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')(Variable('a'), Variable('b')))(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object O inherits p.S mixed with p.M { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')(), 'p.M')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object O inherits p.S mixed with p.M and p.N { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')(), 'p.M', 'p.N')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object O mixed with p.M and p.N { var v; method m() }': ObjectDeclaration('O')(undefined, 'p.M', 'p.N')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object O { var v; method m() }': ObjectDeclaration('O')()(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object O inherits p.S { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')())(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object O inherits p.S(a,b) { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')(Variable('a'), Variable('b')))(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object O inherits p.S mixed with p.M { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')(), 'p.M')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object O inherits p.S mixed with p.M and p.N { var v; method m() }': ObjectDeclaration('O')(SuperType('p.S')(), 'p.M', 'p.N')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object O mixed with p.M and p.N { var v; method m() }': ObjectDeclaration('O')(undefined, 'p.M', 'p.N')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'object { var v; method m() }': FAIL,
     'object O { constructor() }': FAIL,
     'object O': FAIL,
@@ -150,9 +148,9 @@ const fixture = {
   // MEMBERS
   //-------------------------------------------------------------------------------------------------------------------------------
 
-  variableDeclaration: {
-    'var _foo123': VariableDeclaration(Variable('_foo123'), true),
-    'const _foo123 = b': VariableDeclaration(Variable('_foo123'), false, Variable('b')),
+  fieldDeclaration: {
+    'var _foo123': FieldDeclaration(Variable('_foo123'), true),
+    'const _foo123 = b': FieldDeclaration(Variable('_foo123'), false, Variable('b')),
     var: FAIL,
     const: FAIL,
     'var 5': FAIL,
@@ -187,12 +185,12 @@ const fixture = {
     'constructor(p, q...)': ConstructorDeclaration(Parameter('p'), Parameter('q', true))()(),
     'constructor(p) { p++ }': ConstructorDeclaration(Parameter('p'))()(UnaryOp('++', Variable('p'))),
     'constructor(p) = self()': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [])(),
-    'constructor(p) = self(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), BinaryOp('+', Variable('p'), NumberLiteral(1))])(),
-    'constructor(p) = self(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), BinaryOp('+', Variable('p'), NumberLiteral(1))])(UnaryOp('++', Variable('p'))),
+    'constructor(p) = self(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(),
+    'constructor(p) = self(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(UnaryOp('++', Variable('p'))),
     'constructor(p) = super()': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [])(),
-    'constructor(p) = super(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), BinaryOp('+', Variable('p'), NumberLiteral(1))])(),
-    'constructor(p) = super(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), BinaryOp('+', Variable('p'), NumberLiteral(1))])(UnaryOp('++', Variable('p'))),
-    constructor: FAIL,
+    'constructor(p) = super(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(),
+    'constructor(p) = super(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(UnaryOp('++', Variable('p'))),
+    'constructor': FAIL,
     'constructor(': FAIL,
     'constructor() = { }': FAIL,
     'constructor() = self': FAIL,
@@ -204,13 +202,19 @@ const fixture = {
   //-------------------------------------------------------------------------------------------------------------------------------
 
   sentence: {
-    'var _foo123': VariableDeclaration(Variable('_foo123'), true),
-    'var _foo123;': VariableDeclaration(Variable('_foo123'), true),
-    '   var _foo123  ; ': VariableDeclaration(Variable('_foo123'), true),
     '=>': FAIL,
     'class C {}': FAIL,
     'mixin M {}': FAIL,
     'object O {}': FAIL
+  },
+
+  variableDeclaration: {
+    'var _foo123': VariableDeclaration(Variable('_foo123'), true),
+    'const _foo123 = b': VariableDeclaration(Variable('_foo123'), false, Variable('b')),
+    var: FAIL,
+    const: FAIL,
+    'var 5': FAIL,
+    'const 5': FAIL
   },
 
   return: {
@@ -326,7 +330,7 @@ const fixture = {
     'a.m(p, q)': FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')),
     'a?.m(p, q)': FeatureCall(Variable('a'), 'm', true)(Variable('p'), Variable('q')),
     'a.m(p, q).n().o(r)': FeatureCall(FeatureCall(FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')), 'n')(), 'o')(Variable('r')),
-    '(a + 5).m(p, q)': FeatureCall(BinaryOp('+', Variable('a'), NumberLiteral(5)), 'm')(Variable('p'), Variable('q')),
+    '(a + 5).m(p, q)': FeatureCall(BinaryOp('+', Variable('a'), Literal(5)), 'm')(Variable('p'), Variable('q')),
     'a.m(p,)': FAIL,
     'a.m(,q)': FAIL,
     'a.m': FAIL,
@@ -402,37 +406,37 @@ const fixture = {
   //-------------------------------------------------------------------------------------------------------------------------------
 
   literal: {
-    true: BooleanLiteral(true),
-    false: BooleanLiteral(false),
-    null: NullLiteral,
-    1: NumberLiteral(1),
-    10: NumberLiteral(10),
-    '0x10': NumberLiteral(16),
-    '10.50': NumberLiteral(10.50),
+    true: Literal(true),
+    false: Literal(false),
+    null: Literal(null),
+    1: Literal(1),
+    10: Literal(10),
+    '0x10': Literal(16),
+    '10.50': Literal(10.50),
     '0x': FAIL,
     '10.': FAIL,
     '.50': FAIL,
-    '"foo"': StringLiteral('foo'),
-    "'foo'": StringLiteral('foo'),
-    '""': StringLiteral(''),
-    '"foo\\nbar"': StringLiteral('foo\\nbar'),
-    '"foo\nbar"': StringLiteral('foo\nbar'),
+    '"foo"': Literal('foo'),
+    "'foo'": Literal('foo'),
+    '""': Literal(''),
+    '"foo\\nbar"': Literal('foo\\nbar'),
+    '"foo\nbar"': Literal('foo\nbar'),
     '"foo\\xxx"': FAIL,
     '[]': ListLiteral(),
-    '[1]': ListLiteral(NumberLiteral(1)),
-    '[1,false,"foo"]': ListLiteral(NumberLiteral(1), BooleanLiteral(false), StringLiteral('foo')),
-    '#{1 + b, -5}': SetLiteral(BinaryOp('+', NumberLiteral(1), Variable('b')), UnaryOp('-', NumberLiteral(5))),
+    '[1]': ListLiteral(Literal(1)),
+    '[1,false,"foo"]': ListLiteral(Literal(1), Literal(false), Literal('foo')),
+    '#{1 + b, -5}': SetLiteral(BinaryOp('+', Literal(1), Variable('b')), UnaryOp('-', Literal(5))),
     '[': FAIL,
     '[1,2,': FAIL,
     '#{': FAIL,
     '#{1': FAIL,
     'object {}': ObjectDeclaration()()(),
-    'object { var v; method m() }': ObjectDeclaration()()(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object inherits p.S { var v; method m() }': ObjectDeclaration()(SuperType('p.S')())(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object inherits p.S(a,b) { var v; method m() }': ObjectDeclaration()(SuperType('p.S')(Variable('a'), Variable('b')))(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object inherits p.S mixed with p.M { var v; method m() }': ObjectDeclaration()(SuperType('p.S')(), 'p.M')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object inherits p.S mixed with p.M and p.N { var v; method m() }': ObjectDeclaration()(SuperType('p.S')(), 'p.M', 'p.N')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
-    'object mixed with p.M and p.N { var v; method m() }': ObjectDeclaration()(undefined, 'p.M', 'p.N')(VariableDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object { var v; method m() }': ObjectDeclaration()()(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object inherits p.S { var v; method m() }': ObjectDeclaration()(SuperType('p.S')())(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object inherits p.S(a,b) { var v; method m() }': ObjectDeclaration()(SuperType('p.S')(Variable('a'), Variable('b')))(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object inherits p.S mixed with p.M { var v; method m() }': ObjectDeclaration()(SuperType('p.S')(), 'p.M')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object inherits p.S mixed with p.M and p.N { var v; method m() }': ObjectDeclaration()(SuperType('p.S')(), 'p.M', 'p.N')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'object mixed with p.M and p.N { var v; method m() }': ObjectDeclaration()(undefined, 'p.M', 'p.N')(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'object { constructor() }': FAIL,
     'object inherits p.S mixed with p.M': FAIL,
     'object inherits p.S mixed with {}': FAIL,

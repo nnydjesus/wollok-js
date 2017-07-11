@@ -12,3 +12,4 @@ export const Try = (...sentences) => (...catches) => (...always) => Node('Try')(
 export const Throw = (exception) => Node('Throw')({ exception })
 
 export const Catch = (variable, type) => (...handler) => Node('Catch')({ variable, type, handler })
+export const Parameter = (name, varArg = false) => Node('Param')({ name, varArg })
