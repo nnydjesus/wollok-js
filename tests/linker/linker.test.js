@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { linkParent, link, LinkerError } from '../../src/linker/linker'
+import { linkParent, link, LinkerError } from '../../src/linker/link'
 import { queryNodeByType } from '../../src/model/visiting'
 import { ClassDeclaration, MethodDeclaration, Closure } from '../../src/model'
 import parser from '../../src/parser'

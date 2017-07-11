@@ -2,40 +2,28 @@ import winston from 'winston'
 import { visitor } from '../../src/model/visiting'
 import { ExtendableError } from '../../src/utils/error'
 
+export class LinkerError extends ExtendableError { }
+
 // winston.level = 'silly'
 
-export const linkParent = (node, parent) => {
-  if (Array.isArray(node)) {
-    node.forEach(e => linkParent(e, parent))
-  //
-  } else if ((typeof node) === 'object') {
-    Object.keys(node).forEach(key => linkParent(node[key], node))
-    if (parent) {
-      node.parent = parent
-    }
+class Context {
+  constructor() {
+    this.context = []
   }
-  return node
-}
+  peek() { return (this.context.length > 0 ? this.context[this.context.length - 1] : undefined) }
+  push(c) { this.context.push(c) }
+  pop() { this.context.pop() }
 
-class LinkerError extends ExtendableError { }
-
-export const link = (node) => {
-  const context = [];
-  context.peek = () => (context.length > 0 ? context[context.length - 1] : undefined)
-  const push = c => context.push(c)
-  const pop = c => context.pop(c)
-
-  const addToContext = (referenciable, name) => {
-    const current = context.peek()
+  register(referenciable, name) {
+    const current = this.peek()
     current.scope = {
       ...(current && current.scope),
       [name]: referenciable
     }
   }
-
-  const resolve = variable => {
+  resolve(variable) {
     winston.silly(`Resolving ${variable.name}`)
-    const value = context.reduceRight((found, { nodeType, scope }) => {
+    const value = this.context.reduceRight((found, { nodeType, scope }) => {
       winston.silly(`\tLooking for ${variable.name} in ${nodeType}: ${Object.keys(scope || {}).join(', ')}`)
       if (!found && scope && scope[variable.name]) {
         return scope[variable.name]
@@ -47,38 +35,41 @@ export const link = (node) => {
     }
     return value
   }
-
-  visitor({
-    // contexts
-    visitProgram: push,
-    afterProgram: pop,
-
-    visitClassDeclaration: push,
-    afterClassDeclaration: pop,
-
-    visitNamedObjectDeclaration: push,
-    afterNamedObjectDeclaration: pop,
-
-    visitMethodDeclaration: push,
-    afterMethodDeclaration: pop,
-
-    visitClosure: push,
-    afterClosure: pop,
-
-    // variables
-    visitVariableDeclaration(declaration) { addToContext(declaration, declaration.variable.name) },
-    visitParam(param) { addToContext(param, param.name) },
-
-    // linking
-    visitVariable(variable) {
-      winston.silly(`Linking variable ${variable.name}`)
-      // TODO go up in the context or throw unresolved variable (?)
-      const value = resolve(variable)
-      variable.link = value
-      winston.silly('Linked variable to ', value)
-    }
-  })(node)
-  return node
 }
 
+export default class Linker {
 
+  link(node) {
+    const context = new Context();
+
+    visitor({
+      // contexts
+      visitProgram: ::context.push,
+      afterProgram: ::context.pop,
+
+      visitClassDeclaration: ::context.push,
+      afterClassDeclaration: ::context.pop,
+
+      visitNamedObjectDeclaration: ::context.push,
+      afterNamedObjectDeclaration: ::context.pop,
+
+      visitMethodDeclaration: ::context.push,
+      afterMethodDeclaration: ::context.pop,
+
+      visitClosure: ::context.push,
+      afterClosure: ::context.push,
+
+      // variables
+      visitVariableDeclaration(declaration) { context.register(declaration, declaration.variable.name) },
+      visitParam(param) { context.register(param, param.name) },
+
+      // linking
+      visitVariable(variable) {
+        winston.silly(`Linking variable ${variable.name}`)
+        variable.link = context.resolve(variable)
+        winston.silly('Linked variable to ', variable.link)
+      }
+    })(node)
+    return node
+  }
+}
