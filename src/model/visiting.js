@@ -3,13 +3,14 @@ import winston from 'winston'
 const ignoredKeys = ['parent', 'link']
 
 export const visit = (node, fn, after = () => {}) => {
+  winston.silly(`visiting ${node.nodeType}`)
   fn(node)
   Object.keys(node).forEach(key => {
     if (ignoredKeys.includes(key)) return
     const value = node[key]
     const list = Array.isArray(value) ? value : [value]
     list.filter(e => e.nodeType).forEach((e, i) => {
-      winston.silly(`visiting ${node.nodeType}.${key}[${i}]`)
+      winston.silly(`\tvisiting ${node.nodeType}.${key}[${i}]`)
       visit(e, fn, after)
     })
   })

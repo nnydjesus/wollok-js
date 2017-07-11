@@ -1,3 +1,4 @@
+import winston from 'winston'
 import { visitor } from '../../src/model/visiting'
 import { ExtendableError } from '../../src/utils/error'
 
@@ -44,18 +45,23 @@ export const link = (node) => {
     visitMethodMethodDeclaration: push,
     afterMethodDeclaration: pop,
 
+    visitClosure: push,
+    afterClosure: pop,
+
     // variables
     visitVariableDeclaration(declaration) { addToContext(declaration, declaration.variable.name) },
     visitParam(param) { addToContext(param, param.name) },
 
     // checks
     visitVariable(variable) {
+      winston.silly(`Linking variable ${variable.name}`)
       // TODO go up in the context or throw unresolved variable (?)
       const value = context.peek().context && context.peek().context[variable.name]
       if (!value) {
         throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
       }
       variable.link = value
+      winston.silly('Linked variable to ', value)
     }
   })(node)
   return node
