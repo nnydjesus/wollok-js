@@ -5,6 +5,7 @@ import interpret from '../src/interpreter'
 import {
   Assignment,
   BinaryOp,
+  Block,
   Catch,
   ClassDeclaration,
   Closure,

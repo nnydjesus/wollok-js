@@ -36,7 +36,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
   ConstructorDeclaration: ({ parameters, sentences, baseTarget, baseArguments }) => // TODO: Do this without the side effect
     `(${compileParameters(parameters)}) => {
       ${baseTarget === SelfLiteral ? `___cons___['${baseArguments.length}']` : 'super'}(${compileArguments(baseArguments)});
-      ${compileSentenceSequence(sentences)}
+      ${compile(sentences)}
     }`,
 
 
@@ -47,7 +47,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
   },
 
   // TODO: override? Native?
-  MethodDeclaration: ({ name, parameters, sentences }) => `['${name}'](${compileParameters(parameters)}){${compileSentenceSequence(sentences)}}`,
+  MethodDeclaration: ({ name, parameters, sentences }) => `['${name}'](${compileParameters(parameters)}){${compile(sentences)}}`,
 
   VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${variable.name} = ${compile(value)}`,
 
@@ -105,22 +105,21 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
   Super: ({ parameters }) => `super(${compileArguments(parameters)})`,
 
   If: ({ condition, thenSentences, elseSentences }) =>
-    `(() => { if (${compile(condition)}) {${compileSentenceSequence(thenSentences)}} else {${compileSentenceSequence(elseSentences)}}})()`,
+    `(() => { if (${compile(condition)}) {${compile(thenSentences)}} else {${compile(elseSentences)}}})()`,
 
   Return: ({ result }) => `return ${compile(result)}`,
 
   Throw: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
 
   Try: ({ sentences, catches, always }) => {
-    const handlers = catches.map(({ variable, type, handler }) => {
-      const evaluation = `const ${variable.name} = ___ERROR___;${compileSentenceSequence(handler)}`
-      return type ? `if (___ERROR___ instanceof ${type}){${evaluation}}` : evaluation
-    })
-
-    const catchBlock = catches.length ? `catch(___ERROR___){${handlers.join(';')} throw ___ERROR___}` : ''
+    const catchBlock = catches.length ? `catch(___ERROR___){${catches.map(compile).join(';')} throw ___ERROR___}` : ''
     const alwaysBlock = always.length ? `finally{${compileSentenceSequence(always)}}` : ''
-
     return `(()=>{try{${compileSentenceSequence(sentences)}}${catchBlock}${alwaysBlock}})()`
+  },
+
+  Catch: ({ variable, type, handler }) => {
+    const evaluation = `const ${variable.name} = ___ERROR___;${compile(handler)}`
+    return type ? `if (___ERROR___ instanceof ${type}){${evaluation}}` : evaluation
   },
 
   SelfLiteral: () => 'this',
@@ -136,12 +135,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
 
   ListLiteral: ({ values }) => `[ ${values.map(compile).join()} ]`,
 
-  Closure: ({ parameters, sentences }) => {
-    const compiledSentences = sentences.map(compile)
-    if (compiledSentences.length) compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
-
-    return `(function (${compileParameters(parameters)}) {${compileSentenceSequence(sentences)}})`
-  },
+  Closure: ({ parameters, sentences }) => `(function (${compileParameters(parameters)}) {${compile(sentences)}})`,
 
   File: ({ content }) => {
     // TODO: Imports const imports = findByType(content, 'Import')
@@ -158,10 +152,17 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
 
     if (programs.length) {
       if (programs.length > 1) log.warn(`There is more than one program! Only ${programs[0].name} will be run.`)
-      const { sentences } = programs[0]
-      return `${compiledElements} ;(()=>{${compileSentenceSequence(sentences)}})()`
+      return `${compiledElements} ;(()=>{${compile(programs[0].sentences)}})()` // TODO: Extract Program compile
     }
     // TODO: Run tests tests.map(({ description, sentences }) => { })
+  },
+
+  Block: ({ sentences }) => {
+    const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
+    if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
+      compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
+    }
+    return compiledSentences.join(';')
   }
 })
 

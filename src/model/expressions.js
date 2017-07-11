@@ -1,4 +1,5 @@
 import { Node } from './node'
+import { Block } from './inners'
 
 export const Variable = (name) => Node('Variable')({ name })
 export const BinaryOp = (op, left, right) => Node('BinaryOp')({ op, left, right })
@@ -7,9 +8,6 @@ export const InstanceOf = (left, right) => Node('InstanceOf')({ left, right })
 export const FeatureCall = (target, key, nullSafe = false) => (...parameters) => Node('FeatureCall')({ target, key, nullSafe, parameters })
 export const New = (target) => (...parameters) => Node('New')({ target, parameters })
 export const Super = (...parameters) => Node('Super')({ parameters })
-export const If = (condition) => (...thenSentences) => (...elseSentences) => Node('If')({ condition, thenSentences, elseSentences })
+export const If = (condition) => (...thenSentences) => (...elseSentences) => Node('If')({ condition, thenSentences: Block(...thenSentences), elseSentences: Block(...elseSentences) })
 export const Try = (...sentences) => (...catches) => (...always) => Node('Try')({ sentences, catches, always })
 export const Throw = (exception) => Node('Throw')({ exception })
-
-export const Catch = (variable, type) => (...handler) => Node('Catch')({ variable, type, handler })
-export const Parameter = (name, varArg = false) => Node('Param')({ name, varArg })
