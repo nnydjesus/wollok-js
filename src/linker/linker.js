@@ -2,6 +2,8 @@ import winston from 'winston'
 import { visitor } from '../../src/model/visiting'
 import { ExtendableError } from '../../src/utils/error'
 
+// winston.level = 'silly'
+
 export const linkParent = (node, parent) => {
   if (Array.isArray(node)) {
     node.forEach(e => linkParent(e, parent))
@@ -34,12 +36,12 @@ export const link = (node) => {
   const resolve = variable => {
     winston.silly(`Resolving ${variable.name}`)
     const value = context.reduceRight((found, { nodeType, scope }) => {
-      winston.silly(`\tLooking for ${variable.name} in ${nodeType}: `, Object.keys(scope))
+      winston.silly(`\tLooking for ${variable.name} in ${nodeType}: ${Object.keys(scope || {}).join(', ')}`)
       if (!found && scope && scope[variable.name]) {
         return scope[variable.name]
       }
       return found
-    })
+    }, undefined)
     if (!value) {
       throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
     }

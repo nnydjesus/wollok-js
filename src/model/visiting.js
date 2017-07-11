@@ -30,11 +30,16 @@ function methodByConvention(object, node, preffix) {
 }
 
 export const queryNodeByType = (root, type, filter = () => true) => {
+  const possibles = []
   const matches = []
   visit(root, node => {
-    if (filter(node)) {
+    possibles.push(node.nodeType)
+    if (node.nodeType === type && filter(node)) {
       matches.push(node)
     }
   })
+  if (matches.length === 0) {
+    throw new Error(`Could NOT find node ${type}. Visited node types: ${possibles.join()}`)
+  }
   return matches
 }

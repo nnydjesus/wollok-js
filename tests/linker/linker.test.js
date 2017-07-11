@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { linkParent, link, LinkerError } from '../../src/linker/linker'
 import { queryNodeByType } from '../../src/model/visiting'
-import { ClassDeclaration, MethodDeclaration } from '../../src/model'
+import { ClassDeclaration, MethodDeclaration, Closure } from '../../src/model'
 import parser from '../../src/parser'
 
 describe('linker', () => {
@@ -62,8 +62,9 @@ describe('linker', () => {
   describe('Variable resolution', () => {
 
     const expectUnresolvedVariable = (variable, code) =>
-      expect(() => link(parser.parse(code)))
-        .to.throw(LinkerError, `Cannot resolve reference to '${variable}' at ???`)
+      expect(() =>
+        link(parser.parse(code))
+      ).to.throw(LinkerError, `Cannot resolve reference to '${variable}' at ???`)
 
     const expectNoLinkageError = code => link(parser.parse(code))
 
@@ -208,7 +209,7 @@ describe('linker', () => {
 
   })
 
-  describe.only('Scoping', () => {
+  describe('Scoping', () => {
 
     const expectScopeOf = (program, nodeType, findFilter, expected) => {
       const linked = link(parser.parse(program))
@@ -216,7 +217,7 @@ describe('linker', () => {
       expect(Object.keys(node.scope)).to.deep.equal(expected)
     }
 
-    it('Method scope includes parameters and instance variables', () => {
+    it('Method scope includes parameters', () => {
       expectScopeOf(`
           class Bird {
             const energy = 23
@@ -240,6 +241,22 @@ describe('linker', () => {
         ['energy']
       )
     })
+
+    it('Closure scope includes parameters', () => {
+      expectScopeOf(`
+          class Bird {
+            const energy = 23
+            method fly() {
+              const closure = { name, lastName => name + lastName }
+              return closure.apply('john', 'doe')
+            }
+          }
+        `,
+        Closure, () => true,
+        ['name', 'lastName']
+      )
+    })
+
   })
 
 })
