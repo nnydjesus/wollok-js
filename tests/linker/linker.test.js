@@ -222,6 +222,27 @@ describe('linker', () => {
           }
         `)
       })
+
+      it('closure => program(local)', () => {
+        expectNoLinkageError(`
+          program p {
+            const a = 23
+            const closure = { b => a + b }
+          }
+        `)
+      })
+
+      it('closure => method(local + params) => object(instVar)', () => {
+        expectNoLinkageError(`
+          object pepita {
+            const energy = 23
+            method fly(kms) {
+              const b = 23
+              const closure = { a => b + kms + a + energy }
+            }
+          }
+        `)
+      })
     })
 
   })
