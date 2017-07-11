@@ -25,8 +25,8 @@ export const link = (node) => {
 
   const addToContext = (referenciable, name) => {
     const current = context.peek()
-    current.context = {
-      ...(current && current.context),
+    current.scope = {
+      ...(current && current.scope),
       [name]: referenciable
     }
   }
@@ -56,7 +56,7 @@ export const link = (node) => {
     visitVariable(variable) {
       winston.silly(`Linking variable ${variable.name}`)
       // TODO go up in the context or throw unresolved variable (?)
-      const value = context.peek().context && context.peek().context[variable.name]
+      const value = context.peek().scope && context.peek().scope[variable.name]
       if (!value) {
         throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
       }
