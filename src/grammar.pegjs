@@ -23,7 +23,6 @@
     Program,
     Return,
     Super,
-    SuperLiteral,
     SuperType,
     Test,
     Throw,
@@ -46,7 +45,6 @@ id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
 self = 'self' { return Variable('this') }
-super = 'super' { return SuperLiteral }
 variable = name:id { return Variable(name) }
 
 arguments = '(' _ args:(expression (_ ',' _ expression)* )? _ ')' { return args ? [args[0], ...args[1].map(([,,,arg])=>arg)] : [] }
@@ -176,7 +174,7 @@ catch = _ 'catch' __ variable:variable _ type:(':' _ qualifiedName)? _ handler:b
 
 throwExpression = 'throw' _ exception:expression { return Throw(exception) }
 
-superInvocation = super _ args:arguments { return Super(...args) }
+superInvocation = 'super' _ args:arguments { return Super(...args) }
 
 constructorCall = 'new' __ target:qualifiedName _ args:arguments { return New(target)(...args) }
 

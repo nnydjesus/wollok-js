@@ -56,8 +56,6 @@ export const Throw = (exception) => Node('Throw')({ exception })
 
 export const Literal = (value) => Node('Literal')({ value })
 
-export const SuperLiteral = Node('SuperLiteral')({})
-
 const ValuesLiteral = name => (...values) => Node(`${name}Literal`)({ values })
 export const ListLiteral = ValuesLiteral('List')
 
