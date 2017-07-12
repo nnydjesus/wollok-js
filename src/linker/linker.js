@@ -1,6 +1,6 @@
 import winston from 'winston'
 import { Context } from './context'
-import { Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
+import { Block, Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
 import { visit } from '../model/visiting'
 
 // winston.level = 'silly'
@@ -13,7 +13,8 @@ const scopeables = [
   ObjectDeclaration.name,
   MethodDeclaration.name,
   MixinDeclaration.name,
-  Closure.name
+  Closure.name,
+  Block.name
 ]
 const isScopeable = type => scopeables.includes(type)
 
