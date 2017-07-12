@@ -1,6 +1,6 @@
 import winston from 'winston'
-import { Program, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
-import { visitor } from '../model/visiting'
+import { Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
+import { visit } from '../model/visiting'
 import { ExtendableError } from '../utils/error'
 
 export class LinkerError extends ExtendableError { }
@@ -8,40 +8,78 @@ export class LinkerError extends ExtendableError { }
 // winston.level = 'silly'
 
 /* nodes that define new scopes/namespaces */
-const scopingAware = [
-  Program,
-  ClassDeclaration,
-  ObjectDeclaration,
-  MethodDeclaration,
-  MixinDeclaration,
-  Closure
+const scopeables = [
+  File.name,
+  Program.name,
+  ClassDeclaration.name,
+  ObjectDeclaration.name,
+  MethodDeclaration.name,
+  MixinDeclaration.name,
+  Closure.name
 ]
+const isScopeable = type => scopeables.includes(type)
+
+const byName = n => n.name
+
+/* nodes which gets registered in their parent's scope */
+const referenciables = {
+  VariableDeclaration: _ => byName(_.variable),
+  Param: byName,
+  ClassDeclaration: byName,
+  MixinDeclaration: byName,
+  ObjectDeclaration: byName
+}
+
+const linkeables = {
+  Variable: v => v.name,
+  New: n => n.target
+}
 
 export default class Linker {
 
   link(node) {
     const context = new Context();
+    visit(node, ::this.onNode(context), ::this.afterNode(context))
+    return node
+  }
 
-    const visit = {
-      // variables
-      visitVariableDeclaration(declaration) { context.register(declaration, declaration.variable.name) },
-      visitParam(param) { context.register(param, param.name) },
+  onNode(context) {
+    return node => {
+      const type = node.nodeType
+      // winston.silly('((ON))', type)
 
-      // linking
-      visitVariable(variable) {
-        winston.silly(`Linking variable ${variable.name}`)
-        variable.link = context.resolve(variable)
-        winston.silly('Linked variable to ', variable.link)
+      // register it in scope if applies
+      if (referenciables[type]) {
+        const name = referenciables[type](node)
+        winston.silly('>RR> registering', type, '(', name, ')')
+        context.register(node, name)
+      }
+
+      // push it fucker
+      if (isScopeable(type)) {
+        winston.silly('>>>> pushing', type)
+        context.push(node)
+      }
+
+      // link it if linkable
+      if (linkeables[type]) {
+        winston.silly('???? checking', type)
+        const nameExtractor = linkeables[type]
+        node.link = context.resolve(nameExtractor(node))
       }
     }
-    // contexts
-    scopingAware.forEach(scoped => {
-      visit[`visit${scoped.name}`] = ::context.push;
-      visit[`after${scoped.name}`] = ::context.pop;
-    })
+  }
 
-    visitor(visit)(node)
-    return node
+  afterNode(context) {
+    return node => {
+      const type = node.nodeType
+      // winston.silly('((AFTER))', type)
+
+      if (isScopeable(type)) {
+        winston.silly('<<<< poping', type)
+        context.pop()
+      }
+    }
   }
 }
 
@@ -60,11 +98,11 @@ class Context {
       [name]: referenciable
     }
   }
-  resolve(variable) {
+  resolve(name) {
     return failIfNotFound(this.context.reduceRight(
-      (found, { scope }) => found || (scope && scope[variable.name]),
+      (found, { scope }) => found || (scope && scope[name]),
       undefined
-    ), `Cannot resolve reference to '${variable.name}' at ???`)
+    ), `Cannot resolve reference to '${name}' at ???`)
   }
 }
 

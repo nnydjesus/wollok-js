@@ -11,10 +11,12 @@ const expectUnresolvedVariable = (variable, code) => expect(() =>
   link(parser.parse(code))
 ).to.throw(`Cannot resolve reference to '${variable}' at ???`)
 
+const expectScopeHasNames = (node, expected) => expect(Object.keys(node.scope)).to.deep.equal(expected)
 const expectScopeOf = (program, nodeType, findFilter, expected) => {
-  const linked = link(parser.parse(program))
-  const node = queryNodeByType(linked, nodeType.name, findFilter)[0]
-  expect(Object.keys(node.scope)).to.deep.equal(expected)
+  expectScopeHasNames(
+    queryNodeByType(link(parser.parse(program)), nodeType.name, findFilter)[0],
+    expected
+  )
 }
 
 // tests
@@ -253,6 +255,25 @@ describe('linker', () => {
         Closure, () => true,
         ['name', 'lastName']
       )
+    })
+
+  })
+
+  describe('Class linkage', () => {
+
+    it('File scope includes the classes', () => {
+      expectScopeHasNames(link(parser.parse(`
+        class A {}
+        class B {}
+        class C {}
+      `)), ['A', 'B', 'C'])
+    })
+    it('File scope includes the mixins, classes, and objects', () => {
+      expectScopeHasNames(link(parser.parse(`
+        class A {}
+        mixin M {}
+        object c {}
+      `)), ['A', 'M', 'c'])
     })
 
   })
