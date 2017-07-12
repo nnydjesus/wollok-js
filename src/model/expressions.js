@@ -2,9 +2,6 @@ import { Node } from './node'
 import { Block } from './inners'
 
 export const Variable = (name) => Node('Variable')({ name })
-// TODO: BinaryOp and Unary should be replaced by FeatureCall
-export const BinaryOp = (op, left, right) => Node('BinaryOp')({ op, left, right })
-export const UnaryOp = (op, target) => Node('UnaryOp')({ op, target })
 export const InstanceOf = (left, right) => Node('InstanceOf')({ left, right })
 export const FeatureCall = (target, key, nullSafe = false) => (...parameters) => Node('FeatureCall')({ target, key, nullSafe, parameters })
 export const New = (target) => (...parameters) => Node('New')({ target, parameters })

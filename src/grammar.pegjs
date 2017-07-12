@@ -2,7 +2,6 @@
   const path = require('path')
   const {
     Assignment,
-    BinaryOp,
     Catch,
     ClassDeclaration,
     Closure,
@@ -31,7 +30,6 @@
     Test,
     Throw,
     Try,
-    UnaryOp,
     Variable,
     VariableDeclaration
   } = require(path.resolve('./src/model.js')) // THIS PATH HERE IS NOT GOOD, but pegjs sucks
@@ -122,14 +120,14 @@ variableInitialization = '=' _ value:expression { return value }
 return = 'return' _ expression:expression { return Return(expression) }
 
 assignment = left:variable _ '='    _ right:expression { return Assignment(left, right) }
-           / left:variable _ '+='   _ right:expression { return Assignment(left, BinaryOp('+',   left, right)) }
-           / left:variable _ '-='   _ right:expression { return Assignment(left, BinaryOp('-',   left, right)) }
-           / left:variable _ '*='   _ right:expression { return Assignment(left, BinaryOp('*',   left, right)) }
-           / left:variable _ '/='   _ right:expression { return Assignment(left, BinaryOp('/',   left, right)) }
-           / left:variable _ '%='   _ right:expression { return Assignment(left, BinaryOp('%',   left, right)) }
-           / left:variable _ '<<='  _ right:expression { return Assignment(left, BinaryOp('<<',  left, right)) }
-           / left:variable _ '>>='  _ right:expression { return Assignment(left, BinaryOp('>>',  left, right)) }
-           / left:variable _ '>>>=' _ right:expression { return Assignment(left, BinaryOp('>>>', left, right)) }
+           / left:variable _ '+='   _ right:expression { return Assignment(left, FeatureCall(left, '+'  )(right)) }
+           / left:variable _ '-='   _ right:expression { return Assignment(left, FeatureCall(left, '-'  )(right)) }
+           / left:variable _ '*='   _ right:expression { return Assignment(left, FeatureCall(left, '*'  )(right)) }
+           / left:variable _ '/='   _ right:expression { return Assignment(left, FeatureCall(left, '/'  )(right)) }
+           / left:variable _ '%='   _ right:expression { return Assignment(left, FeatureCall(left, '%'  )(right)) }
+           / left:variable _ '<<='  _ right:expression { return Assignment(left, FeatureCall(left, '<<' )(right)) }
+           / left:variable _ '>>='  _ right:expression { return Assignment(left, FeatureCall(left, '>>' )(right)) }
+           / left:variable _ '>>>=' _ right:expression { return Assignment(left, FeatureCall(left, '>>>')(right)) }
 
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -138,18 +136,18 @@ assignment = left:variable _ '='    _ right:expression { return Assignment(left,
 
 expression = orExpression
 
-orExpression             = left:andExpression            tail:( _ orOp  _ andExpression           )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-andExpression            = left:equalityExpression       tail:( _ andOp _ equalityExpression      )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
+orExpression             = left:andExpression            tail:( _ orOp  _ andExpression           )* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
+andExpression            = left:equalityExpression       tail:( _ andOp _ equalityExpression      )* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
+equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
 orderExpression          = left:otherOpExpression _ 'instanceof' __ right:qualifiedName              { return InstanceOf(left, right) }
-                         / left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
+                         / left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
                           
-otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-prefixUnaryExpression    = op:preOp _ exp:prefixUnaryExpression { return UnaryOp(op, exp) }
+otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
+additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
+multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => FeatureCall(prev,op)(right), left) }
+prefixUnaryExpression    = op:preOp _ exp:prefixUnaryExpression { return FeatureCall(exp,op+'_')() }
                          / postfixUnaryExpression
-postfixUnaryExpression   = exp:featureCall op:postOp? { return op ? UnaryOp(op, exp) : exp }
+postfixUnaryExpression   = exp:featureCall op:postOp? { return op ? FeatureCall(exp,'_'+op)() : exp }
 featureCall              = left:primaryExpression tail:(('.'/'?.') id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> FeatureCall(target,key,nullSafe === '?.')(...params), left) }
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp

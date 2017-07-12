@@ -3,7 +3,6 @@ import { expect } from 'chai'
 import parser from '../src/parser'
 import {
   Assignment,
-  BinaryOp,
   Catch,
   ClassDeclaration,
   Closure,
@@ -31,7 +30,6 @@ import {
   Test,
   Throw,
   Try,
-  UnaryOp,
   Variable,
   VariableDeclaration
 } from '../src/model'
@@ -164,8 +162,8 @@ const fixture = {
     'method m(p...)': MethodDeclaration('m')(Parameter('p', true))(),
     'method m(p,q...)': MethodDeclaration('m')(Parameter('p'), Parameter('q', true))(),
     'method m(p) { }': MethodDeclaration('m')(Parameter('p'))(),
-    'method m(p) { p++ }': MethodDeclaration('m')(Parameter('p'))(UnaryOp('++', Variable('p'))),
-    'method m(p) = p++': MethodDeclaration('m')(Parameter('p'))(UnaryOp('++', Variable('p'))),
+    'method m(p) { p++ }': MethodDeclaration('m')(Parameter('p'))(FeatureCall(Variable('p'), '_++')()),
+    'method m(p) = p++': MethodDeclaration('m')(Parameter('p'))(FeatureCall(Variable('p'), '_++')()),
     'override method m(p)': MethodDeclaration('m', true)(Parameter('p'))(),
     'override method m(p) native': MethodDeclaration('m', true, true)(Parameter('p'))(),
     'method m() = { a }': MethodDeclaration('m')()(Closure()(Variable('a'))),
@@ -183,13 +181,13 @@ const fixture = {
     'constructor(p, q)': ConstructorDeclaration(Parameter('p'), Parameter('q'))()(),
     'constructor(p...)': ConstructorDeclaration(Parameter('p', true))()(),
     'constructor(p, q...)': ConstructorDeclaration(Parameter('p'), Parameter('q', true))()(),
-    'constructor(p) { p++ }': ConstructorDeclaration(Parameter('p'))()(UnaryOp('++', Variable('p'))),
+    'constructor(p) { p++ }': ConstructorDeclaration(Parameter('p'))()(FeatureCall(Variable('p'), '_++')()),
     'constructor(p) = self()': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [])(),
-    'constructor(p) = self(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(),
-    'constructor(p) = self(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(UnaryOp('++', Variable('p'))),
+    'constructor(p) = self(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(),
+    'constructor(p) = self(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(FeatureCall(Variable('p'), '_++')()),
     'constructor(p) = super()': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [])(),
-    'constructor(p) = super(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(),
-    'constructor(p) = super(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), BinaryOp('+', Variable('p'), Literal(1))])(UnaryOp('++', Variable('p'))),
+    'constructor(p) = super(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(),
+    'constructor(p) = super(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(FeatureCall(Variable('p'), '_++')()),
     'constructor': FAIL,
     'constructor(': FAIL,
     'constructor() = { }': FAIL,
@@ -224,14 +222,14 @@ const fixture = {
 
   assignment: {
     'a = b': Assignment(Variable('a'), Variable('b')),
-    'a += b': Assignment(Variable('a'), BinaryOp('+', Variable('a'), Variable('b'))),
-    'a -= b': Assignment(Variable('a'), BinaryOp('-', Variable('a'), Variable('b'))),
-    'a *= b': Assignment(Variable('a'), BinaryOp('*', Variable('a'), Variable('b'))),
-    'a /= b': Assignment(Variable('a'), BinaryOp('/', Variable('a'), Variable('b'))),
-    'a %= b': Assignment(Variable('a'), BinaryOp('%', Variable('a'), Variable('b'))),
-    'a <<= b': Assignment(Variable('a'), BinaryOp('<<', Variable('a'), Variable('b'))),
-    'a >>= b': Assignment(Variable('a'), BinaryOp('>>', Variable('a'), Variable('b'))),
-    'a >>>= b': Assignment(Variable('a'), BinaryOp('>>>', Variable('a'), Variable('b'))),
+    'a += b': Assignment(Variable('a'), FeatureCall(Variable('a'), '+')(Variable('b'))),
+    'a -= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '-')(Variable('b'))),
+    'a *= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '*')(Variable('b'))),
+    'a /= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '/')(Variable('b'))),
+    'a %= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '%')(Variable('b'))),
+    'a <<= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '<<')(Variable('b'))),
+    'a >>= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '>>')(Variable('b'))),
+    'a >>>= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '>>>')(Variable('b'))),
     'a = b = c': FAIL,
     'a = b += c': FAIL,
     'a += b = c': FAIL
@@ -242,31 +240,31 @@ const fixture = {
   //-------------------------------------------------------------------------------------------------------------------------------
 
   orExpression: {
-    'a || b': BinaryOp('||', Variable('a'), Variable('b')),
-    'a or b': BinaryOp('or', Variable('a'), Variable('b')),
-    'a and b || !(c > d)': BinaryOp('||', BinaryOp('and', Variable('a'), Variable('b')), UnaryOp('!', BinaryOp('>', Variable('c'), Variable('d'))))
+    'a || b': FeatureCall(Variable('a'), '||')(Variable('b')),
+    'a or b': FeatureCall(Variable('a'), 'or')(Variable('b')),
+    'a and b || !(c > d)': FeatureCall(FeatureCall(Variable('a'), 'and')(Variable('b')), '||')(FeatureCall(FeatureCall(Variable('c'), '>')(Variable('d')), '!_')())
   },
 
   andExpression: {
-    'a && b': BinaryOp('&&', Variable('a'), Variable('b')),
-    'a and b': BinaryOp('and', Variable('a'), Variable('b')),
-    'a == b && !(c and d)': BinaryOp('&&', BinaryOp('==', Variable('a'), Variable('b')), UnaryOp('!', BinaryOp('and', Variable('c'), Variable('d'))))
+    'a && b': FeatureCall(Variable('a'), '&&')(Variable('b')),
+    'a and b': FeatureCall(Variable('a'), 'and')(Variable('b')),
+    'a == b && !(c and d)': FeatureCall(FeatureCall(Variable('a'), '==')(Variable('b')), '&&')(FeatureCall(FeatureCall(Variable('c'), 'and')(Variable('d')), '!_')())
   },
 
   equalityExpression: {
-    'a == b': BinaryOp('==', Variable('a'), Variable('b')),
-    'a != b': BinaryOp('!=', Variable('a'), Variable('b')),
-    'a === b': BinaryOp('===', Variable('a'), Variable('b')),
-    'a !== b': BinaryOp('!==', Variable('a'), Variable('b')),
-    'a + x == -b * y': BinaryOp('==', BinaryOp('+', Variable('a'), Variable('x')), BinaryOp('*', UnaryOp('-', Variable('b')), Variable('y')))
+    'a == b': FeatureCall(Variable('a'), '==')(Variable('b')),
+    'a != b': FeatureCall(Variable('a'), '!=')(Variable('b')),
+    'a === b': FeatureCall(Variable('a'), '===')(Variable('b')),
+    'a !== b': FeatureCall(Variable('a'), '!==')(Variable('b')),
+    'a + x == -b * y': FeatureCall(FeatureCall(Variable('a'), '+')(Variable('x')), '==')(FeatureCall(FeatureCall(Variable('b'), '-_')(), '*')(Variable('y')))
   },
 
   orderExpression: {
-    'a >= b': BinaryOp('>=', Variable('a'), Variable('b')),
-    'a <= b': BinaryOp('<=', Variable('a'), Variable('b')),
-    'a > b': BinaryOp('>', Variable('a'), Variable('b')),
-    'a < b': BinaryOp('<', Variable('a'), Variable('b')),
-    'a + x < -b * y': BinaryOp('<', BinaryOp('+', Variable('a'), Variable('x')), BinaryOp('*', UnaryOp('-', Variable('b')), Variable('y'))),
+    'a >= b': FeatureCall(Variable('a'), '>=')(Variable('b')),
+    'a <= b': FeatureCall(Variable('a'), '<=')(Variable('b')),
+    'a > b': FeatureCall(Variable('a'), '>')(Variable('b')),
+    'a < b': FeatureCall(Variable('a'), '<')(Variable('b')),
+    'a + x < -b * y': FeatureCall(FeatureCall(Variable('a'), '+')(Variable('x')), '<')(FeatureCall(FeatureCall(Variable('b'), '-_')(), '*')(Variable('y'))),
     'a instanceof p.C': InstanceOf(Variable('a'), 'p.C'),
     'a.m() instanceof p.C': InstanceOf(FeatureCall(Variable('a'), 'm')(), 'p.C'),
     'a instanceof': FAIL,
@@ -274,53 +272,53 @@ const fixture = {
   },
 
   otherOpExpression: {
-    'a ..< b': BinaryOp('..<', Variable('a'), Variable('b')),
-    'a >.. b': BinaryOp('>..', Variable('a'), Variable('b')),
-    'a .. b': BinaryOp('..', Variable('a'), Variable('b')),
-    'a -> b': BinaryOp('->', Variable('a'), Variable('b')),
-    'a >>> b': BinaryOp('>>>', Variable('a'), Variable('b')),
-    'a >> b': BinaryOp('>>', Variable('a'), Variable('b')),
-    'a <<< b': BinaryOp('<<<', Variable('a'), Variable('b')),
-    'a << b': BinaryOp('<<', Variable('a'), Variable('b')),
-    'a <=> b': BinaryOp('<=>', Variable('a'), Variable('b')),
-    'a <> b': BinaryOp('<>', Variable('a'), Variable('b')),
-    'a ?: b': BinaryOp('?:', Variable('a'), Variable('b')),
-    'a * -x <=> (b - y >> c)++': BinaryOp('<=>', BinaryOp('*', Variable('a'), UnaryOp('-', Variable('x'))), UnaryOp('++', BinaryOp('>>', BinaryOp('-', Variable('b'), Variable('y')), Variable('c'))))
+    'a ..< b': FeatureCall(Variable('a'), '..<')(Variable('b')),
+    'a >.. b': FeatureCall(Variable('a'), '>..')(Variable('b')),
+    'a .. b': FeatureCall(Variable('a'), '..')(Variable('b')),
+    'a -> b': FeatureCall(Variable('a'), '->')(Variable('b')),
+    'a >>> b': FeatureCall(Variable('a'), '>>>')(Variable('b')),
+    'a >> b': FeatureCall(Variable('a'), '>>')(Variable('b')),
+    'a <<< b': FeatureCall(Variable('a'), '<<<')(Variable('b')),
+    'a << b': FeatureCall(Variable('a'), '<<')(Variable('b')),
+    'a <=> b': FeatureCall(Variable('a'), '<=>')(Variable('b')),
+    'a <> b': FeatureCall(Variable('a'), '<>')(Variable('b')),
+    'a ?: b': FeatureCall(Variable('a'), '?:')(Variable('b')),
+    'a * -x <=> (b - y >> c)++': FeatureCall(FeatureCall(Variable('a'), '*')(FeatureCall(Variable('x'), '-_')()), '<=>')(FeatureCall(FeatureCall(FeatureCall(Variable('b'), '-')(Variable('y')), '>>')(Variable('c')), '_++')())
   },
 
   additiveExpression: {
-    'a + b': BinaryOp('+', Variable('a'), Variable('b')),
-    'a - b': BinaryOp('-', Variable('a'), Variable('b')),
-    'a +b -c': BinaryOp('-', BinaryOp('+', Variable('a'), Variable('b')), Variable('c')),
-    'a + (b - c)': BinaryOp('+', Variable('a'), BinaryOp('-', Variable('b'), Variable('c'))),
-    'a * -x + (b - c)++': BinaryOp('+', BinaryOp('*', Variable('a'), UnaryOp('-', Variable('x'))), UnaryOp('++', BinaryOp('-', Variable('b'), Variable('c'))))
+    'a + b': FeatureCall(Variable('a'), '+')(Variable('b')),
+    'a - b': FeatureCall(Variable('a'), '-')(Variable('b')),
+    'a +b -c': FeatureCall(FeatureCall(Variable('a'), '+')(Variable('b')), '-')(Variable('c')),
+    'a + (b - c)': FeatureCall(Variable('a'), '+')(FeatureCall(Variable('b'), '-')(Variable('c'))),
+    'a * -x + (b - c)++': FeatureCall(FeatureCall(Variable('a'), '*')(FeatureCall(Variable('x'), '-_')()), '+')(FeatureCall(FeatureCall(Variable('b'), '-')(Variable('c')), '_++')())
   },
 
   multiplicativeExpression: {
-    'a * b': BinaryOp('*', Variable('a'), Variable('b')),
-    'a ** b': BinaryOp('**', Variable('a'), Variable('b')),
-    'a / b': BinaryOp('/', Variable('a'), Variable('b')),
-    'a % b': BinaryOp('%', Variable('a'), Variable('b')),
-    'a * b / c': BinaryOp('/', BinaryOp('*', Variable('a'), Variable('b')), Variable('c')),
-    'a * (b / c)': BinaryOp('*', Variable('a'), BinaryOp('/', Variable('b'), Variable('c'))),
-    'a++ * -(b / c)': BinaryOp('*', UnaryOp('++', Variable('a')), UnaryOp('-', BinaryOp('/', Variable('b'), Variable('c')))),
-    'a * (b + c)': BinaryOp('*', Variable('a'), BinaryOp('+', Variable('b'), Variable('c')))
+    'a * b': FeatureCall(Variable('a'), '*')(Variable('b')),
+    'a ** b': FeatureCall(Variable('a'), '**')(Variable('b')),
+    'a / b': FeatureCall(Variable('a'), '/')(Variable('b')),
+    'a % b': FeatureCall(Variable('a'), '%')(Variable('b')),
+    'a * b / c': FeatureCall(FeatureCall(Variable('a'), '*')(Variable('b')), '/')(Variable('c')),
+    'a * (b / c)': FeatureCall(Variable('a'), '*')(FeatureCall(Variable('b'), '/')(Variable('c'))),
+    'a++ * -(b / c)': FeatureCall(FeatureCall(Variable('a'), '_++')(), '*')(FeatureCall(FeatureCall(Variable('b'), '/')(Variable('c')), '-_')()),
+    'a * (b + c)': FeatureCall(Variable('a'), '*')(FeatureCall(Variable('b'), '+')(Variable('c')))
   },
 
   prefixUnaryExpression: {
-    'not a': UnaryOp('not', Variable('a')),
-    '!a': UnaryOp('!', Variable('a')),
-    '-a': UnaryOp('-', Variable('a')),
-    '+a': UnaryOp('+', Variable('a')),
-    'not !a': UnaryOp('not', UnaryOp('!', Variable('a'))),
-    '-a++': UnaryOp('-', UnaryOp('++', Variable('a'))),
-    '(-a)++': UnaryOp('++', UnaryOp('-', Variable('a')))
+    'not a': FeatureCall(Variable('a'), 'not_')(),
+    '!a': FeatureCall(Variable('a'), '!_')(),
+    '-a': FeatureCall(Variable('a'), '-_')(),
+    '+a': FeatureCall(Variable('a'), '+_')(),
+    'not !a': FeatureCall(FeatureCall(Variable('a'), '!_')(), 'not_')(),
+    '-a++': FeatureCall(FeatureCall(Variable('a'), '_++')(), '-_')(),
+    '(-a)++': FeatureCall(FeatureCall(Variable('a'), '-_')(), '_++')(),
   },
 
   postfixUnaryExpression: {
-    'a++': UnaryOp('++', Variable('a')),
-    'a--': UnaryOp('--', Variable('a')),
-    '((a--)++)--': UnaryOp('--', UnaryOp('++', UnaryOp('--', Variable('a'))))
+    'a++': FeatureCall(Variable('a'), '_++')(),
+    'a--': FeatureCall(Variable('a'), '_--')(),
+    '((a--)++)--': FeatureCall(FeatureCall(FeatureCall(Variable('a'), '_--')(), '_++')(), '_--')()
   },
 
   featureCall: {
@@ -330,7 +328,7 @@ const fixture = {
     'a.m(p, q)': FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')),
     'a?.m(p, q)': FeatureCall(Variable('a'), 'm', true)(Variable('p'), Variable('q')),
     'a.m(p, q).n().o(r)': FeatureCall(FeatureCall(FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')), 'n')(), 'o')(Variable('r')),
-    '(a + 5).m(p, q)': FeatureCall(BinaryOp('+', Variable('a'), Literal(5)), 'm')(Variable('p'), Variable('q')),
+    '(a + 5).m(p, q)': FeatureCall(FeatureCall(Variable('a'), '+')(Literal(5)), 'm')(Variable('p'), Variable('q')),
     'a.m(p,)': FAIL,
     'a.m(,q)': FAIL,
     'a.m': FAIL,
@@ -346,7 +344,7 @@ const fixture = {
   constructorCall: {
     'new p.C()': New('p.C')(),
     'new p.C(a)': New('p.C')(Variable('a')),
-    'new p.C(a, b++)': New('p.C')(Variable('a'), UnaryOp('++', Variable('b'))),
+    'new p.C(a, b++)': New('p.C')(Variable('a'), FeatureCall(Variable('b'), '_++')()),
     'new p.C': FAIL,
     new: FAIL
   },
@@ -354,19 +352,19 @@ const fixture = {
   superInvocation: {
     'super()': Super(),
     'super(a)': Super(Variable('a')),
-    'super(a, b++)': Super(Variable('a'), UnaryOp('++', Variable('b'))),
+    'super(a, b++)': Super(Variable('a'), FeatureCall(Variable('b'), '_++')()),
     super: FAIL,
     'super.m()': FAIL
   },
 
   ifExpression: {
-    'if(a > b) x': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'))(),
-    'if (a > b)x': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'))(),
-    'if (a > b){x}': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'))(),
-    'if (a > b){x;y}': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'), Variable('y'))(),
-    'if (a > b) x else y': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'))(Variable('y')),
-    'if (a > b) {x} else {y}': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'))(Variable('y')),
-    'if (a > b){x}else{y}': If(BinaryOp('>', Variable('a'), Variable('b')))(Variable('x'))(Variable('y')),
+    'if(a > b) x': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
+    'if (a > b)x': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
+    'if (a > b){x}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
+    'if (a > b){x;y}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'), Variable('y'))(),
+    'if (a > b) x else y': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
+    'if (a > b) {x} else {y}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
+    'if (a > b){x}else{y}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
     'if(a) if(b) x else y else z': If(Variable('a'))(If(Variable('b'))(Variable('x'))(Variable('y')))(Variable('z')),
     'if(a) if(b) x else y': If(Variable('a'))(If(Variable('b'))(Variable('x'))(Variable('y')))(),
     'if (a > b)xelse y': FAIL,
@@ -376,17 +374,17 @@ const fixture = {
   },
 
   tryExpression: {
-    'try x++': Try(UnaryOp('++', Variable('x')))()(),
-    'try {x++}': Try(UnaryOp('++', Variable('x')))()(),
-    'try {x++} catch e h': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e'))(Variable('h')))(),
-    'try {x++} catch e: foo.bar.E h': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try{ x++ }catch e{h}': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e'))(Variable('h')))(),
-    'try{ x++ }catch e : foo.bar.E {h}': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try {x++} catch e{h} then always f': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e{h} then always {f}': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e1{h1} catch e2{h2}': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
-    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(UnaryOp('++', Variable('x')))(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
-    'try {x++} then always {f}': Try(UnaryOp('++', Variable('x')))()(Variable('f')),
+    'try x++': Try(FeatureCall(Variable('x'), '_++')())()(),
+    'try {x++}': Try(FeatureCall(Variable('x'), '_++')())()(),
+    'try {x++} catch e h': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
+    'try {x++} catch e: foo.bar.E h': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
+    'try{ x++ }catch e{h}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
+    'try{ x++ }catch e : foo.bar.E {h}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
+    'try {x++} catch e{h} then always f': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e{h} then always {f}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e1{h1} catch e2{h2}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
+    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
+    'try {x++} then always {f}': Try(FeatureCall(Variable('x'), '_++')())()(Variable('f')),
     'try {x++} catch e{h} then always': FAIL,
     'try {x++} then always f then always f': FAIL,
     'try{ x++ }catch e': FAIL,
@@ -425,7 +423,7 @@ const fixture = {
     '[]': ListLiteral(),
     '[1]': ListLiteral(Literal(1)),
     '[1,false,"foo"]': ListLiteral(Literal(1), Literal(false), Literal('foo')),
-    '#{1 + b, -5}': SetLiteral(BinaryOp('+', Literal(1), Variable('b')), UnaryOp('-', Literal(5))),
+    '#{1 + b, -5}': SetLiteral(FeatureCall(Literal(1), '+')(Variable('b')), FeatureCall(Literal(5), '-_')()),
     '[': FAIL,
     '[1,2,': FAIL,
     '#{': FAIL,
