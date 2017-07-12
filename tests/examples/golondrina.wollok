@@ -1,0 +1,29 @@
+class Golondrina {
+
+  var energia = 0
+
+  constructor() = self(0) {
+  }
+
+  constructor(nuevaEnergia) {
+    energia = nuevaEnergia
+  }
+
+  method vola(distancia) {
+    energia -= distancia * 10
+  }
+
+  method come(cantidad) {
+    energia += cantidad * 10
+  }
+
+  method energia() = energia
+
+}
+
+program Prueba {
+  const pepita = new Golondrina()
+  pepita.come(20)
+  pepita.vola(10)
+  pepita.energia()
+}
