@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { linkParent, link, LinkerError } from '../../src/linker/link'
+import { linkParent, link } from '../../src/linker/link'
 import { queryNodeByType } from '../../src/model/visiting'
 import { ClassDeclaration, MethodDeclaration, Closure } from '../../src/model'
 import parser from '../../src/parser'
@@ -64,7 +64,7 @@ describe('linker', () => {
     const expectUnresolvedVariable = (variable, code) =>
       expect(() =>
         link(parser.parse(code))
-      ).to.throw(LinkerError, `Cannot resolve reference to '${variable}' at ???`)
+      ).to.throw(`Cannot resolve reference to '${variable}' at ???`)
 
     const expectNoLinkageError = code => link(parser.parse(code))
 

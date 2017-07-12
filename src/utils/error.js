@@ -9,4 +9,4 @@ export class ExtendableError extends Error {
       this.stack = (new Error(message)).stack
     }
   }
-}    
+}

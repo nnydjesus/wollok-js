@@ -1,4 +1,4 @@
-import Linker from './Linker'
+import Linker from './thelinker'
 
 export const linkParent = (node, parent) => {
   if (Array.isArray(node)) {
