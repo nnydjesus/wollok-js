@@ -1,3 +1,4 @@
+import log from 'color-log'
 import { SelfLiteral } from './model'
 
 const { assign } = Object
