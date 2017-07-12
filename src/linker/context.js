@@ -19,6 +19,9 @@ export class Context {
     }
   }
   resolve(name) {
+    // TODO: in the future this won't fail here.
+    //  it should leave a mark on the node so that we can report
+    //  more than one linkage error at once, instead of reporting them one by one.
     return failIfNotFound(this.context.reduceRight(
       (found, { scope }) => found || (scope && scope[name]),
       undefined

@@ -51,7 +51,7 @@ export default class Linker {
         context.register(node, name)
       }
 
-      // push it (fucker)
+      // push it (fucker) if it is a context
       if (isScopeable(type)) {
         winston.silly('>>>> pushing', type)
         context.push(node)
