@@ -41,7 +41,7 @@ export const Literal = (value) => Node(Literal)({ value })
 export const List = (...values) => Node(List)({ values })
 export const Closure = (...parameters) => (...sentences) => Node(Closure)({ parameters, sentences: Block(...sentences) })
 
-export const Send = (target, key, nullSafe = false) => (...parameters) => Node(Send)({ target, key, nullSafe, parameters })
+export const Send = (target, key) => (...parameters) => Node(Send)({ target, key, parameters })
 export const Super = (...parameters) => Node(Super)({ parameters })
 
 export const New = (target) => (...parameters) => Node(New)({ target, parameters })

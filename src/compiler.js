@@ -38,7 +38,7 @@ const compile = assign(expression => compile[expression.type](expression), {
     return writeable ? getter + setter : getter
   },
 
-  // TODO: override? Native?
+  // TODO: Native?
   Method: ({ name, parameters, sentences }) => `['${name}'](${parameters.map(compile).join()}){${compile(sentences)}}`,
 
   VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${variable.name} = ${compile(value)}`,
@@ -49,7 +49,6 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   InstanceOf: ({ left, right }) => `${compile(left)} instanceof ${right}`,
 
-  // TODO: Nullsafe? Do we really want this?
   Send: ({ target, key, parameters }) => `${compile(target)}["${key}"](${parameters.map(compile).join()})`,
 
   New: ({ target, parameters }) => `new ${target}(${parameters.map(compile).join()})`,

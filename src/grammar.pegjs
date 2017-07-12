@@ -142,7 +142,7 @@ multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefix
 prefixUnaryExpression    = op:preOp _ exp:prefixUnaryExpression { return Send(exp,op+'_')() }
                          / postfixUnaryExpression
 postfixUnaryExpression   = exp:Send op:postOp? { return op ? Send(exp,'_'+op)() : exp }
-Send              = left:primaryExpression tail:(('.'/'?.') id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> Send(target,key,nullSafe === '?.')(...params), left) }
+Send              = left:primaryExpression tail:('.' id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> Send(target,key)(...params), left) }
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp
 orOp    = '||' / 'or'

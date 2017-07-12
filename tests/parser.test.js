@@ -321,7 +321,6 @@ const fixture = {
     'a.m(p)': Send(Variable('a'), 'm')(Variable('p')),
     'a.m{p => p}': Send(Variable('a'), 'm')(Closure(Parameter('p'))(Variable('p'))),
     'a.m(p, q)': Send(Variable('a'), 'm')(Variable('p'), Variable('q')),
-    'a?.m(p, q)': Send(Variable('a'), 'm', true)(Variable('p'), Variable('q')),
     'a.m(p, q).n().o(r)': Send(Send(Send(Variable('a'), 'm')(Variable('p'), Variable('q')), 'n')(), 'o')(Variable('r')),
     '(a + 5).m(p, q)': Send(Send(Variable('a'), '+')(Literal(5)), 'm')(Variable('p'), Variable('q')),
     'a.m(p,)': FAIL,
