@@ -17,19 +17,19 @@ describe('Closure scoping', () => {
     `)
   })
 
-   it('scope includes parameters', () => {
-      expectScopeOf(`
-          class Bird {
-            const energy = 23
-            method fly() {
-              const closure = { name, lastName => name + lastName }
-              return closure.apply('john', 'doe')
-            }
+  it('scope includes parameters', () => {
+    expectScopeOf(`
+        class Bird {
+          const energy = 23
+          method fly() {
+            const closure = { name, lastName => name + lastName }
+            return closure.apply('john', 'doe')
           }
-        `,
-        Closure, () => true,
-        ['name', 'lastName']
-      )
-    })
+        }
+      `,
+      Closure, () => true,
+      ['name', 'lastName']
+    )
+  })
 
 })
