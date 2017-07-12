@@ -67,6 +67,7 @@
     "no-nested-ternary": 0,
     "guard-for-in": "off",
     "no-restricted-syntax": "off",
-    "no-eval": "off"
+    "no-eval": "off",
+    "no-extend-native": "off"
   }
 }
