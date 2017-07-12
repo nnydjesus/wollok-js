@@ -124,7 +124,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
     }
   },
 
-  ListLiteral: ({ values }) => `[ ${values.map(compile).join()} ]`,
+  List: ({ values }) => `[ ${values.map(compile).join()} ]`,
 
   Closure: ({ parameters, sentences }) => `(function (${compileParameters(parameters)}) {${compile(sentences)}})`,
 

@@ -55,9 +55,7 @@ export const Throw = (exception) => Node('Throw')({ exception })
 //-------------------------------------------------------------------------------------------------------------------------------
 
 export const Literal = (value) => Node('Literal')({ value })
-
-const ValuesLiteral = name => (...values) => Node(`${name}Literal`)({ values })
-export const ListLiteral = ValuesLiteral('List')
+export const List = (...values) => Node('List')({ values })
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // INNERS

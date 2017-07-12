@@ -13,7 +13,7 @@ import {
   If,
   // Import,
   InstanceOf,
-  ListLiteral,
+  List,
   // Method,
   // Mixin,
   // Singleton,
@@ -89,9 +89,9 @@ const fixture = new Map([
   [Send(Literal(true), 'not_')(), false],
   // TODO: prefix +: WTF does it do???
 
-  [InstanceOf(ListLiteral(), 'Array'), true],
+  [InstanceOf(List(), 'Array'), true],
 
-  [New('Set')(ListLiteral(Literal(1), Literal(2))), new Set([1, 2])],
+  [New('Set')(List(Literal(1), Literal(2))), new Set([1, 2])],
 
   // TODO: Super
 
@@ -122,7 +122,7 @@ const fixture = new Map([
   [Literal(1), 1],
   [Literal(7.5), 7.5],
   [Literal('foo'), 'foo'],
-  [ListLiteral(Literal(1), Literal(2)), [1, 2]],
+  [List(Literal(1), Literal(2)), [1, 2]],
   [Closure(Parameter('a'))(Variable('a')), (a) => a],
 
   //-------------------------------------------------------------------------------------------------------------------------------

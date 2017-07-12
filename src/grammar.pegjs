@@ -12,7 +12,7 @@
     If,
     Import,
     InstanceOf,
-    ListLiteral,
+    List,
     Method,
     Mixin,
     New,
@@ -203,8 +203,8 @@ numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.j
               / whole:[0-9]+'.'decimals:[0-9]+ { return Literal(parseFloat(whole.join('')+'.'+decimals.join(''))) }
               / value:[0-9]+                   { return Literal(parseInt(value.join(''), 10)) }
 
-collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return ListLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
-                  / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return New('Set')(ListLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : [])) }
+collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
+                  / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return New('Set')(List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : [])) }
 
 objectLiteral = 'object' superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton()(superclass || undefined,...mixins)(...members) }
 
