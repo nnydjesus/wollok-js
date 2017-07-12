@@ -1,1 +1,0 @@
-export const Node = nodeType => body => ({ nodeType, ...body })
