@@ -59,7 +59,6 @@ export const Literal = (value) => Node('Literal')({ value })
 export const SuperLiteral = Node('SuperLiteral')({})
 
 const ValuesLiteral = name => (...values) => Node(`${name}Literal`)({ values })
-export const SetLiteral = ValuesLiteral('Set')
 export const ListLiteral = ValuesLiteral('List')
 
 //-------------------------------------------------------------------------------------------------------------------------------

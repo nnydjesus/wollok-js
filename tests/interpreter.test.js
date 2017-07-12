@@ -22,7 +22,6 @@ import {
   Parameter,
   // Program,
   Return,
-  SetLiteral,
   Literal,
   // Super,
   // SuperLiteral,
@@ -91,7 +90,7 @@ const fixture = new Map([
   [Send(Literal(true), 'not_')(), false],
   // TODO: prefix +: WTF does it do???
 
-  [InstanceOf(SetLiteral(), 'Set'), true],
+  [InstanceOf(ListLiteral(), 'Array'), true],
 
   [New('Set')(ListLiteral(Literal(1), Literal(2))), new Set([1, 2])],
 
@@ -124,7 +123,6 @@ const fixture = new Map([
   [Literal(1), 1],
   [Literal(7.5), 7.5],
   [Literal('foo'), 'foo'],
-  [SetLiteral(Literal(1), Literal(2)), new Set([1, 2])],
   [ListLiteral(Literal(1), Literal(2)), [1, 2]],
   [Closure(Parameter('a'))(Variable('a')), (a) => a],
 
