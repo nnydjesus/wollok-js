@@ -1,10 +1,48 @@
 import winston from 'winston'
-import { visitor } from '../../src/model/visiting'
-import { ExtendableError } from '../../src/utils/error'
+import { Program, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration } from '../model'
+import { visitor } from '../model/visiting'
+import { ExtendableError } from '../utils/error'
 
 export class LinkerError extends ExtendableError { }
 
 // winston.level = 'silly'
+
+/* nodes that define new scopes/namespaces */
+const scopingAware = [
+  Program,
+  ClassDeclaration,
+  ObjectDeclaration,
+  MethodDeclaration,
+  Closure
+]
+
+export default class Linker {
+
+  link(node) {
+    const context = new Context();
+
+    const visit = {
+      // variables
+      visitVariableDeclaration(declaration) { context.register(declaration, declaration.variable.name) },
+      visitParam(param) { context.register(param, param.name) },
+
+      // linking
+      visitVariable(variable) {
+        winston.silly(`Linking variable ${variable.name}`)
+        variable.link = context.resolve(variable)
+        winston.silly('Linked variable to ', variable.link)
+      }
+    }
+    // contexts
+    scopingAware.forEach(scoped => {
+      visit[`visit${scoped.name}`] = ::context.push;
+      visit[`after${scoped.name}`] = ::context.pop;
+    })
+
+    visitor(visit)(node)
+    return node
+  }
+}
 
 class Context {
   constructor() {
@@ -22,54 +60,14 @@ class Context {
     }
   }
   resolve(variable) {
-    winston.silly(`Resolving ${variable.name}`)
-    const value = this.context.reduceRight((found, { nodeType, scope }) => {
-      winston.silly(`\tLooking for ${variable.name} in ${nodeType}: ${Object.keys(scope || {}).join(', ')}`)
-      if (!found && scope && scope[variable.name]) {
-        return scope[variable.name]
-      }
-      return found
-    }, undefined)
-    if (!value) {
-      throw new LinkerError(`Cannot resolve reference to '${variable.name}' at ???`)
-    }
-    return value
+    return failIfNotFound(this.context.reduceRight(
+      (found, { scope }) => found || (scope && scope[variable.name]),
+      undefined
+    ), `Cannot resolve reference to '${variable.name}' at ???`)
   }
 }
 
-export default class Linker {
-
-  link(node) {
-    const context = new Context();
-
-    visitor({
-      // contexts
-      visitProgram: ::context.push,
-      afterProgram: ::context.pop,
-
-      visitClassDeclaration: ::context.push,
-      afterClassDeclaration: ::context.pop,
-
-      visitNamedObjectDeclaration: ::context.push,
-      afterNamedObjectDeclaration: ::context.pop,
-
-      visitMethodDeclaration: ::context.push,
-      afterMethodDeclaration: ::context.pop,
-
-      visitClosure: ::context.push,
-      afterClosure: ::context.push,
-
-      // variables
-      visitVariableDeclaration(declaration) { context.register(declaration, declaration.variable.name) },
-      visitParam(param) { context.register(param, param.name) },
-
-      // linking
-      visitVariable(variable) {
-        winston.silly(`Linking variable ${variable.name}`)
-        variable.link = context.resolve(variable)
-        winston.silly('Linked variable to ', variable.link)
-      }
-    })(node)
-    return node
-  }
+const failIfNotFound = (value, message) => {
+  if (!value) throw new LinkerError(message)
+  return value
 }
