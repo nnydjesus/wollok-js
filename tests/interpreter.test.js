@@ -22,7 +22,6 @@ import {
   Parameter,
   // Program,
   Return,
-  SelfLiteral,
   SetLiteral,
   Literal,
   // Super,
@@ -120,7 +119,7 @@ const fixture = new Map([
   //-------------------------------------------------------------------------------------------------------------------------------
 
   [Literal(null), null],
-  [SelfLiteral, this],
+  [Variable('this'), this],
   [Literal(true), true],
   [Literal(1), 1],
   [Literal(7.5), 7.5],

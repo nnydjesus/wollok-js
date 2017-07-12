@@ -1,7 +1,6 @@
 import { Node } from './node'
 import { Block } from './inners'
 
-export const SelfLiteral = Node('SelfLiteral')({})
 export const SuperLiteral = Node('SuperLiteral')({})
 
 export const Literal = (value) => Node('Literal')({ value })

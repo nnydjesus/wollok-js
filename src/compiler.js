@@ -1,5 +1,4 @@
 import log from 'color-log'
-import { SelfLiteral } from './model'
 
 const { assign } = Object
 
@@ -30,9 +29,9 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
     return `class ${name} extends ${superclass.name} { ${Constructor} ${memberDeclarations} }`
   },
 
-  Constructor: ({ parameters, sentences, baseTarget, baseArguments }) =>
+  Constructor: ({ parameters, sentences, lookUpCall, baseArguments }) =>
     `static ___init${parameters.length}___(${compileParameters(parameters)}) {
-      ${baseTarget === SelfLiteral ? `this.constructor.__init'${baseArguments.length}___'` : 'super'}(${compileArguments(baseArguments)});
+      ${lookUpCall ? 'super' : `this.constructor.__init'${baseArguments.length}___'`}(${compileArguments(baseArguments)});
       ${compile(sentences)}
     }`,
 
@@ -117,8 +116,6 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
     const evaluation = `const ${variable.name} = ___ERROR___;${compile(handler)}`
     return type ? `if (___ERROR___ instanceof ${type}){${evaluation}}` : evaluation
   },
-
-  SelfLiteral: () => 'this',
 
   Literal: ({ value }) => {
     switch (typeof value) {

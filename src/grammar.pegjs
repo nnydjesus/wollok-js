@@ -22,7 +22,6 @@
     Parameter,
     Program,
     Return,
-    SelfLiteral,
     SetLiteral,
     Super,
     SuperLiteral,
@@ -47,7 +46,7 @@ __ = blank:[ \t\r\n]+ { return blank.join('') }
 id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
-self = 'self' { return SelfLiteral }
+self = 'self' { return Variable('this') }
 super = 'super' { return SuperLiteral }
 variable = name:id { return Variable(name) }
 
@@ -105,7 +104,7 @@ Field = variable:variableDeclaration { return Field(variable.variable, variable.
 
 Method = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return Method(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
 
-Constructor = 'constructor' _ parameters:parameters _ base:('=' _ (self/super) _ arguments)? _ sentences:block? _ ';'? _ {return Constructor(...parameters)(base ? base[2] : undefined, base ? base[4] : undefined)(...sentences||[])}
+Constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super') _ arguments)? _ sentences:block? _ ';'? _ {return Constructor(...parameters)(base ? base[4] : [], !base || base[2] === 'super')(...sentences||[])}
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
