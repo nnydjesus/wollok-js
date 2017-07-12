@@ -10,41 +10,41 @@ const { assign } = Object
 const compile = assign(expression => compile[expression.nodeType](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
-  ObjectDeclaration: ({ name, superclass, members }) => // TODO: Mixin linearization
+  Singleton: ({ name, superclass, members }) => // TODO: Mixin linearization
     `const ${name} = new class extends ${superclass.name}{
       constructor(){super(${compileArguments(superclass.parameters)})};${members.map(compile).join(';')}
     };`,
 
-  // TODO MixinDeclaration: ({ name, members }) => {},
+  // TODO Mixin: ({ name, members }) => {},
 
-  ClassDeclaration: ({ name, superclass, members }) => { // TODO: Mixin linearization
+  Class: ({ name, superclass, members }) => { // TODO: Mixin linearization
     const constructors = findByType(members, 'VariableDeclaration', m => m.value)
-    const variableDeclarations = findByType(members, 'ConstructorDeclaration')
+    const variableDeclarations = findByType(members, 'Constructor')
 
-    const constructorDeclaration = `constructor(){
+    const Constructor = `constructor(){
       ${variableDeclarations.map(({ name, value }) => `this.${name}=${compile(value)}`)}.join(';')
       ${constructors.map(compile)}
       this.constructor['__init'+arguments.length+'__'].bind(this)(...arguments)
     }`
-    const memberDeclarations = members.filter(m => m.nodeType !== 'ConstructorDeclaration').map(compile).join(';')
-    return `class ${name} extends ${superclass.name} { ${constructorDeclaration} ${memberDeclarations} }`
+    const memberDeclarations = members.filter(m => m.nodeType !== 'Constructor').map(compile).join(';')
+    return `class ${name} extends ${superclass.name} { ${Constructor} ${memberDeclarations} }`
   },
 
-  ConstructorDeclaration: ({ parameters, sentences, baseTarget, baseArguments }) =>
+  Constructor: ({ parameters, sentences, baseTarget, baseArguments }) =>
     `static ___init${parameters.length}___(${compileParameters(parameters)}) {
       ${baseTarget === SelfLiteral ? `this.constructor.__init'${baseArguments.length}___'` : 'super'}(${compileArguments(baseArguments)});
       ${compile(sentences)}
     }`,
 
 
-  FieldDeclaration: ({ variable, writeable }) => {
+  Field: ({ variable, writeable }) => {
     const getter = `get ['${variable.name}']() {return this['___${variable.name}___']}`
     const setter = `set ['${variable.name}'](___value___) {this['___${variable.name}___'] = ___value___}`
     return writeable ? getter + setter : getter
   },
 
   // TODO: override? Native?
-  MethodDeclaration: ({ name, parameters, sentences }) => `['${name}'](${compileParameters(parameters)}){${compile(sentences)}}`,
+  Method: ({ name, parameters, sentences }) => `['${name}'](${compileParameters(parameters)}){${compile(sentences)}}`,
 
   VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${variable.name} = ${compile(value)}`,
 

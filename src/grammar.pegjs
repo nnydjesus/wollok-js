@@ -3,21 +3,21 @@
   const {
     Assignment,
     Catch,
-    ClassDeclaration,
+    Class,
     Closure,
-    ConstructorDeclaration,
+    Constructor,
     Send,
-    FieldDeclaration,
+    Field,
     File,
     If,
     Import,
     InstanceOf,
     ListLiteral,
-    MethodDeclaration,
-    MixinDeclaration,
+    Method,
+    Mixin,
     New,
     Literal,
-    ObjectDeclaration,
+    Singleton,
     Package,
     Parameter,
     Program,
@@ -80,11 +80,11 @@ libraryElement = element: (package / class / namedObject / mixin) _ { return ele
 
 package = 'package' __ name:qualifiedName _ '{' _ elements:libraryElement* _ '}' { return Package(name)(...elements) }
 
-class = 'class' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:(memberDeclaration/constructorDeclaration)* _ '}' { return ClassDeclaration(name)(superclass || undefined,...mixins)(...members) }
+class = 'class' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:(memberDeclaration/Constructor)* _ '}' { return Class(name)(superclass || undefined,...mixins)(...members) }
 
-mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return MixinDeclaration(name)(...members) }
+mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return Mixin(name)(...members) }
 
-namedObject = 'object' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return ObjectDeclaration(name)(superclass || undefined,...mixins)(...members) }
+namedObject = 'object' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton(name)(superclass || undefined,...mixins)(...members) }
 
 inheritance = superclass:(_ 'inherits' __ qualifiedName _ arguments?)? { return superclass ? SuperType(superclass[3])(...superclass[5]||[]) : SuperType()() }
 
@@ -99,13 +99,13 @@ methodBody = 'native'
 // MEMBERS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-memberDeclaration = member:(fieldDeclaration / methodDeclaration) _ ';'? _ { return member }
+memberDeclaration = member:(Field / Method) _ ';'? _ { return member }
 
-fieldDeclaration = variable:variableDeclaration { return FieldDeclaration(variable.variable, variable.writeable, variable.value) }
+Field = variable:variableDeclaration { return Field(variable.variable, variable.writeable, variable.value) }
 
-methodDeclaration = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return MethodDeclaration(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
+Method = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return Method(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
 
-constructorDeclaration = 'constructor' _ parameters:parameters _ base:('=' _ (self/super) _ arguments)? _ sentences:block? _ ';'? _ {return ConstructorDeclaration(...parameters)(base ? base[2] : undefined, base ? base[4] : undefined)(...sentences||[])}
+Constructor = 'constructor' _ parameters:parameters _ base:('=' _ (self/super) _ arguments)? _ sentences:block? _ ';'? _ {return Constructor(...parameters)(base ? base[2] : undefined, base ? base[4] : undefined)(...sentences||[])}
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
@@ -210,6 +210,6 @@ numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.j
 collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return ListLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
                   / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return SetLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
 
-objectLiteral = 'object' superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return ObjectDeclaration()(superclass || undefined,...mixins)(...members) }
+objectLiteral = 'object' superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton()(superclass || undefined,...mixins)(...members) }
 
 closure = '{' _ parameters:(undelimitedParameters _ '=>' _)? _ sentences:sentence* _ '}' {return Closure(...parameters?parameters[0]:[])(...sentences) }
