@@ -1,9 +1,7 @@
 import winston from 'winston'
+import { Context } from './context'
 import { Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
 import { visit } from '../model/visiting'
-import { ExtendableError } from '../utils/error'
-
-export class LinkerError extends ExtendableError { }
 
 // winston.level = 'silly'
 
@@ -36,9 +34,8 @@ const linkeables = {
 }
 
 export default class Linker {
-
   link(node) {
-    const context = new Context();
+    const context = new Context()
     visit(node, ::this.onNode(context), ::this.afterNode(context))
     return node
   }
@@ -46,7 +43,6 @@ export default class Linker {
   onNode(context) {
     return node => {
       const type = node.nodeType
-      // winston.silly('((ON))', type)
 
       // register it in scope if applies
       if (referenciables[type]) {
@@ -55,7 +51,7 @@ export default class Linker {
         context.register(node, name)
       }
 
-      // push it fucker
+      // push it (fucker)
       if (isScopeable(type)) {
         winston.silly('>>>> pushing', type)
         context.push(node)
@@ -73,7 +69,6 @@ export default class Linker {
   afterNode(context) {
     return node => {
       const type = node.nodeType
-      // winston.silly('((AFTER))', type)
 
       if (isScopeable(type)) {
         winston.silly('<<<< poping', type)
@@ -81,32 +76,4 @@ export default class Linker {
       }
     }
   }
-}
-
-class Context {
-  constructor() {
-    this.context = []
-  }
-  peek() { return (this.context.length > 0 ? this.context[this.context.length - 1] : undefined) }
-  push(c) { this.context.push(c) }
-  pop() { this.context.pop() }
-
-  register(referenciable, name) {
-    const current = this.peek()
-    current.scope = {
-      ...(current && current.scope),
-      [name]: referenciable
-    }
-  }
-  resolve(name) {
-    return failIfNotFound(this.context.reduceRight(
-      (found, { scope }) => found || (scope && scope[name]),
-      undefined
-    ), `Cannot resolve reference to '${name}' at ???`)
-  }
-}
-
-const failIfNotFound = (value, message) => {
-  if (!value) throw new LinkerError(message)
-  return value
 }
