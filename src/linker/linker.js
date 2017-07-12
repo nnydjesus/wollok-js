@@ -18,7 +18,6 @@ const scopeables = [
 const isScopeable = type => scopeables.includes(type)
 
 const byName = n => n.name
-
 /* nodes which gets registered in their parent's scope */
 const referenciables = {
   VariableDeclaration: _ => byName(_.variable),

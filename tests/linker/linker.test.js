@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { link } from '../../src/linker/link'
 import { queryNodeByType } from '../../src/model/visiting'
-import { ClassDeclaration, MethodDeclaration, Closure, MixinDeclaration } from '../../src/model'
+import { New, ClassDeclaration, MethodDeclaration, Closure, MixinDeclaration } from '../../src/model'
 import parser from '../../src/parser'
 
 // expectations
@@ -268,12 +268,40 @@ describe('linker', () => {
         class C {}
       `)), ['A', 'B', 'C'])
     })
+
     it('File scope includes the mixins, classes, and objects', () => {
       expectScopeHasNames(link(parser.parse(`
         class A {}
         mixin M {}
         object c {}
       `)), ['A', 'M', 'c'])
+    })
+
+    it('New gets linked to a class in the same file (declared BEFORE)', () => {
+      const node = expectNoLinkageError(`
+        class Bird {}
+        class BirdFactory {
+          method create() {
+            return new Bird()
+          }
+        }
+      `)
+      const Bird = queryNodeByType(node, ClassDeclaration.name, c => c.name === 'Bird')[0]
+      const niu = queryNodeByType(node, New.name)[0]
+      expect(niu.link).to.deep.equal(Bird)
+    })
+
+    // TODO: finally I reached the point where the stack based linking 
+    //   is not enough (or the deep-first approach)
+    it.skip('New gets linked to a class in the same file (declared AFTER)', () => {
+      expectNoLinkageError(`
+        class BirdFactory {
+          method create() {
+            return new Bird()
+          }
+        }
+        class Bird {}
+      `)
     })
 
   })
