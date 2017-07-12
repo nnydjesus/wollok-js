@@ -3,13 +3,11 @@ import { SelfLiteral } from './model'
 
 const { assign } = Object
 
-// TODO: Add a block to the model and replace the compileSentenceSequence with it's compile call
-
 // This interpreter compiles the AST to a string representing JS code and then evals it.
 // I know, I know... But this is not meant to be nice or final code. Just a quick rough approach to get a better feeling on the AST shape.
 
 const compile = assign(expression => compile[expression.nodeType](expression), {
-  // TODO PACKAGE: ({ name, elements }) => {},
+  // TODO: PACKAGE: ({ name, elements }) => {},
 
   ObjectDeclaration: ({ name, superclass, members }) => // TODO: Mixin linearization
     `const ${name} = new class extends ${superclass.name}{
@@ -22,12 +20,11 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
     const constructors = findByType(members, 'VariableDeclaration', m => m.value)
     const variableDeclarations = findByType(members, 'ConstructorDeclaration')
 
-    const constructorFunctions = constructors.map(compile).map(cons => `___cons___[\${baseArguments.length}] = ${cons}`)
-    const constructorDeclaration = `constructor(...___args___){
+    const constructorDeclaration = `constructor(){
       ${variableDeclarations.map(({ name, value }) => `this.${name}=${compile(value)}`)}.join(';')
       ___cons___ = {};
-      ${constructorFunctions.join(';')};
-      ___cons___[___args___.length](...___args___)
+      ${constructors.map(compile).map(cons => `___cons___[\${baseArguments.length}] = ${cons};`)}
+      ___cons___[arguments.length](...arguments)
     }`
     const memberDeclarations = members.filter(m => m.nodeType !== 'ConstructorDeclaration').map(compile).join(';')
     return `class ${name} extends ${superclass.name} { ${constructorDeclaration} ${memberDeclarations} }`
