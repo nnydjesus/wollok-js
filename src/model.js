@@ -11,9 +11,7 @@ export const Package = (name) => (...elements) => Node('Package')({ name, elemen
 
 export const Class = (name) => (superclass = 'Object', ...mixins) => (...members) => Node('Class')({ name, superclass, mixins, members })
 export const Mixin = (name) => (...members) => Node('Mixin')({ name, members })
-export const Singleton = (name = undefined) => (superclass = SuperType()(), ...mixins) => (...members) => Node('NamedSingleton')({ name, superclass, mixins, members })
-
-export const SuperType = (name = 'Object') => (...parameters) => Node('SuperType')({ name, parameters })
+export const Singleton = (name = undefined) => (superclass = 'Object', superArguments = [], ...mixins) => (...members) => Node('NamedSingleton')({ name, superclass, superArguments, mixins, members })
 
 export const Program = (name) => (...sentences) => Node('Program')({ name, sentences: Block(...sentences) })
 export const Test = (description) => (...sentences) => Node('Program')({ description, sentences: Block(...sentences) })

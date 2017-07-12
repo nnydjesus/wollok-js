@@ -24,7 +24,6 @@ import {
   Return,
   Literal,
   // Super,
-  // SuperType,
   // Test,
   Throw,
   Try,

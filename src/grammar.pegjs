@@ -80,9 +80,7 @@ class = 'class' __ name:id superclass:(_ 'inherits' __ qualifiedName)? mixins:mi
 
 mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return Mixin(name)(...members) }
 
-namedObject = 'object' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton(name)(superclass || undefined,...mixins)(...members) }
-
-inheritance = superclass:(_ 'inherits' __ qualifiedName _ arguments?)? { return superclass ? SuperType(superclass[3])(...superclass[5]||[]) : SuperType()() }
+namedObject = 'object' __ name:id superclass:(_ 'inherits' __ qualifiedName _ arguments?)? mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton(name)(superclass ? superclass[3] : undefined, superclass ? superclass[5] || undefined: undefined,...mixins)(...members) }
 
 mixinInclusion = mixins:(_ 'mixed with' __ qualifiedName ((__'and'__/_','_) qualifiedName)* )? { return mixins ? [mixins[3], ...mixins[4].map(([,mixin])=>mixin)] : [] }
 
@@ -206,6 +204,6 @@ numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.j
 collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
                   / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return New('Set')(List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : [])) }
 
-objectLiteral = 'object' superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton()(superclass || undefined,...mixins)(...members) }
+objectLiteral = 'object' superclass:(_ 'inherits' __ qualifiedName _ arguments?)? mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton()(superclass ? superclass[3] : undefined, superclass ? superclass[5] || undefined: undefined,...mixins)(...members) }
 
 closure = '{' _ parameters:(undelimitedParameters _ '=>' _)? _ sentences:sentence* _ '}' {return Closure(...parameters?parameters[0]:[])(...sentences) }
