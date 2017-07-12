@@ -34,7 +34,7 @@ describe('linker', () => {
             const b = a
           }
         `))
-        const [a, b] = linked.content[0].sentences
+        const [a, b] = linked.content[0].sentences.sentences
         expect(b.value.link).to.deep.equal(a)
       })
 
@@ -63,7 +63,7 @@ describe('linker', () => {
           const Bird = linked.content[0]
           const energyInstVar = Bird.members.find(m => m.variable && m.variable.name === 'energy')
           const flyMethod = Bird.members.find(m => m.name === 'fly')
-          const assignment = flyMethod.sentences[0]
+          const assignment = flyMethod.sentences.sentences[0]
           expect(assignment.variable.link).to.deep.equal(energyInstVar)
         })
 

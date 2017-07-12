@@ -18,9 +18,10 @@ describe('visitor', () => {
       expect(visited).to.deep.equal([
         'File',
         'Program',
+        'Block',
         'VariableDeclaration',
         'Variable',
-        'NumberLiteral',
+        'Literal',
         'VariableDeclaration',
         'Variable',
         'Variable'
@@ -37,8 +38,9 @@ describe('visitor', () => {
       visit(node, () => {}, e => visited.push(e.nodeType))
       expect(visited).to.deep.equal([
         'Variable',
-        'NumberLiteral',
+        'Literal',
         'VariableDeclaration',
+        'Block',
         'Program',
         'File'
       ])

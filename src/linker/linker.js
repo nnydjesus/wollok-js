@@ -21,6 +21,7 @@ const byName = n => n.name
 /* nodes which gets registered in their parent's scope */
 const referenciables = {
   VariableDeclaration: _ => byName(_.variable),
+  FieldDeclaration: _ => byName(_.variable),
   Param: byName,
   ClassDeclaration: byName,
   MixinDeclaration: byName,

@@ -3,12 +3,12 @@
   const {
     Assignment,
     BinaryOp,
-    BooleanLiteral,
     Catch,
     ClassDeclaration,
     Closure,
     ConstructorDeclaration,
     FeatureCall,
+    FieldDeclaration,
     File,
     If,
     Import,
@@ -17,8 +17,7 @@
     MethodDeclaration,
     MixinDeclaration,
     New,
-    NullLiteral,
-    NumberLiteral,
+    Literal,
     ObjectDeclaration,
     Package,
     Parameter,
@@ -26,7 +25,6 @@
     Return,
     SelfLiteral,
     SetLiteral,
-    StringLiteral,
     Super,
     SuperLiteral,
     SuperType,
@@ -103,11 +101,9 @@ methodBody = 'native'
 // MEMBERS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-memberDeclaration = member:(variableDeclaration / methodDeclaration) _ ';'? _ { return member }
+memberDeclaration = member:(fieldDeclaration / methodDeclaration) _ ';'? _ { return member }
 
-variableDeclaration = 'var' __ variable:variable _ value:variableInitialization? { return VariableDeclaration(variable, true, value || NullLiteral) }
-                    / 'const' __ variable:variable _ value:variableInitialization { return VariableDeclaration(variable, false, value) }
-variableInitialization = '=' _ value:expression { return value }
+fieldDeclaration = variable:variableDeclaration { return FieldDeclaration(variable.variable, variable.writeable, variable.value) }
 
 methodDeclaration = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return MethodDeclaration(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
 
@@ -118,6 +114,10 @@ constructorDeclaration = 'constructor' _ parameters:parameters _ base:('=' _ (se
 //-------------------------------------------------------------------------------------------------------------------------------
 
 sentence = _ sentence:( variableDeclaration / return / assignment / expression) _ ';'? _ { return sentence }
+
+variableDeclaration = 'var' __ variable:variable _ value:variableInitialization? { return VariableDeclaration(variable, true, value || Literal(null)) }
+                    / 'const' __ variable:variable _ value:variableInitialization { return VariableDeclaration(variable, false, value) }
+variableInitialization = '=' _ value:expression { return value }
 
 return = 'return' _ expression:expression { return Return(expression) }
 
@@ -191,23 +191,23 @@ constructorCall = 'new' __ target:qualifiedName _ args:arguments { return New(ta
 
 literal = booleanLiteral
         / numberLiteral
-        / nullLiteral
+        / Literal
         / stringLiteral
         / objectLiteral
         / closure
         / collectionLiteral
 
-booleanLiteral = value:('false' / 'true') { return BooleanLiteral(value === 'true') }
+booleanLiteral = value:('false' / 'true') { return Literal(value === 'true') }
 
-nullLiteral = 'null' { return NullLiteral }
+Literal = 'null' { return Literal(null) }
 
-stringLiteral = '"' value:( escapedChar  / [^'\\"] )* '"' { return StringLiteral(value.join('')) }
-              / "'" value:( escapedChar  / [^'\\'] )* "'" { return StringLiteral(value.join('')) }
+stringLiteral = '"' value:( escapedChar  / [^'\\"] )* '"' { return Literal(value.join('')) }
+              / "'" value:( escapedChar  / [^'\\'] )* "'" { return Literal(value.join('')) }
 escapedChar = '\\b'/'\\t'/'\\n'/'\\f'/'\\r'/'\\u'/'\\"'/"\\'"/'\\\\'
 
-numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return NumberLiteral(parseInt(value.join(''), 16)) }
-              / whole:[0-9]+'.'decimals:[0-9]+ { return NumberLiteral(parseFloat(whole.join('')+'.'+decimals.join(''))) }
-              / value:[0-9]+                   { return NumberLiteral(parseInt(value.join(''), 10)) }
+numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.join(''), 16)) }
+              / whole:[0-9]+'.'decimals:[0-9]+ { return Literal(parseFloat(whole.join('')+'.'+decimals.join(''))) }
+              / value:[0-9]+                   { return Literal(parseInt(value.join(''), 10)) }
 
 collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return ListLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
                   / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return SetLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
