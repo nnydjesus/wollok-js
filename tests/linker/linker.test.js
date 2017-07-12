@@ -4,16 +4,24 @@ import { queryNodeByType } from '../../src/model/visiting'
 import { ClassDeclaration, MethodDeclaration, Closure, MixinDeclaration } from '../../src/model'
 import parser from '../../src/parser'
 
+// expectations
+
+const expectNoLinkageError = code => link(parser.parse(code))
+const expectUnresolvedVariable = (variable, code) => expect(() =>
+  link(parser.parse(code))
+).to.throw(`Cannot resolve reference to '${variable}' at ???`)
+
+const expectScopeOf = (program, nodeType, findFilter, expected) => {
+  const linked = link(parser.parse(program))
+  const node = queryNodeByType(linked, nodeType.name, findFilter)[0]
+  expect(Object.keys(node.scope)).to.deep.equal(expected)
+}
+
+// tests
+
 describe('linker', () => {
 
   describe('Variable resolution', () => {
-
-    const expectUnresolvedVariable = (variable, code) =>
-      expect(() =>
-        link(parser.parse(code))
-      ).to.throw(`Cannot resolve reference to '${variable}' at ???`)
-
-    const expectNoLinkageError = code => link(parser.parse(code))
 
     describe('program', () => {
 
@@ -195,12 +203,6 @@ describe('linker', () => {
   })
 
   describe('Scoping', () => {
-
-    const expectScopeOf = (program, nodeType, findFilter, expected) => {
-      const linked = link(parser.parse(program))
-      const node = queryNodeByType(linked, nodeType.name, findFilter)[0]
-      expect(Object.keys(node.scope)).to.deep.equal(expected)
-    }
 
     it('Method scope includes parameters', () => {
       expectScopeOf(`
