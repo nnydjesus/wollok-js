@@ -1,4 +1,4 @@
-const Node = nodeType => body => ({ nodeType, ...body })
+const Node = type => body => ({ type, ...body })
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // TOP LEVEL
@@ -52,7 +52,7 @@ export const InstanceOf = (left, right) => Node('InstanceOf')({ left, right })
 export const If = (condition) => (...thenSentences) => (...elseSentences) => Node('If')({ condition, thenSentences: Block(...thenSentences), elseSentences: Block(...elseSentences) })
 export const Throw = (exception) => Node('Throw')({ exception })
 export const Try = (...sentences) => (...catches) => (...always) => Node('Try')({ sentences: Block(...sentences), catches, always: Block(...always) })
-export const Catch = (variable, type) => (...handler) => Node('Catch')({ variable, type, handler: Block(...handler) })
+export const Catch = (variable, errorType) => (...handler) => Node('Catch')({ variable, errorType, handler: Block(...handler) })
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // COMMONS

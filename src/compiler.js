@@ -6,7 +6,7 @@ const { assign } = Object
 // I know, I know... But this is not meant to be nice or final code. Just a quick rough approach to get a better feeling on the AST shape.
 
 // TODO: Extract into separate module
-const compile = assign(expression => compile[expression.nodeType](expression), {
+const compile = assign(expression => compile[expression.type](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
   Singleton: ({ name, superclass, members }) => // TODO: Mixin linearization
@@ -25,7 +25,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
       ${constructors.map(compile)}
       this.constructor['__init'+arguments.length+'__'].bind(this)(...arguments)
     }`
-    const memberDeclarations = members.filter(m => m.nodeType !== 'Constructor').map(compile).join(';')
+    const memberDeclarations = members.filter(m => m.type !== 'Constructor').map(compile).join(';')
     return `class ${name} extends ${superclass.name} { ${Constructor} ${memberDeclarations} }`
   },
 
@@ -112,9 +112,9 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
     ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';')} throw ___ERROR___}` : ''}
     ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
 
-  Catch: ({ variable, type, handler }) => {
+  Catch: ({ variable, errorType, handler }) => {
     const evaluation = `const ${variable.name} = ___ERROR___;${compile(handler)}`
-    return type ? `if (___ERROR___ instanceof ${type}){${evaluation}}` : evaluation
+    return errorType ? `if (___ERROR___ instanceof ${errorType}){${evaluation}}` : evaluation
   },
 
   Literal: ({ value }) => {
@@ -132,7 +132,7 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
     // TODO: Imports const imports = findByType(content, 'Import')
     const programs = findByType(content, 'Program')
     const tests = findByType('Test')
-    const elements = content.filter(c => c.nodeType !== 'Test' && c.nodeType !== 'Program' && c.nodeType !== 'Import')
+    const elements = content.filter(c => c.type !== 'Test' && c.type !== 'Program' && c.type !== 'Import')
 
     if (!programs.length && !tests.length) {
       log.error('There is no program or tests to run!')
@@ -162,6 +162,6 @@ const compileParameters = (params) => params.map(({ name, varArg }) => (varArg ?
 const compileArguments = (args) => args.map(compile).join()
 
 // TODO: Wherever we use this, we should have separate field in the model instead
-const findByType = (content, type, extraCondition = () => true) => content.filter(c => c.nodeType === type && extraCondition(c))
+const findByType = (content, type, extraCondition = () => true) => content.filter(c => c.type === type && extraCondition(c))
 
 export default compile
