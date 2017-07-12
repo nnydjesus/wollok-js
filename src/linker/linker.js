@@ -29,7 +29,8 @@ const referenciables = {
 
 const linkeables = {
   Variable: v => v.name,
-  New: n => n.target
+  New: n => n.target,
+  SuperType: s => s.name
 }
 
 export default class Linker {
@@ -59,8 +60,10 @@ export default class Linker {
       // link it if linkable
       if (linkeables[type]) {
         winston.silly('???? checking', type)
-        const nameExtractor = linkeables[type]
-        node.link = context.resolve(nameExtractor(node))
+        const name = linkeables[type](node)
+        if (name !== 'Object') { // HACK for now I need to resolve ref to Object !!!!!!! 
+          node.link = context.resolve(name)
+        }
       }
     }
   }
