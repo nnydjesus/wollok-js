@@ -7,7 +7,7 @@ import {
   ClassDeclaration,
   Closure,
   ConstructorDeclaration,
-  FeatureCall,
+  Send,
   FieldDeclaration,
   If,
   Import,
@@ -70,7 +70,7 @@ const fixture = {
   program: {
     'program name { }': Program('name')(),
     '  program name { }  ': Program('name')(),
-    'program name { const x = a.m(1) }': Program('name')(VariableDeclaration(Variable('x'), false, FeatureCall(Variable('a'), 'm')(Literal(1)))),
+    'program name { const x = a.m(1) }': Program('name')(VariableDeclaration(Variable('x'), false, Send(Variable('a'), 'm')(Literal(1)))),
     'program { }': FAIL,
     'program name { ': FAIL,
     'program name': FAIL
@@ -78,7 +78,7 @@ const fixture = {
 
   test: {
     'test "name" { }': Test(Literal('name'))(),
-    'test "name" { const x = a.m(1) }': Test(Literal('name'))(VariableDeclaration(Variable('x'), false, FeatureCall(Variable('a'), 'm')(Literal(1)))),
+    'test "name" { const x = a.m(1) }': Test(Literal('name'))(VariableDeclaration(Variable('x'), false, Send(Variable('a'), 'm')(Literal(1)))),
     'test { }': FAIL,
     'test "name" { ': FAIL,
     'test "name"': FAIL
@@ -162,8 +162,8 @@ const fixture = {
     'method m(p...)': MethodDeclaration('m')(Parameter('p', true))(),
     'method m(p,q...)': MethodDeclaration('m')(Parameter('p'), Parameter('q', true))(),
     'method m(p) { }': MethodDeclaration('m')(Parameter('p'))(),
-    'method m(p) { p++ }': MethodDeclaration('m')(Parameter('p'))(FeatureCall(Variable('p'), '_++')()),
-    'method m(p) = p++': MethodDeclaration('m')(Parameter('p'))(FeatureCall(Variable('p'), '_++')()),
+    'method m(p) { p++ }': MethodDeclaration('m')(Parameter('p'))(Send(Variable('p'), '_++')()),
+    'method m(p) = p++': MethodDeclaration('m')(Parameter('p'))(Send(Variable('p'), '_++')()),
     'override method m(p)': MethodDeclaration('m', true)(Parameter('p'))(),
     'override method m(p) native': MethodDeclaration('m', true, true)(Parameter('p'))(),
     'method m() = { a }': MethodDeclaration('m')()(Closure()(Variable('a'))),
@@ -181,13 +181,13 @@ const fixture = {
     'constructor(p, q)': ConstructorDeclaration(Parameter('p'), Parameter('q'))()(),
     'constructor(p...)': ConstructorDeclaration(Parameter('p', true))()(),
     'constructor(p, q...)': ConstructorDeclaration(Parameter('p'), Parameter('q', true))()(),
-    'constructor(p) { p++ }': ConstructorDeclaration(Parameter('p'))()(FeatureCall(Variable('p'), '_++')()),
+    'constructor(p) { p++ }': ConstructorDeclaration(Parameter('p'))()(Send(Variable('p'), '_++')()),
     'constructor(p) = self()': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [])(),
-    'constructor(p) = self(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(),
-    'constructor(p) = self(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(FeatureCall(Variable('p'), '_++')()),
+    'constructor(p) = self(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), Send(Variable('p'), '+')(Literal(1))])(),
+    'constructor(p) = self(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SelfLiteral, [Variable('p'), Send(Variable('p'), '+')(Literal(1))])(Send(Variable('p'), '_++')()),
     'constructor(p) = super()': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [])(),
-    'constructor(p) = super(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(),
-    'constructor(p) = super(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), FeatureCall(Variable('p'), '+')(Literal(1))])(FeatureCall(Variable('p'), '_++')()),
+    'constructor(p) = super(p,p + 1)': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), Send(Variable('p'), '+')(Literal(1))])(),
+    'constructor(p) = super(p,p + 1) { p++ }': ConstructorDeclaration(Parameter('p'))(SuperLiteral, [Variable('p'), Send(Variable('p'), '+')(Literal(1))])(Send(Variable('p'), '_++')()),
     'constructor': FAIL,
     'constructor(': FAIL,
     'constructor() = { }': FAIL,
@@ -222,14 +222,14 @@ const fixture = {
 
   assignment: {
     'a = b': Assignment(Variable('a'), Variable('b')),
-    'a += b': Assignment(Variable('a'), FeatureCall(Variable('a'), '+')(Variable('b'))),
-    'a -= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '-')(Variable('b'))),
-    'a *= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '*')(Variable('b'))),
-    'a /= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '/')(Variable('b'))),
-    'a %= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '%')(Variable('b'))),
-    'a <<= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '<<')(Variable('b'))),
-    'a >>= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '>>')(Variable('b'))),
-    'a >>>= b': Assignment(Variable('a'), FeatureCall(Variable('a'), '>>>')(Variable('b'))),
+    'a += b': Assignment(Variable('a'), Send(Variable('a'), '+')(Variable('b'))),
+    'a -= b': Assignment(Variable('a'), Send(Variable('a'), '-')(Variable('b'))),
+    'a *= b': Assignment(Variable('a'), Send(Variable('a'), '*')(Variable('b'))),
+    'a /= b': Assignment(Variable('a'), Send(Variable('a'), '/')(Variable('b'))),
+    'a %= b': Assignment(Variable('a'), Send(Variable('a'), '%')(Variable('b'))),
+    'a <<= b': Assignment(Variable('a'), Send(Variable('a'), '<<')(Variable('b'))),
+    'a >>= b': Assignment(Variable('a'), Send(Variable('a'), '>>')(Variable('b'))),
+    'a >>>= b': Assignment(Variable('a'), Send(Variable('a'), '>>>')(Variable('b'))),
     'a = b = c': FAIL,
     'a = b += c': FAIL,
     'a += b = c': FAIL
@@ -240,95 +240,95 @@ const fixture = {
   //-------------------------------------------------------------------------------------------------------------------------------
 
   orExpression: {
-    'a || b': FeatureCall(Variable('a'), '||')(Variable('b')),
-    'a or b': FeatureCall(Variable('a'), 'or')(Variable('b')),
-    'a and b || !(c > d)': FeatureCall(FeatureCall(Variable('a'), 'and')(Variable('b')), '||')(FeatureCall(FeatureCall(Variable('c'), '>')(Variable('d')), '!_')())
+    'a || b': Send(Variable('a'), '||')(Variable('b')),
+    'a or b': Send(Variable('a'), 'or')(Variable('b')),
+    'a and b || !(c > d)': Send(Send(Variable('a'), 'and')(Variable('b')), '||')(Send(Send(Variable('c'), '>')(Variable('d')), '!_')())
   },
 
   andExpression: {
-    'a && b': FeatureCall(Variable('a'), '&&')(Variable('b')),
-    'a and b': FeatureCall(Variable('a'), 'and')(Variable('b')),
-    'a == b && !(c and d)': FeatureCall(FeatureCall(Variable('a'), '==')(Variable('b')), '&&')(FeatureCall(FeatureCall(Variable('c'), 'and')(Variable('d')), '!_')())
+    'a && b': Send(Variable('a'), '&&')(Variable('b')),
+    'a and b': Send(Variable('a'), 'and')(Variable('b')),
+    'a == b && !(c and d)': Send(Send(Variable('a'), '==')(Variable('b')), '&&')(Send(Send(Variable('c'), 'and')(Variable('d')), '!_')())
   },
 
   equalityExpression: {
-    'a == b': FeatureCall(Variable('a'), '==')(Variable('b')),
-    'a != b': FeatureCall(Variable('a'), '!=')(Variable('b')),
-    'a === b': FeatureCall(Variable('a'), '===')(Variable('b')),
-    'a !== b': FeatureCall(Variable('a'), '!==')(Variable('b')),
-    'a + x == -b * y': FeatureCall(FeatureCall(Variable('a'), '+')(Variable('x')), '==')(FeatureCall(FeatureCall(Variable('b'), '-_')(), '*')(Variable('y')))
+    'a == b': Send(Variable('a'), '==')(Variable('b')),
+    'a != b': Send(Variable('a'), '!=')(Variable('b')),
+    'a === b': Send(Variable('a'), '===')(Variable('b')),
+    'a !== b': Send(Variable('a'), '!==')(Variable('b')),
+    'a + x == -b * y': Send(Send(Variable('a'), '+')(Variable('x')), '==')(Send(Send(Variable('b'), '-_')(), '*')(Variable('y')))
   },
 
   orderExpression: {
-    'a >= b': FeatureCall(Variable('a'), '>=')(Variable('b')),
-    'a <= b': FeatureCall(Variable('a'), '<=')(Variable('b')),
-    'a > b': FeatureCall(Variable('a'), '>')(Variable('b')),
-    'a < b': FeatureCall(Variable('a'), '<')(Variable('b')),
-    'a + x < -b * y': FeatureCall(FeatureCall(Variable('a'), '+')(Variable('x')), '<')(FeatureCall(FeatureCall(Variable('b'), '-_')(), '*')(Variable('y'))),
+    'a >= b': Send(Variable('a'), '>=')(Variable('b')),
+    'a <= b': Send(Variable('a'), '<=')(Variable('b')),
+    'a > b': Send(Variable('a'), '>')(Variable('b')),
+    'a < b': Send(Variable('a'), '<')(Variable('b')),
+    'a + x < -b * y': Send(Send(Variable('a'), '+')(Variable('x')), '<')(Send(Send(Variable('b'), '-_')(), '*')(Variable('y'))),
     'a instanceof p.C': InstanceOf(Variable('a'), 'p.C'),
-    'a.m() instanceof p.C': InstanceOf(FeatureCall(Variable('a'), 'm')(), 'p.C'),
+    'a.m() instanceof p.C': InstanceOf(Send(Variable('a'), 'm')(), 'p.C'),
     'a instanceof': FAIL,
     'instanceof t': FAIL
   },
 
   otherOpExpression: {
-    'a ..< b': FeatureCall(Variable('a'), '..<')(Variable('b')),
-    'a >.. b': FeatureCall(Variable('a'), '>..')(Variable('b')),
-    'a .. b': FeatureCall(Variable('a'), '..')(Variable('b')),
-    'a -> b': FeatureCall(Variable('a'), '->')(Variable('b')),
-    'a >>> b': FeatureCall(Variable('a'), '>>>')(Variable('b')),
-    'a >> b': FeatureCall(Variable('a'), '>>')(Variable('b')),
-    'a <<< b': FeatureCall(Variable('a'), '<<<')(Variable('b')),
-    'a << b': FeatureCall(Variable('a'), '<<')(Variable('b')),
-    'a <=> b': FeatureCall(Variable('a'), '<=>')(Variable('b')),
-    'a <> b': FeatureCall(Variable('a'), '<>')(Variable('b')),
-    'a ?: b': FeatureCall(Variable('a'), '?:')(Variable('b')),
-    'a * -x <=> (b - y >> c)++': FeatureCall(FeatureCall(Variable('a'), '*')(FeatureCall(Variable('x'), '-_')()), '<=>')(FeatureCall(FeatureCall(FeatureCall(Variable('b'), '-')(Variable('y')), '>>')(Variable('c')), '_++')())
+    'a ..< b': Send(Variable('a'), '..<')(Variable('b')),
+    'a >.. b': Send(Variable('a'), '>..')(Variable('b')),
+    'a .. b': Send(Variable('a'), '..')(Variable('b')),
+    'a -> b': Send(Variable('a'), '->')(Variable('b')),
+    'a >>> b': Send(Variable('a'), '>>>')(Variable('b')),
+    'a >> b': Send(Variable('a'), '>>')(Variable('b')),
+    'a <<< b': Send(Variable('a'), '<<<')(Variable('b')),
+    'a << b': Send(Variable('a'), '<<')(Variable('b')),
+    'a <=> b': Send(Variable('a'), '<=>')(Variable('b')),
+    'a <> b': Send(Variable('a'), '<>')(Variable('b')),
+    'a ?: b': Send(Variable('a'), '?:')(Variable('b')),
+    'a * -x <=> (b - y >> c)++': Send(Send(Variable('a'), '*')(Send(Variable('x'), '-_')()), '<=>')(Send(Send(Send(Variable('b'), '-')(Variable('y')), '>>')(Variable('c')), '_++')())
   },
 
   additiveExpression: {
-    'a + b': FeatureCall(Variable('a'), '+')(Variable('b')),
-    'a - b': FeatureCall(Variable('a'), '-')(Variable('b')),
-    'a +b -c': FeatureCall(FeatureCall(Variable('a'), '+')(Variable('b')), '-')(Variable('c')),
-    'a + (b - c)': FeatureCall(Variable('a'), '+')(FeatureCall(Variable('b'), '-')(Variable('c'))),
-    'a * -x + (b - c)++': FeatureCall(FeatureCall(Variable('a'), '*')(FeatureCall(Variable('x'), '-_')()), '+')(FeatureCall(FeatureCall(Variable('b'), '-')(Variable('c')), '_++')())
+    'a + b': Send(Variable('a'), '+')(Variable('b')),
+    'a - b': Send(Variable('a'), '-')(Variable('b')),
+    'a +b -c': Send(Send(Variable('a'), '+')(Variable('b')), '-')(Variable('c')),
+    'a + (b - c)': Send(Variable('a'), '+')(Send(Variable('b'), '-')(Variable('c'))),
+    'a * -x + (b - c)++': Send(Send(Variable('a'), '*')(Send(Variable('x'), '-_')()), '+')(Send(Send(Variable('b'), '-')(Variable('c')), '_++')())
   },
 
   multiplicativeExpression: {
-    'a * b': FeatureCall(Variable('a'), '*')(Variable('b')),
-    'a ** b': FeatureCall(Variable('a'), '**')(Variable('b')),
-    'a / b': FeatureCall(Variable('a'), '/')(Variable('b')),
-    'a % b': FeatureCall(Variable('a'), '%')(Variable('b')),
-    'a * b / c': FeatureCall(FeatureCall(Variable('a'), '*')(Variable('b')), '/')(Variable('c')),
-    'a * (b / c)': FeatureCall(Variable('a'), '*')(FeatureCall(Variable('b'), '/')(Variable('c'))),
-    'a++ * -(b / c)': FeatureCall(FeatureCall(Variable('a'), '_++')(), '*')(FeatureCall(FeatureCall(Variable('b'), '/')(Variable('c')), '-_')()),
-    'a * (b + c)': FeatureCall(Variable('a'), '*')(FeatureCall(Variable('b'), '+')(Variable('c')))
+    'a * b': Send(Variable('a'), '*')(Variable('b')),
+    'a ** b': Send(Variable('a'), '**')(Variable('b')),
+    'a / b': Send(Variable('a'), '/')(Variable('b')),
+    'a % b': Send(Variable('a'), '%')(Variable('b')),
+    'a * b / c': Send(Send(Variable('a'), '*')(Variable('b')), '/')(Variable('c')),
+    'a * (b / c)': Send(Variable('a'), '*')(Send(Variable('b'), '/')(Variable('c'))),
+    'a++ * -(b / c)': Send(Send(Variable('a'), '_++')(), '*')(Send(Send(Variable('b'), '/')(Variable('c')), '-_')()),
+    'a * (b + c)': Send(Variable('a'), '*')(Send(Variable('b'), '+')(Variable('c')))
   },
 
   prefixUnaryExpression: {
-    'not a': FeatureCall(Variable('a'), 'not_')(),
-    '!a': FeatureCall(Variable('a'), '!_')(),
-    '-a': FeatureCall(Variable('a'), '-_')(),
-    '+a': FeatureCall(Variable('a'), '+_')(),
-    'not !a': FeatureCall(FeatureCall(Variable('a'), '!_')(), 'not_')(),
-    '-a++': FeatureCall(FeatureCall(Variable('a'), '_++')(), '-_')(),
-    '(-a)++': FeatureCall(FeatureCall(Variable('a'), '-_')(), '_++')(),
+    'not a': Send(Variable('a'), 'not_')(),
+    '!a': Send(Variable('a'), '!_')(),
+    '-a': Send(Variable('a'), '-_')(),
+    '+a': Send(Variable('a'), '+_')(),
+    'not !a': Send(Send(Variable('a'), '!_')(), 'not_')(),
+    '-a++': Send(Send(Variable('a'), '_++')(), '-_')(),
+    '(-a)++': Send(Send(Variable('a'), '-_')(), '_++')(),
   },
 
   postfixUnaryExpression: {
-    'a++': FeatureCall(Variable('a'), '_++')(),
-    'a--': FeatureCall(Variable('a'), '_--')(),
-    '((a--)++)--': FeatureCall(FeatureCall(FeatureCall(Variable('a'), '_--')(), '_++')(), '_--')()
+    'a++': Send(Variable('a'), '_++')(),
+    'a--': Send(Variable('a'), '_--')(),
+    '((a--)++)--': Send(Send(Send(Variable('a'), '_--')(), '_++')(), '_--')()
   },
 
-  featureCall: {
-    'a.m()': FeatureCall(Variable('a'), 'm')(),
-    'a.m(p)': FeatureCall(Variable('a'), 'm')(Variable('p')),
-    'a.m{p => p}': FeatureCall(Variable('a'), 'm')(Closure(Parameter('p'))(Variable('p'))),
-    'a.m(p, q)': FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')),
-    'a?.m(p, q)': FeatureCall(Variable('a'), 'm', true)(Variable('p'), Variable('q')),
-    'a.m(p, q).n().o(r)': FeatureCall(FeatureCall(FeatureCall(Variable('a'), 'm')(Variable('p'), Variable('q')), 'n')(), 'o')(Variable('r')),
-    '(a + 5).m(p, q)': FeatureCall(FeatureCall(Variable('a'), '+')(Literal(5)), 'm')(Variable('p'), Variable('q')),
+  Send: {
+    'a.m()': Send(Variable('a'), 'm')(),
+    'a.m(p)': Send(Variable('a'), 'm')(Variable('p')),
+    'a.m{p => p}': Send(Variable('a'), 'm')(Closure(Parameter('p'))(Variable('p'))),
+    'a.m(p, q)': Send(Variable('a'), 'm')(Variable('p'), Variable('q')),
+    'a?.m(p, q)': Send(Variable('a'), 'm', true)(Variable('p'), Variable('q')),
+    'a.m(p, q).n().o(r)': Send(Send(Send(Variable('a'), 'm')(Variable('p'), Variable('q')), 'n')(), 'o')(Variable('r')),
+    '(a + 5).m(p, q)': Send(Send(Variable('a'), '+')(Literal(5)), 'm')(Variable('p'), Variable('q')),
     'a.m(p,)': FAIL,
     'a.m(,q)': FAIL,
     'a.m': FAIL,
@@ -344,7 +344,7 @@ const fixture = {
   constructorCall: {
     'new p.C()': New('p.C')(),
     'new p.C(a)': New('p.C')(Variable('a')),
-    'new p.C(a, b++)': New('p.C')(Variable('a'), FeatureCall(Variable('b'), '_++')()),
+    'new p.C(a, b++)': New('p.C')(Variable('a'), Send(Variable('b'), '_++')()),
     'new p.C': FAIL,
     new: FAIL
   },
@@ -352,19 +352,19 @@ const fixture = {
   superInvocation: {
     'super()': Super(),
     'super(a)': Super(Variable('a')),
-    'super(a, b++)': Super(Variable('a'), FeatureCall(Variable('b'), '_++')()),
+    'super(a, b++)': Super(Variable('a'), Send(Variable('b'), '_++')()),
     super: FAIL,
     'super.m()': FAIL
   },
 
   ifExpression: {
-    'if(a > b) x': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
-    'if (a > b)x': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
-    'if (a > b){x}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
-    'if (a > b){x;y}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'), Variable('y'))(),
-    'if (a > b) x else y': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
-    'if (a > b) {x} else {y}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
-    'if (a > b){x}else{y}': If(FeatureCall(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
+    'if(a > b) x': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
+    'if (a > b)x': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
+    'if (a > b){x}': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'))(),
+    'if (a > b){x;y}': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'), Variable('y'))(),
+    'if (a > b) x else y': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
+    'if (a > b) {x} else {y}': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
+    'if (a > b){x}else{y}': If(Send(Variable('a'), '>')(Variable('b')))(Variable('x'))(Variable('y')),
     'if(a) if(b) x else y else z': If(Variable('a'))(If(Variable('b'))(Variable('x'))(Variable('y')))(Variable('z')),
     'if(a) if(b) x else y': If(Variable('a'))(If(Variable('b'))(Variable('x'))(Variable('y')))(),
     'if (a > b)xelse y': FAIL,
@@ -374,17 +374,17 @@ const fixture = {
   },
 
   tryExpression: {
-    'try x++': Try(FeatureCall(Variable('x'), '_++')())()(),
-    'try {x++}': Try(FeatureCall(Variable('x'), '_++')())()(),
-    'try {x++} catch e h': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
-    'try {x++} catch e: foo.bar.E h': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try{ x++ }catch e{h}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
-    'try{ x++ }catch e : foo.bar.E {h}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try {x++} catch e{h} then always f': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e{h} then always {f}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e1{h1} catch e2{h2}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
-    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(FeatureCall(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
-    'try {x++} then always {f}': Try(FeatureCall(Variable('x'), '_++')())()(Variable('f')),
+    'try x++': Try(Send(Variable('x'), '_++')())()(),
+    'try {x++}': Try(Send(Variable('x'), '_++')())()(),
+    'try {x++} catch e h': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
+    'try {x++} catch e: foo.bar.E h': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
+    'try{ x++ }catch e{h}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
+    'try{ x++ }catch e : foo.bar.E {h}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
+    'try {x++} catch e{h} then always f': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e{h} then always {f}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e1{h1} catch e2{h2}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
+    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
+    'try {x++} then always {f}': Try(Send(Variable('x'), '_++')())()(Variable('f')),
     'try {x++} catch e{h} then always': FAIL,
     'try {x++} then always f then always f': FAIL,
     'try{ x++ }catch e': FAIL,
@@ -423,7 +423,7 @@ const fixture = {
     '[]': ListLiteral(),
     '[1]': ListLiteral(Literal(1)),
     '[1,false,"foo"]': ListLiteral(Literal(1), Literal(false), Literal('foo')),
-    '#{1 + b, -5}': SetLiteral(FeatureCall(Literal(1), '+')(Variable('b')), FeatureCall(Literal(5), '-_')()),
+    '#{1 + b, -5}': SetLiteral(Send(Literal(1), '+')(Variable('b')), Send(Literal(5), '-_')()),
     '[': FAIL,
     '[1,2,': FAIL,
     '#{': FAIL,
@@ -443,12 +443,12 @@ const fixture = {
     'object ': FAIL,
     '{}': Closure()(),
     '{ => }': Closure()(),
-    '{ a.m() }': Closure()(FeatureCall(Variable('a'), 'm')()),
+    '{ a.m() }': Closure()(Send(Variable('a'), 'm')()),
     '{ a => }': Closure(Parameter('a'))(),
-    '{ a => a.m() }': Closure(Parameter('a'))(FeatureCall(Variable('a'), 'm')()),
-    '{ a, b => a.m() }': Closure(Parameter('a'), Parameter('b'))(FeatureCall(Variable('a'), 'm')()),
-    '{ a, b... => a.m() }': Closure(Parameter('a'), Parameter('b', true))(FeatureCall(Variable('a'), 'm')()),
-    '{ a, b => a.m(); b }': Closure(Parameter('a'), Parameter('b'))(FeatureCall(Variable('a'), 'm')(), Variable('b')),
+    '{ a => a.m() }': Closure(Parameter('a'))(Send(Variable('a'), 'm')()),
+    '{ a, b => a.m() }': Closure(Parameter('a'), Parameter('b'))(Send(Variable('a'), 'm')()),
+    '{ a, b... => a.m() }': Closure(Parameter('a'), Parameter('b', true))(Send(Variable('a'), 'm')()),
+    '{ a, b => a.m(); b }': Closure(Parameter('a'), Parameter('b'))(Send(Variable('a'), 'm')(), Variable('b')),
     '{ a, b a.m() }': FAIL
   }
 

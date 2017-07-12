@@ -8,7 +8,7 @@ import {
   // ClassDeclaration,
   Closure,
   // ConstructorDeclaration,
-  FeatureCall,
+  Send,
   // FieldDeclaration,
   If,
   // Import,
@@ -47,11 +47,11 @@ const fixture = new Map([
   [VariableDeclaration(Variable('a'), false, Literal(1)), undefined],
 
 
-  [FeatureCall(Closure()(VariableDeclaration(Variable('a'), true), Variable('a')), 'call')(), null],
-  [FeatureCall(Closure()(VariableDeclaration(Variable('a'), true, Literal(1)), Variable('a')), 'call')(), 1],
-  [FeatureCall(Closure()(VariableDeclaration(Variable('a'), false, Literal(1)), Variable('a')), 'call')(), 1],
+  [Send(Closure()(VariableDeclaration(Variable('a'), true), Variable('a')), 'call')(), null],
+  [Send(Closure()(VariableDeclaration(Variable('a'), true, Literal(1)), Variable('a')), 'call')(), 1],
+  [Send(Closure()(VariableDeclaration(Variable('a'), false, Literal(1)), Variable('a')), 'call')(), 1],
 
-  [FeatureCall(Closure()(
+  [Send(Closure()(
     VariableDeclaration(Variable('a'), true, Literal(1)),
     Assignment(Variable('a'), Literal(2)),
     Variable('a')
@@ -65,31 +65,31 @@ const fixture = new Map([
 
   [Variable('a'), new ReferenceError('a is not defined')],
 
-  [FeatureCall(Literal(true), '||')(Literal(false)), true],
-  [FeatureCall(Literal(true), 'or')(Literal(false)), true],
-  [FeatureCall(Literal(true), '&&')(Literal(false)), false],
-  [FeatureCall(Literal(true), 'and')(Literal(false)), false],
-  [FeatureCall(Literal(5), '===')(Literal(3)), false],
-  [FeatureCall(Literal(5), '!==')(Literal(3)), true],
-  [FeatureCall(Literal(5), '==')(Literal(3)), false],
-  [FeatureCall(Literal(5), '!=')(Literal(3)), true],
-  [FeatureCall(Literal(5), '>=')(Literal(3)), true],
-  [FeatureCall(Literal(5), '<=')(Literal(3)), false],
-  [FeatureCall(Literal(5), '>')(Literal(3)), true],
-  [FeatureCall(Literal(5), '<')(Literal(3)), false],
-  [FeatureCall(Literal(5), '+')(Literal(3)), 8],
-  [FeatureCall(Literal(5), '-')(Literal(3)), 2],
-  [FeatureCall(Literal(5), '**')(Literal(3)), 125],
-  [FeatureCall(Literal(5), '*')(Literal(3)), 15],
-  [FeatureCall(Literal(5), '/')(Literal(3)), 5 / 3],
-  [FeatureCall(Literal(5), '%')(Literal(3)), 2],
+  [Send(Literal(true), '||')(Literal(false)), true],
+  [Send(Literal(true), 'or')(Literal(false)), true],
+  [Send(Literal(true), '&&')(Literal(false)), false],
+  [Send(Literal(true), 'and')(Literal(false)), false],
+  [Send(Literal(5), '===')(Literal(3)), false],
+  [Send(Literal(5), '!==')(Literal(3)), true],
+  [Send(Literal(5), '==')(Literal(3)), false],
+  [Send(Literal(5), '!=')(Literal(3)), true],
+  [Send(Literal(5), '>=')(Literal(3)), true],
+  [Send(Literal(5), '<=')(Literal(3)), false],
+  [Send(Literal(5), '>')(Literal(3)), true],
+  [Send(Literal(5), '<')(Literal(3)), false],
+  [Send(Literal(5), '+')(Literal(3)), 8],
+  [Send(Literal(5), '-')(Literal(3)), 2],
+  [Send(Literal(5), '**')(Literal(3)), 125],
+  [Send(Literal(5), '*')(Literal(3)), 15],
+  [Send(Literal(5), '/')(Literal(3)), 5 / 3],
+  [Send(Literal(5), '%')(Literal(3)), 2],
   // TODO: Other Ops: '..<' / '>..' / '..' / '->' / '>>>' / '>>' / '<<<' / '<<' / '<=>' / '<>' / '?:'
 
-  [FeatureCall(Literal(5), '-_')(), -5],
-  [FeatureCall(Variable('a'), '_++')(), new ReferenceError('a is not defined')],
-  [FeatureCall(Variable('a'), '_--')(), new ReferenceError('a is not defined')],
-  [FeatureCall(Literal(true), '!_')(), false],
-  [FeatureCall(Literal(true), 'not_')(), false],
+  [Send(Literal(5), '-_')(), -5],
+  [Send(Variable('a'), '_++')(), new ReferenceError('a is not defined')],
+  [Send(Variable('a'), '_--')(), new ReferenceError('a is not defined')],
+  [Send(Literal(true), '!_')(), false],
+  [Send(Literal(true), 'not_')(), false],
   // TODO: prefix +: WTF does it do???
 
   [InstanceOf(SetLiteral(), 'Set'), true],
@@ -105,11 +105,11 @@ const fixture = new Map([
   [Try(Literal(1))()(Literal(3)), 3],
   [Try(Throw(Literal('woops')))(Catch(Variable('e'))(Literal(2)))(), 2],
 
-  [FeatureCall(Closure()(
+  [Send(Closure()(
     Return(Literal(2)),
     Literal(1)
   ), 'call')(), 2],
-  [FeatureCall(Closure()(
+  [Send(Closure()(
     Literal(1),
     Return(Literal(2))
   ), 'call')(), 2],

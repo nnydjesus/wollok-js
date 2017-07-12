@@ -88,14 +88,14 @@ const compile = assign(expression => compile[expression.nodeType](expression), {
       case '++': return `${operand}++`
       case '--': return `${operand}--`
       default: throw TypeError('Unsupported operator')
-            // case '+': TODO: WTF does this do?
+      // case '+': TODO: WTF does this do?
     }
   },
 
   InstanceOf: ({ left, right }) => `${compile(left)} instanceof ${right}`,
 
   // TODO: Nullsafe? Do we really want this?
-  FeatureCall: ({ target, key, parameters }) => `${compile(target)}["${key}"](${compileArguments(parameters)})`,
+  Send: ({ target, key, parameters }) => `${compile(target)}["${key}"](${compileArguments(parameters)})`,
 
   New: ({ target, parameters }) => `new ${target}(${compileArguments(parameters)})`,
 
