@@ -102,6 +102,7 @@ const fixture = {
   class: {
     'class C { }': ClassDeclaration('C')()(),
     'class C { var v; method m() }': ClassDeclaration('C')()(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
+    'class C inherits S { }': ClassDeclaration('C')(SuperType('S')())(),
     'class C inherits p.S { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')())(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'class C inherits p.S(a,b) { var v; method m() }': ClassDeclaration('C')(SuperType('p.S')(Variable('a'), Variable('b')))(FieldDeclaration(Variable('v'), true), MethodDeclaration('m')()()),
     'class C inherits p.S mixed with p.M { }': ClassDeclaration('C')(SuperType('p.S')(), 'p.M')(),
