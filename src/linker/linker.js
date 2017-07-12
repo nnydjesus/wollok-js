@@ -1,5 +1,5 @@
 import winston from 'winston'
-import { Program, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration } from '../model'
+import { Program, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
 import { visitor } from '../model/visiting'
 import { ExtendableError } from '../utils/error'
 
@@ -13,6 +13,7 @@ const scopingAware = [
   ClassDeclaration,
   ObjectDeclaration,
   MethodDeclaration,
+  MixinDeclaration,
   Closure
 ]
 

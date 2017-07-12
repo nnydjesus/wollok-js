@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { linkParent, link } from '../../src/linker/link'
 import { queryNodeByType } from '../../src/model/visiting'
-import { ClassDeclaration, MethodDeclaration, Closure } from '../../src/model'
+import { ClassDeclaration, MethodDeclaration, Closure, MixinDeclaration } from '../../src/model'
 import parser from '../../src/parser'
 
 describe('linker', () => {
@@ -276,6 +276,17 @@ describe('linker', () => {
           }
         `,
         ClassDeclaration, m => m.name === 'Bird',
+        ['energy']
+      )
+    })
+
+    it('Mixin scope includes instance variables', () => {
+      expectScopeOf(`
+          mixin Bird {
+            const energy = 23
+          }
+        `,
+        MixinDeclaration, m => m.name === 'Bird',
         ['energy']
       )
     })
