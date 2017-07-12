@@ -23,5 +23,3 @@ export const link = (node) => {
   const linker = new Linker()
   return linker.link(node)
 }
-
-
