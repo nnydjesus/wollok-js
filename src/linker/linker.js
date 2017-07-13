@@ -1,7 +1,10 @@
-import winston from 'winston'
+import { linkParent } from './link'
 import { Context } from './context'
 import { Block, Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
 import { visit } from '../model/visiting'
+import { ExtendableError } from '../utils/error'
+
+export class LinkerError extends ExtendableError { }
 
 // winston.level = 'silly'
 
@@ -37,47 +40,85 @@ const linkeables = {
 
 export default class Linker {
   link(node) {
-    const context = new Context()
-    visit(node, ::this.onNode(context), ::this.afterNode(context))
+    this.firstPass(node)
+    this.secondPass(node)
     return node
   }
+  firstPass(node) {
+    const context = new Context()
+    linkParent(node) // link parent should be a command within the first pass
+    new CreateScopesVisitor(context).visit(node)
+  }
+  secondPass(node) {
+    const visitor = new LinkVisitor()
+    visitor.visit(node)
+    // TODO: backward compat error handling. This should be modelled better
+    if (visitor.unresolvables.length > 0) {
+      throw new LinkerError(`Cannot resolve reference to '${visitor.unresolvables[0]}' at ???`)
+    }
+  }
+}
 
-  onNode(context) {
-    return node => {
-      const type = node.nodeType
+class Visitor {
+  visit(node) {
+    visit(node, ::this.onNode, ::this.afterNode)
+  }
+  onNode() { }
+  afterNode() { }
+}
 
-      // register it in scope if applies
-      if (referenciables[type]) {
-        const name = referenciables[type](node)
-        winston.silly('>RR> registering', type, '(', name, ')')
-        context.register(node, name)
-      }
+class CreateScopesVisitor extends Visitor {
+  constructor(context) {
+    super()
+    this.context = context
+  }
 
-      // push it (fucker) if it is a context
-      if (isScopeable(type)) {
-        winston.silly('>>>> pushing', type)
-        context.push(node)
-      }
+  onNode(node) {
+    const type = node.nodeType
 
-      // link it if linkable
-      if (linkeables[type]) {
-        winston.silly('???? checking', type)
-        const name = linkeables[type](node)
-        if (name !== 'Object') { // HACK for now I need to resolve ref to Object !!!!!!! 
-          node.link = context.resolve(name)
+    if (referenciables[type]) {
+      const name = referenciables[type](node)
+      this.context.register(node, name)
+    }
+
+    if (isScopeable(type)) {
+      this.context.push(node)
+    }
+  }
+
+  afterNode(node) {
+    const type = node.nodeType
+    if (isScopeable(type)) {
+      this.context.pop()
+    }
+  }
+
+}
+
+class LinkVisitor extends Visitor {
+  constructor() {
+    super()
+    this.unresolvables = []
+  }
+  onNode(node) {
+    const type = node.nodeType
+    // try to link on the first pass if linkable
+    if (linkeables[type]) {
+      const name = linkeables[type](node)
+      // HACK for now I need to resolve ref to Object !!!!!!! 
+      if (name !== 'Object') {
+        const found = findInScope(node, name)
+        if (found) {
+          node.link = found
+        } else {
+          this.unresolvables.push(name)
         }
       }
     }
   }
-
-  afterNode(context) {
-    return node => {
-      const type = node.nodeType
-
-      if (isScopeable(type)) {
-        winston.silly('<<<< poping', type)
-        context.pop()
-      }
-    }
-  }
 }
+
+// scoping
+
+const findInScope = (node, name) =>
+  node && ((node.scope && node.scope[name]) || findInScope(node.parent, name))

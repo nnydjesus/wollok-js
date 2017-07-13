@@ -1,20 +1,23 @@
 import winston from 'winston'
 
+// this should be in the linker !
 const ignoredKeys = ['parent', 'link']
 
-export const visit = (node, fn, after = () => {}) => {
+export const visit = (node, fn, after = () => {}, parent) => {
+  if (!node.nodeType) { return node }
   winston.silly(`visiting ${node.nodeType}`)
-  fn(node)
+  fn(node, parent)
   Object.keys(node).forEach(key => {
     if (ignoredKeys.includes(key)) return
     const value = node[key]
     const list = Array.isArray(value) ? value : [value]
     list.filter(e => e.nodeType).forEach((e, i) => {
       winston.silly(`\tvisiting ${node.nodeType}.${key}[${i}]`)
-      visit(e, fn, after)
+      visit(e, fn, after, node)
     })
   })
   after(node)
+  return node
 }
 
 export const visitor = object => node => visit(node,

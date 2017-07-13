@@ -50,7 +50,7 @@ describe('Class linkage', () => {
 
     // TODO: finally I reached the point where the stack based linking 
     //   is not enough (or the deep-first approach)
-    it.skip('gets linked to a class in the same file (declared AFTER)', () => {
+    it('gets linked to a class in the same file (declared AFTER)', () => {
       expectNoLinkageError(`
         class BirdFactory {
           method create() {
@@ -80,7 +80,7 @@ describe('Class linkage', () => {
       `, 'blah')
     })
 
-    it.skip('gets linked to a class in the same file (declared AFTER)', () => {
+    it('gets linked to a class in the same file (declared AFTER)', () => {
       expectNoLinkageError(`
         class Son inherits Father { }
         class Father { }

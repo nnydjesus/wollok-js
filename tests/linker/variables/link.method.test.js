@@ -80,7 +80,8 @@ describe('Method scoping', () => {
       `)
     })
 
-    it('detects a reference to a variable that is not yet declared', () => {
+    // THIS will be part of the validator and not the linker
+    it.skip('detects a reference to a variable that is not yet declared', () => {
       expectUnresolvedVariable('factor', `
         object pepita {
           method willConsume(meters) {

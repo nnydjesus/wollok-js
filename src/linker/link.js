@@ -1,15 +1,9 @@
 import Linker from './linker'
+import { visit } from '../model/visiting'
 
-export const linkParent = (node, parent) => {
-  if (Array.isArray(node)) {
-    node.forEach(e => linkParent(e, parent))
-  //
-  } else if ((typeof node) === 'object') {
-    Object.keys(node).forEach(key => linkParent(node[key], node))
-    if (parent) node.parent = parent
-  }
-  return node
-}
+export const linkParent = node => visit(node, (node, parent) => { 
+  if (parent) node.parent = parent
+})
 
 /** 
  * Performs linking on the given (root?) node.
