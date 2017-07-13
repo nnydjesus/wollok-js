@@ -1,6 +1,6 @@
 import winston from 'winston'
 import { Context } from './context'
-import { Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
+import { VariableDeclaration, Field, Variable, New, Parameter, Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
 import { visit } from './visiting'
 
 // winston.level = 'silly'
@@ -21,17 +21,18 @@ const isScopeable = type => scopeables.includes(type)
 const byName = n => n.name
 /* nodes which gets registered in their parent's scope */
 const referenciables = {
-  VariableDeclaration: _ => byName(_.variable),
-  FieldDeclaration: _ => byName(_.variable),
-  Param: byName,
-  ClassDeclaration: byName,
-  MixinDeclaration: byName,
-  ObjectDeclaration: byName
+  [VariableDeclaration.name]: _ => byName(_.variable),
+  [Field.name]: _ => byName(_.variable),
+  [Parameter.name]: byName,
+  [Class.name]: byName,
+  [Mixin.name]: byName,
+  [Singleton.name]: byName
 }
 
 const linkeables = {
-  Variable: v => v.name,
-  New: n => n.target
+  [Variable.name]: v => v.name,
+  [New.name]: n => n.target,
+  [Class.name]: c => c.superclass
 }
 
 export default class Linker {
@@ -43,7 +44,7 @@ export default class Linker {
 
   onNode(context) {
     return node => {
-      const type = node.type
+      const { type } = node
 
       // register it in scope if applies
       if (referenciables[type]) {

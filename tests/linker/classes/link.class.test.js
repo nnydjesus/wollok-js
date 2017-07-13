@@ -63,7 +63,7 @@ describe('Class linkage', () => {
 
   })
 
-  describe('SuperType (inherits)', () => {
+  describe('Super (inherits)', () => {
 
     it('gets linked to a class in the same file (declared BEFORE)', () => {
       const node = expectNoLinkageError(`
@@ -71,8 +71,8 @@ describe('Class linkage', () => {
         class Son inherits Father { }
       `)
       const Father = queryNodeByType(node, Class.name, c => c.name === 'Father')[0]
-      const zuper = queryNodeByType(node, Class.name, s => s.name === 'Father')[0]
-      expect(zuper.link).to.deep.equal(Father)
+      const Son = queryNodeByType(node, Class.name, s => s.name === 'Son')[0]
+      expect(Son.link).to.deep.equal(Father)
     })
     it('throws an error if the referenced class does NOT exist', () => {
       expectUnresolvedVariable('Father', `
