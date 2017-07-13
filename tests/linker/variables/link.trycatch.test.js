@@ -1,5 +1,4 @@
-import { expectNoLinkageError, expectUnresolvedVariable, expectScopeOf } from '../link-expects'
-import { Try } from '../../../src/model'
+import { expectNoLinkageError, expectUnresolvedVariable } from '../link-expects'
 
 // RE ENABLE ALL THE SKIPPED ONCE THE PARSER FIXES CATCHES
 
