@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { linkParent } from '../../src/linker/link'
+import { linkParentStep as linkParent } from '../../src/linker/steps'
 import { Node } from '../../src/model/node'
 
 describe('linkParent', () => {
