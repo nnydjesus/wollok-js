@@ -45,9 +45,8 @@ export default class Linker {
     return node
   }
   firstPass(node) {
-    const context = new Context()
     linkParent(node) // link parent should be a command within the first pass
-    new CreateScopesVisitor(context).visit(node)
+    new CreateScopesVisitor().visit(node)
   }
   secondPass(node) {
     const visitor = new LinkVisitor()
@@ -68,9 +67,9 @@ class Visitor {
 }
 
 class CreateScopesVisitor extends Visitor {
-  constructor(context) {
+  constructor() {
     super()
-    this.context = context
+    this.context = new Context()
   }
 
   onNode(node) {
