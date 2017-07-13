@@ -1,5 +1,5 @@
 import { expectScopeOf } from '../link-expects'
-import { MixinDeclaration } from '../../../src/model'
+import { Mixin } from '../../../src/model'
 
 describe('Class scoping', () => {
 
@@ -9,7 +9,7 @@ describe('Class scoping', () => {
           const energy = 23
         }
       `,
-      MixinDeclaration, m => m.name === 'Bird',
+      Mixin, m => m.name === 'Bird',
       ['energy']
     )
   })

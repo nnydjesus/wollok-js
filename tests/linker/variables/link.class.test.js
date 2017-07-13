@@ -1,5 +1,5 @@
 import { expectScopeOf } from '../link-expects'
-import { ClassDeclaration } from '../../../src/model'
+import { Class } from '../../../src/model'
 
 describe('Class - variable resolution', () => {
 
@@ -9,7 +9,7 @@ describe('Class - variable resolution', () => {
           const energy = 23
         }
       `,
-      ClassDeclaration, m => m.name === 'Bird',
+      Class, m => m.name === 'Bird',
       ['energy']
     )
   })
