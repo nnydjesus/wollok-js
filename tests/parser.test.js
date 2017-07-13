@@ -157,8 +157,8 @@ const fixture = {
     'method m(p...)': Method('m')(Parameter('p', true))(),
     'method m(p,q...)': Method('m')(Parameter('p'), Parameter('q', true))(),
     'method m(p) { }': Method('m')(Parameter('p'))(),
-    'method m(p) { p++ }': Method('m')(Parameter('p'))(Send(Variable('p'), '_++')()),
-    'method m(p) = p++': Method('m')(Parameter('p'))(Send(Variable('p'), '_++')()),
+    'method m(p) { p++ }': Method('m')(Parameter('p'))(Assignment(Variable('p'), Send(Variable('p'), '_++')())),
+    'method m(p) = p++': Method('m')(Parameter('p'))(Assignment(Variable('p'), Send(Variable('p'), '_++')())),
     'override method m(p)': Method('m', true)(Parameter('p'))(),
     'override method m(p) native': Method('m', true, true)(Parameter('p'))(),
     'method m() = { a }': Method('m')()(Closure()(Variable('a'))),
@@ -176,13 +176,13 @@ const fixture = {
     'constructor(p, q)': Constructor(Parameter('p'), Parameter('q'))()(),
     'constructor(p...)': Constructor(Parameter('p', true))()(),
     'constructor(p, q...)': Constructor(Parameter('p'), Parameter('q', true))()(),
-    'constructor(p) { p++ }': Constructor(Parameter('p'))()(Send(Variable('p'), '_++')()),
+    'constructor(p) { p++ }': Constructor(Parameter('p'))()(Assignment(Variable('p'), Send(Variable('p'), '_++')())),
     'constructor(p) = self()': Constructor(Parameter('p'))([], false)(),
     'constructor(p) = self(p,p + 1)': Constructor(Parameter('p'))([Variable('p'), Send(Variable('p'), '+')(Literal(1))], false)(),
-    'constructor(p) = self(p,p + 1) { p++ }': Constructor(Parameter('p'))([Variable('p'), Send(Variable('p'), '+')(Literal(1))], false)(Send(Variable('p'), '_++')()),
+    'constructor(p) = self(p,p + 1) { p++ }': Constructor(Parameter('p'))([Variable('p'), Send(Variable('p'), '+')(Literal(1))], false)(Assignment(Variable('p'), Send(Variable('p'), '_++')())),
     'constructor(p) = super()': Constructor(Parameter('p'))([], true)(),
     'constructor(p) = super(p,p + 1)': Constructor(Parameter('p'))([Variable('p'), Send(Variable('p'), '+')(Literal(1))], true)(),
-    'constructor(p) = super(p,p + 1) { p++ }': Constructor(Parameter('p'))([Variable('p'), Send(Variable('p'), '+')(Literal(1))], true)(Send(Variable('p'), '_++')()),
+    'constructor(p) = super(p,p + 1) { p++ }': Constructor(Parameter('p'))([Variable('p'), Send(Variable('p'), '+')(Literal(1))], true)(Assignment(Variable('p'), Send(Variable('p'), '_++')())),
     'constructor': FAIL,
     'constructor(': FAIL,
     'constructor() = { }': FAIL,
@@ -278,7 +278,7 @@ const fixture = {
     'a <=> b': Send(Variable('a'), '<=>')(Variable('b')),
     'a <> b': Send(Variable('a'), '<>')(Variable('b')),
     'a ?: b': Send(Variable('a'), '?:')(Variable('b')),
-    'a * -x <=> (b - y >> c)++': Send(Send(Variable('a'), '*')(Send(Variable('x'), '-_')()), '<=>')(Send(Send(Send(Variable('b'), '-')(Variable('y')), '>>')(Variable('c')), '_++')())
+    'a * -x <=> (b - y >> c)': Send(Send(Variable('a'), '*')(Send(Variable('x'), '-_')()), '<=>')(Send(Send(Variable('b'), '-')(Variable('y')), '>>')(Variable('c')))
   },
 
   additiveExpression: {
@@ -286,7 +286,7 @@ const fixture = {
     'a - b': Send(Variable('a'), '-')(Variable('b')),
     'a +b -c': Send(Send(Variable('a'), '+')(Variable('b')), '-')(Variable('c')),
     'a + (b - c)': Send(Variable('a'), '+')(Send(Variable('b'), '-')(Variable('c'))),
-    'a * -x + (b - c)++': Send(Send(Variable('a'), '*')(Send(Variable('x'), '-_')()), '+')(Send(Send(Variable('b'), '-')(Variable('c')), '_++')())
+    'a * -x + -(b - c)': Send(Send(Variable('a'), '*')(Send(Variable('x'), '-_')()), '+')(Send(Send(Variable('b'), '-')(Variable('c')), '-_')())
   },
 
   multiplicativeExpression: {
@@ -296,7 +296,7 @@ const fixture = {
     'a % b': Send(Variable('a'), '%')(Variable('b')),
     'a * b / c': Send(Send(Variable('a'), '*')(Variable('b')), '/')(Variable('c')),
     'a * (b / c)': Send(Variable('a'), '*')(Send(Variable('b'), '/')(Variable('c'))),
-    'a++ * -(b / c)': Send(Send(Variable('a'), '_++')(), '*')(Send(Send(Variable('b'), '/')(Variable('c')), '-_')()),
+    'a++ * -(b / c)': Send(Assignment(Variable('a'), Send(Variable('a'), '_++')()), '*')(Send(Send(Variable('b'), '/')(Variable('c')), '-_')()),
     'a * (b + c)': Send(Variable('a'), '*')(Send(Variable('b'), '+')(Variable('c')))
   },
 
@@ -306,17 +306,17 @@ const fixture = {
     '-a': Send(Variable('a'), '-_')(),
     '+a': Send(Variable('a'), '+_')(),
     'not !a': Send(Send(Variable('a'), '!_')(), 'not_')(),
-    '-a++': Send(Send(Variable('a'), '_++')(), '-_')(),
-    '(-a)++': Send(Send(Variable('a'), '-_')(), '_++')(),
+    '-a++': Send(Assignment(Variable('a'), Send(Variable('a'), '_++')()), '-_')(),
+    '(-a)++': FAIL,
   },
 
   postfixUnaryExpression: {
-    'a++': Send(Variable('a'), '_++')(),
-    'a--': Send(Variable('a'), '_--')(),
-    '((a--)++)--': Send(Send(Send(Variable('a'), '_--')(), '_++')(), '_--')()
+    'a++': Assignment(Variable('a'), Send(Variable('a'), '_++')()),
+    'a--': Assignment(Variable('a'), Send(Variable('a'), '_--')()),
+    '(a--)++': FAIL
   },
 
-  Send: {
+  send: {
     'a.m()': Send(Variable('a'), 'm')(),
     'a.m(p)': Send(Variable('a'), 'm')(Variable('p')),
     'a.m{p => p}': Send(Variable('a'), 'm')(Closure(Parameter('p'))(Variable('p'))),
@@ -338,7 +338,7 @@ const fixture = {
   constructorCall: {
     'new p.C()': New('p.C')(),
     'new p.C(a)': New('p.C')(Variable('a')),
-    'new p.C(a, b++)': New('p.C')(Variable('a'), Send(Variable('b'), '_++')()),
+    'new p.C(a, b++)': New('p.C')(Variable('a'), Assignment(Variable('b'), Send(Variable('b'), '_++')())),
     'new p.C': FAIL,
     new: FAIL
   },
@@ -346,7 +346,7 @@ const fixture = {
   superInvocation: {
     'super()': Super(),
     'super(a)': Super(Variable('a')),
-    'super(a, b++)': Super(Variable('a'), Send(Variable('b'), '_++')()),
+    'super(a, b++)': Super(Variable('a'), Assignment(Variable('b'), Send(Variable('b'), '_++')())),
     super: FAIL,
     'super.m()': FAIL
   },
@@ -368,17 +368,17 @@ const fixture = {
   },
 
   tryExpression: {
-    'try x++': Try(Send(Variable('x'), '_++')())()(),
-    'try {x++}': Try(Send(Variable('x'), '_++')())()(),
-    'try {x++} catch e h': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
-    'try {x++} catch e: foo.bar.E h': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try{ x++ }catch e{h}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(),
-    'try{ x++ }catch e : foo.bar.E {h}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try {x++} catch e{h} then always f': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e{h} then always {f}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e1{h1} catch e2{h2}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
-    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(Send(Variable('x'), '_++')())(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
-    'try {x++} then always {f}': Try(Send(Variable('x'), '_++')())()(Variable('f')),
+    'try x++': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))()(),
+    'try {x++}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))()(),
+    'try {x++} catch e h': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(),
+    'try {x++} catch e: foo.bar.E h': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
+    'try{ x++ }catch e{h}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(),
+    'try{ x++ }catch e : foo.bar.E {h}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
+    'try {x++} catch e{h} then always f': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e{h} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e1{h1} catch e2{h2}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
+    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
+    'try {x++} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))()(Variable('f')),
     'try {x++} catch e{h} then always': FAIL,
     'try {x++} then always f then always f': FAIL,
     'try{ x++ }catch e': FAIL,

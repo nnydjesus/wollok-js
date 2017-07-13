@@ -79,14 +79,12 @@ const fixture = new Map([
   [Send(Literal(5), '*')(Literal(3)), 15],
   [Send(Literal(5), '/')(Literal(3)), 5 / 3],
   [Send(Literal(5), '%')(Literal(3)), 2],
-  // TODO: Other Ops: '..<' / '>..' / '..' / '->' / '>>>' / '>>' / '<<<' / '<<' / '<=>' / '<>' / '?:'
 
   [Send(Literal(5), '-_')(), -5],
-  [Send(Variable('a'), '_++')(), new ReferenceError('a is not defined')],
+  [Assignment(Variable('a'), Assignment(Variable('a'), Send(Variable('a'), '_++')())), new ReferenceError('a is not defined')],
   [Send(Variable('a'), '_--')(), new ReferenceError('a is not defined')],
   [Send(Literal(true), '!_')(), false],
   [Send(Literal(true), 'not_')(), false],
-  // TODO: prefix +: WTF does it do???
 
   [InstanceOf(List(), 'Array'), true],
 

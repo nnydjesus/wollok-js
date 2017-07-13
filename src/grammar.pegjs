@@ -135,14 +135,15 @@ andExpression            = left:equalityExpression       tail:( _ andOp _ equali
 equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
 orderExpression          = left:otherOpExpression _ 'instanceof' __ right:qualifiedName              { return InstanceOf(left, right) }
                          / left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-                          
 otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
 additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
 multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-prefixUnaryExpression    = op:preOp _ exp:prefixUnaryExpression { return Send(exp,op+'_')() }
+prefixUnaryExpression    = op:preOp _ right:prefixUnaryExpression { return Send(right,op+'_')() }
                          / postfixUnaryExpression
-postfixUnaryExpression   = exp:Send op:postOp? { return op ? Send(exp,'_'+op)() : exp }
-Send              = left:primaryExpression tail:('.' id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> Send(target,key)(...params), left) }
+postfixUnaryExpression   = left:variable op:postOp { return Assignment(left, Send(left,'_'+op)()) }
+                         / send
+send                     = left:primaryExpression tail:('.' id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> Send(target,key)(...params), left) }
+
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp
 orOp    = '||' / 'or'
