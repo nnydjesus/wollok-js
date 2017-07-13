@@ -1,5 +1,7 @@
 import winston from 'winston'
 
+// winston.level = 'silly'
+
 // this should be in the linker !
 const ignoredKeys = ['parent', 'link']
 
@@ -10,7 +12,7 @@ export const visit = (node, { onNode, afterNode = () => {} }, parent) => {
   Object.keys(node).forEach(key => {
     if (ignoredKeys.includes(key)) return
     const value = node[key]
-    const list = Array.isArray(value) ? value : [value]
+    const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.nodeType).forEach((e, i) => {
       winston.silly(`\tvisiting ${node.nodeType}.${key}[${i}]`)
       visit(e, { onNode, afterNode }, node)
