@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { link } from '../../src/linker/link'
-import { queryNodeByType } from '../../src/model/visiting'
+import { queryNodeByType } from '../../src/linker/visiting'
 import parser from '../../src/parser'
 
 // expect utils for
@@ -11,9 +11,9 @@ export const expectUnresolvedVariable = (variable, code) => expect(() =>
 ).to.throw(`Cannot resolve reference to '${variable}' at ???`)
 
 export const expectScopeHasNames = (node, expected) => expect(Object.keys(node.scope)).to.deep.equal(expected)
-export const expectScopeOf = (program, nodeType, findFilter, expected) => {
+export const expectScopeOf = (program, type, findFilter, expected) => {
   expectScopeHasNames(
-    queryNodeByType(link(parser.parse(program)), nodeType.name, findFilter)[0],
+    queryNodeByType(link(parser.parse(program)), type.name, findFilter)[0],
     expected
   )
 }

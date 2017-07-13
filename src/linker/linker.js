@@ -1,7 +1,7 @@
 import winston from 'winston'
 import { Context } from './context'
-import { Block, Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
-import { visit } from '../model/visiting'
+import { Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
+import { visit } from './visiting'
 
 // winston.level = 'silly'
 
@@ -9,10 +9,10 @@ import { visit } from '../model/visiting'
 const scopeables = [
   File.name,
   Program.name,
-  ClassDeclaration.name,
-  ObjectDeclaration.name,
-  MethodDeclaration.name,
-  MixinDeclaration.name,
+  Class.name,
+  Singleton.name,
+  Method.name,
+  Mixin.name,
   Closure.name,
   Block.name
 ]
@@ -31,8 +31,7 @@ const referenciables = {
 
 const linkeables = {
   Variable: v => v.name,
-  New: n => n.target,
-  SuperType: s => s.name
+  New: n => n.target
 }
 
 export default class Linker {
@@ -44,7 +43,7 @@ export default class Linker {
 
   onNode(context) {
     return node => {
-      const type = node.nodeType
+      const type = node.type
 
       // register it in scope if applies
       if (referenciables[type]) {
@@ -72,7 +71,7 @@ export default class Linker {
 
   afterNode(context) {
     return node => {
-      const type = node.nodeType
+      const type = node.type
 
       if (isScopeable(type)) {
         winston.silly('<<<< poping', type)

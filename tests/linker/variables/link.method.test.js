@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeOf } from '../link-expects'
 import { link } from '../../../src/linker/link'
 import parser from '../../../src/parser'
-import { MethodDeclaration } from '../../../src/model'
+import { Method } from '../../../src/model'
 
 describe('Method scoping', () => {
 
@@ -103,7 +103,7 @@ describe('Method scoping', () => {
           }
         }
       `,
-      MethodDeclaration, m => m.name === 'fly',
+      Method, m => m.name === 'fly',
       ['kms']
     )
   })
