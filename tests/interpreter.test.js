@@ -3,36 +3,30 @@ import { expect } from 'chai'
 import interpret from '../src/interpreter'
 import {
   Assignment,
-  BinaryOp,
   // Block,
   Catch,
-  // ClassDeclaration,
+  // Class,
   Closure,
-  // ConstructorDeclaration,
-  FeatureCall,
-  // FieldDeclaration,
+  // Constructor,
+  Send,
+  // Field,
   If,
   // Import,
   InstanceOf,
-  ListLiteral,
-  // MethodDeclaration,
-  // MixinDeclaration,
-  // ObjectDeclaration,
+  List,
+  // Method,
+  // Mixin,
+  // Singleton,
   New,
   // Package,
   Parameter,
   // Program,
   Return,
-  SelfLiteral,
-  SetLiteral,
   Literal,
   // Super,
-  // SuperLiteral,
-  // SuperType,
   // Test,
   Throw,
   Try,
-  UnaryOp,
   Variable,
   VariableDeclaration
 } from '../src/model'
@@ -49,11 +43,11 @@ const fixture = new Map([
   [VariableDeclaration(Variable('a'), false, Literal(1)), undefined],
 
 
-  [FeatureCall(Closure()(VariableDeclaration(Variable('a'), true), Variable('a')), 'call')(), null],
-  [FeatureCall(Closure()(VariableDeclaration(Variable('a'), true, Literal(1)), Variable('a')), 'call')(), 1],
-  [FeatureCall(Closure()(VariableDeclaration(Variable('a'), false, Literal(1)), Variable('a')), 'call')(), 1],
+  [Send(Closure()(VariableDeclaration(Variable('a'), true), Variable('a')), 'call')(), null],
+  [Send(Closure()(VariableDeclaration(Variable('a'), true, Literal(1)), Variable('a')), 'call')(), 1],
+  [Send(Closure()(VariableDeclaration(Variable('a'), false, Literal(1)), Variable('a')), 'call')(), 1],
 
-  [FeatureCall(Closure()(
+  [Send(Closure()(
     VariableDeclaration(Variable('a'), true, Literal(1)),
     Assignment(Variable('a'), Literal(2)),
     Variable('a')
@@ -67,36 +61,34 @@ const fixture = new Map([
 
   [Variable('a'), new ReferenceError('a is not defined')],
 
-  [BinaryOp('||', Literal(true), Literal(false)), true],
-  [BinaryOp('or', Literal(true), Literal(false)), true],
-  [BinaryOp('&&', Literal(true), Literal(false)), false],
-  [BinaryOp('and', Literal(true), Literal(false)), false],
-  [BinaryOp('===', Literal(5), Literal(3)), false],
-  [BinaryOp('!==', Literal(5), Literal(3)), true],
-  [BinaryOp('==', Literal(5), Literal(3)), false],
-  [BinaryOp('!=', Literal(5), Literal(3)), true],
-  [BinaryOp('>=', Literal(5), Literal(3)), true],
-  [BinaryOp('<=', Literal(5), Literal(3)), false],
-  [BinaryOp('>', Literal(5), Literal(3)), true],
-  [BinaryOp('<', Literal(5), Literal(3)), false],
-  [BinaryOp('+', Literal(5), Literal(3)), 8],
-  [BinaryOp('-', Literal(5), Literal(3)), 2],
-  [BinaryOp('**', Literal(5), Literal(3)), 125],
-  [BinaryOp('*', Literal(5), Literal(3)), 15],
-  [BinaryOp('/', Literal(5), Literal(3)), 5 / 3],
-  [BinaryOp('%', Literal(5), Literal(3)), 2],
-  // TODO: Other Ops: '..<' / '>..' / '..' / '->' / '>>>' / '>>' / '<<<' / '<<' / '<=>' / '<>' / '?:'
+  [Send(Literal(true), '||')(Literal(false)), true],
+  [Send(Literal(true), 'or')(Literal(false)), true],
+  [Send(Literal(true), '&&')(Literal(false)), false],
+  [Send(Literal(true), 'and')(Literal(false)), false],
+  [Send(Literal(5), '===')(Literal(3)), false],
+  [Send(Literal(5), '!==')(Literal(3)), true],
+  [Send(Literal(5), '==')(Literal(3)), false],
+  [Send(Literal(5), '!=')(Literal(3)), true],
+  [Send(Literal(5), '>=')(Literal(3)), true],
+  [Send(Literal(5), '<=')(Literal(3)), false],
+  [Send(Literal(5), '>')(Literal(3)), true],
+  [Send(Literal(5), '<')(Literal(3)), false],
+  [Send(Literal(5), '+')(Literal(3)), 8],
+  [Send(Literal(5), '-')(Literal(3)), 2],
+  [Send(Literal(5), '**')(Literal(3)), 125],
+  [Send(Literal(5), '*')(Literal(3)), 15],
+  [Send(Literal(5), '/')(Literal(3)), 5 / 3],
+  [Send(Literal(5), '%')(Literal(3)), 2],
 
-  [UnaryOp('-', Literal(5)), -5],
-  [UnaryOp('++', Variable('a')), new ReferenceError('a is not defined')],
-  [UnaryOp('--', Variable('a')), new ReferenceError('a is not defined')],
-  [UnaryOp('!', Literal(true)), false],
-  [UnaryOp('not', Literal(true)), false],
-  // TODO: prefix +: WTF does it do???
+  [Send(Literal(5), '-_')(), -5],
+  [Assignment(Variable('a'), Assignment(Variable('a'), Send(Variable('a'), '_++')())), new ReferenceError('a is not defined')],
+  [Send(Variable('a'), '_--')(), new ReferenceError('a is not defined')],
+  [Send(Literal(true), '!_')(), false],
+  [Send(Literal(true), 'not_')(), false],
 
-  [InstanceOf(SetLiteral(), 'Set'), true],
+  [InstanceOf(List(), 'Array'), true],
 
-  [New('Set')(ListLiteral(Literal(1), Literal(2))), new Set([1, 2])],
+  [New('Set')(List(Literal(1), Literal(2))), new Set([1, 2])],
 
   // TODO: Super
 
@@ -107,11 +99,11 @@ const fixture = new Map([
   [Try(Literal(1))()(Literal(3)), 3],
   [Try(Throw(Literal('woops')))(Catch(Variable('e'))(Literal(2)))(), 2],
 
-  [FeatureCall(Closure()(
+  [Send(Closure()(
     Return(Literal(2)),
     Literal(1)
   ), 'call')(), 2],
-  [FeatureCall(Closure()(
+  [Send(Closure()(
     Literal(1),
     Return(Literal(2))
   ), 'call')(), 2],
@@ -122,13 +114,12 @@ const fixture = new Map([
   //-------------------------------------------------------------------------------------------------------------------------------
 
   [Literal(null), null],
-  [SelfLiteral, this],
+  [Variable('this'), this],
   [Literal(true), true],
   [Literal(1), 1],
   [Literal(7.5), 7.5],
   [Literal('foo'), 'foo'],
-  [SetLiteral(Literal(1), Literal(2)), new Set([1, 2])],
-  [ListLiteral(Literal(1), Literal(2)), [1, 2]],
+  [List(Literal(1), Literal(2)), [1, 2]],
   [Closure(Parameter('a'))(Variable('a')), (a) => a],
 
   //-------------------------------------------------------------------------------------------------------------------------------

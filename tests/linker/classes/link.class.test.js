@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
 import { link } from '../../../src/linker/link'
-import { queryNodeByType } from '../../../src/model/visiting'
-import { SuperType, New, ClassDeclaration } from '../../../src/model'
+import { queryNodeByType } from '../../../src/linker/visiting'
+import { New, Class } from '../../../src/model'
 import parser from '../../../src/parser'
 
 describe('Class linkage', () => {
@@ -34,7 +34,7 @@ describe('Class linkage', () => {
           }
         }
       `)
-      const Bird = queryNodeByType(node, ClassDeclaration.name, c => c.name === 'Bird')[0]
+      const Bird = queryNodeByType(node, Class.name, c => c.name === 'Bird')[0]
       const niu = queryNodeByType(node, New.name)[0]
       expect(niu.link).to.deep.equal(Bird)
     })
@@ -63,16 +63,16 @@ describe('Class linkage', () => {
 
   })
 
-  describe('SuperType (inherits)', () => {
+  describe('Super (inherits)', () => {
 
     it('gets linked to a class in the same file (declared BEFORE)', () => {
       const node = expectNoLinkageError(`
         class Father { }
         class Son inherits Father { }
       `)
-      const Father = queryNodeByType(node, ClassDeclaration.name, c => c.name === 'Father')[0]
-      const zuper = queryNodeByType(node, SuperType.name, s => s.name === 'Father')[0]
-      expect(zuper.link).to.deep.equal(Father)
+      const Father = queryNodeByType(node, Class.name, c => c.name === 'Father')[0]
+      const Son = queryNodeByType(node, Class.name, s => s.name === 'Son')[0]
+      expect(Son.link).to.deep.equal(Father)
     })
     it('throws an error if the referenced class does NOT exist', () => {
       expectUnresolvedVariable('Father', `

@@ -2,36 +2,31 @@
   const path = require('path')
   const {
     Assignment,
-    BinaryOp,
     Catch,
-    ClassDeclaration,
+    Class,
     Closure,
-    ConstructorDeclaration,
-    FeatureCall,
-    FieldDeclaration,
+    Constructor,
+    Send,
+    Field,
     File,
     If,
     Import,
     InstanceOf,
-    ListLiteral,
-    MethodDeclaration,
-    MixinDeclaration,
+    List,
+    Method,
+    Mixin,
     New,
     Literal,
-    ObjectDeclaration,
+    Singleton,
     Package,
     Parameter,
     Program,
     Return,
-    SelfLiteral,
-    SetLiteral,
     Super,
-    SuperLiteral,
     SuperType,
     Test,
     Throw,
     Try,
-    UnaryOp,
     Variable,
     VariableDeclaration
   } = require(path.resolve('./src/model.js')) // THIS PATH HERE IS NOT GOOD, but pegjs sucks
@@ -49,8 +44,6 @@ __ = blank:[ \t\r\n]+ { return blank.join('') }
 id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
-self = 'self' { return SelfLiteral }
-super = 'super' { return SuperLiteral }
 variable = name:id { return Variable(name) }
 
 arguments = '(' _ args:(expression (_ ',' _ expression)* )? _ ')' { return args ? [args[0], ...args[1].map(([,,,arg])=>arg)] : [] }
@@ -82,13 +75,11 @@ libraryElement = element: (package / class / namedObject / mixin) _ { return ele
 
 package = 'package' __ name:qualifiedName _ '{' _ elements:libraryElement* _ '}' { return Package(name)(...elements) }
 
-class = 'class' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:(memberDeclaration/constructorDeclaration)* _ '}' { return ClassDeclaration(name)(superclass || undefined,...mixins)(...members) }
+class = 'class' __ name:id superclass:(_ 'inherits' __ qualifiedName)? mixins:mixinInclusion _ '{' _ members:(memberDeclaration/Constructor)* _ '}' { return Class(name)(superclass ? superclass[3] : 'Object',...mixins)(...members) }
 
-mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return MixinDeclaration(name)(...members) }
+mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return Mixin(name)(...members) }
 
-namedObject = 'object' __ name:id superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return ObjectDeclaration(name)(superclass || undefined,...mixins)(...members) }
-
-inheritance = superclass:(_ 'inherits' __ qualifiedName _ arguments?)? { return superclass ? SuperType(superclass[3])(...superclass[5]||[]) : SuperType()() }
+namedObject = 'object' __ name:id superclass:(_ 'inherits' __ qualifiedName _ arguments?)? mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton(name)(superclass ? superclass[3] : undefined, superclass ? superclass[5] || undefined: undefined,...mixins)(...members) }
 
 mixinInclusion = mixins:(_ 'mixed with' __ qualifiedName ((__'and'__/_','_) qualifiedName)* )? { return mixins ? [mixins[3], ...mixins[4].map(([,mixin])=>mixin)] : [] }
 
@@ -101,13 +92,13 @@ methodBody = 'native'
 // MEMBERS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-memberDeclaration = member:(fieldDeclaration / methodDeclaration) _ ';'? _ { return member }
+memberDeclaration = member:(Field / Method) _ ';'? _ { return member }
 
-fieldDeclaration = variable:variableDeclaration { return FieldDeclaration(variable.variable, variable.writeable, variable.value) }
+Field = variable:variableDeclaration { return Field(variable.variable, variable.writeable, variable.value) }
 
-methodDeclaration = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return MethodDeclaration(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
+Method = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return Method(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
 
-constructorDeclaration = 'constructor' _ parameters:parameters _ base:('=' _ (self/super) _ arguments)? _ sentences:block? _ ';'? _ {return ConstructorDeclaration(...parameters)(base ? base[2] : undefined, base ? base[4] : undefined)(...sentences||[])}
+Constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super') _ arguments)? _ sentences:block? _ ';'? _ {return Constructor(...parameters)(base ? base[4] : [], !base || base[2] === 'super')(...sentences||[])}
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
@@ -122,14 +113,14 @@ variableInitialization = '=' _ value:expression { return value }
 return = 'return' _ expression:expression { return Return(expression) }
 
 assignment = left:variable _ '='    _ right:expression { return Assignment(left, right) }
-           / left:variable _ '+='   _ right:expression { return Assignment(left, BinaryOp('+',   left, right)) }
-           / left:variable _ '-='   _ right:expression { return Assignment(left, BinaryOp('-',   left, right)) }
-           / left:variable _ '*='   _ right:expression { return Assignment(left, BinaryOp('*',   left, right)) }
-           / left:variable _ '/='   _ right:expression { return Assignment(left, BinaryOp('/',   left, right)) }
-           / left:variable _ '%='   _ right:expression { return Assignment(left, BinaryOp('%',   left, right)) }
-           / left:variable _ '<<='  _ right:expression { return Assignment(left, BinaryOp('<<',  left, right)) }
-           / left:variable _ '>>='  _ right:expression { return Assignment(left, BinaryOp('>>',  left, right)) }
-           / left:variable _ '>>>=' _ right:expression { return Assignment(left, BinaryOp('>>>', left, right)) }
+           / left:variable _ '+='   _ right:expression { return Assignment(left, Send(left, '+'  )(right)) }
+           / left:variable _ '-='   _ right:expression { return Assignment(left, Send(left, '-'  )(right)) }
+           / left:variable _ '*='   _ right:expression { return Assignment(left, Send(left, '*'  )(right)) }
+           / left:variable _ '/='   _ right:expression { return Assignment(left, Send(left, '/'  )(right)) }
+           / left:variable _ '%='   _ right:expression { return Assignment(left, Send(left, '%'  )(right)) }
+           / left:variable _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<' )(right)) }
+           / left:variable _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>' )(right)) }
+           / left:variable _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>')(right)) }
 
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -138,19 +129,20 @@ assignment = left:variable _ '='    _ right:expression { return Assignment(left,
 
 expression = orExpression
 
-orExpression             = left:andExpression            tail:( _ orOp  _ andExpression           )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-andExpression            = left:equalityExpression       tail:( _ andOp _ equalityExpression      )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
+orExpression             = left:andExpression            tail:( _ orOp  _ andExpression           )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
+andExpression            = left:equalityExpression       tail:( _ andOp _ equalityExpression      )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
+equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
 orderExpression          = left:otherOpExpression _ 'instanceof' __ right:qualifiedName              { return InstanceOf(left, right) }
-                         / left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-                          
-otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => BinaryOp(op,prev,right), left) }
-prefixUnaryExpression    = op:preOp _ exp:prefixUnaryExpression { return UnaryOp(op, exp) }
+                         / left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
+otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
+additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
+multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
+prefixUnaryExpression    = op:preOp _ right:prefixUnaryExpression { return Send(right,op+'_')() }
                          / postfixUnaryExpression
-postfixUnaryExpression   = exp:featureCall op:postOp? { return op ? UnaryOp(op, exp) : exp }
-featureCall              = left:primaryExpression tail:(('.'/'?.') id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> FeatureCall(target,key,nullSafe === '?.')(...params), left) }
+postfixUnaryExpression   = left:variable op:postOp { return Assignment(left, Send(left,'_'+op)()) }
+                         / send
+send                     = left:primaryExpression tail:('.' id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> Send(target,key)(...params), left) }
+
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp
 orOp    = '||' / 'or'
@@ -169,7 +161,6 @@ primaryExpression = literal
                   / ifExpression
                   / tryExpression
                   / throwExpression
-                  / self
                   / variable
                   / '(' _ exp:expression _ ')' { return exp }
 
@@ -180,7 +171,7 @@ catch = _ 'catch' __ variable:variable _ type:(':' _ qualifiedName)? _ handler:b
 
 throwExpression = 'throw' _ exception:expression { return Throw(exception) }
 
-superInvocation = super _ args:arguments { return Super(...args) }
+superInvocation = 'super' _ args:arguments { return Super(...args) }
 
 constructorCall = 'new' __ target:qualifiedName _ args:arguments { return New(target)(...args) }
 
@@ -209,9 +200,9 @@ numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.j
               / whole:[0-9]+'.'decimals:[0-9]+ { return Literal(parseFloat(whole.join('')+'.'+decimals.join(''))) }
               / value:[0-9]+                   { return Literal(parseInt(value.join(''), 10)) }
 
-collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return ListLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
-                  / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return SetLiteral(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
+collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
+                  / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return New('Set')(List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : [])) }
 
-objectLiteral = 'object' superclass:inheritance mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return ObjectDeclaration()(superclass || undefined,...mixins)(...members) }
+objectLiteral = 'object' superclass:(_ 'inherits' __ qualifiedName _ arguments?)? mixins:mixinInclusion _ '{' _ members:memberDeclaration* _ '}' { return Singleton()(superclass ? superclass[3] : undefined, superclass ? superclass[5] || undefined: undefined,...mixins)(...members) }
 
 closure = '{' _ parameters:(undelimitedParameters _ '=>' _)? _ sentences:sentence* _ '}' {return Closure(...parameters?parameters[0]:[])(...sentences) }

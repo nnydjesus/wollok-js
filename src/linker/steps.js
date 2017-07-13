@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { visit } from '../model/visiting'
+import { visit } from './visiting'
 import { referenciables, isScopeable, linkeables } from './definitions'
 
 export const linkParentStep = node => visit(node, {
@@ -10,7 +10,7 @@ export const linkParentStep = node => visit(node, {
 
 export const createScopesStep = (node, context = new Context()) => visit(node, {
   onNode(node) {
-    const type = node.nodeType
+    const { type } = node
 
     if (referenciables[type]) {
       const name = referenciables[type](node)
@@ -22,8 +22,7 @@ export const createScopesStep = (node, context = new Context()) => visit(node, {
     }
   },
 
-  afterNode(node) {
-    const type = node.nodeType
+  afterNode({ type }) {
     if (isScopeable(type)) {
       context.pop()
     }
@@ -33,10 +32,10 @@ export const createScopesStep = (node, context = new Context()) => visit(node, {
 export const linkStep = (node, unresolvables = []) => {
   visit(node, {
     onNode(n) {
-      const type = n.nodeType
+      const { type } = n
       if (linkeables[type]) {
         const name = linkeables[type](n)
-        // HACK for now I need to resolve ref to Object !!!!!!! 
+        // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
         if (name !== 'Object') {
           const found = findInScope(n, name)
           if (found) {

@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { visit } from '../../src/model/visiting'
+import { visit } from '../../src/linker/visiting'
 import parser from '../../src/parser'
 
 describe('visitor', () => {
@@ -14,7 +14,7 @@ describe('visitor', () => {
         }
       `)
       const visited = []
-      visit(node, { onNode(e) { visited.push(e.nodeType) } })
+      visit(node, { onNode(e) { visited.push(e.type) } })
       expect(visited).to.deep.equal([
         'File',
         'Program',
@@ -35,7 +35,7 @@ describe('visitor', () => {
         }
       `)
       const visited = []
-      visit(node, { onNode: () => {}, afterNode: e => visited.push(e.nodeType) })
+      visit(node, { onNode: () => {}, afterNode: e => visited.push(e.type) })
       expect(visited).to.deep.equal([
         'Variable',
         'Literal',

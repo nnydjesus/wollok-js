@@ -1,4 +1,4 @@
-import { Block, Program, File, ClassDeclaration, MethodDeclaration, Closure, ObjectDeclaration, MixinDeclaration } from '../model'
+import { Variable, New, Super, Field, VariableDeclaration, Parameter, Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
 
 // This declarations are not the best and most intuitive form, but
 // the minimum to add new cases already understandables by the curren linker impl
@@ -11,10 +11,10 @@ import { Block, Program, File, ClassDeclaration, MethodDeclaration, Closure, Obj
 const scopeables = [
   File.name,
   Program.name,
-  ClassDeclaration.name,
-  ObjectDeclaration.name,
-  MethodDeclaration.name,
-  MixinDeclaration.name,
+  Class.name,
+  Singleton.name,
+  Method.name,
+  Mixin.name,
   Closure.name,
   Block.name
 ]
@@ -23,12 +23,12 @@ export const isScopeable = type => scopeables.includes(type)
 const byName = n => n.name
 /* nodes which gets registered in their parent's scope */
 export const referenciables = {
-  VariableDeclaration: _ => byName(_.variable),
-  FieldDeclaration: _ => byName(_.variable),
-  Param: byName,
-  ClassDeclaration: byName,
-  MixinDeclaration: byName,
-  ObjectDeclaration: byName
+  [VariableDeclaration.name]: _ => byName(_.variable),
+  [Field.name]: _ => byName(_.variable),
+  [Parameter.name]: byName,
+  [Class.name]: byName,
+  [Mixin.name]: byName,
+  [Singleton.name]: byName
 }
 
 /** 
@@ -49,7 +49,7 @@ export const referenciables = {
 // })
 
 export const linkeables = {
-  Variable: v => v.name,
-  New: n => n.target,
-  SuperType: s => s.name
+  [Variable.name]: v => v.name,
+  [New.name]: n => n.target,
+  [Class.name]: c => c.superclass
 }
