@@ -1,5 +1,3 @@
-import log from 'color-log'
-
 const { assign } = Object
 
 // This interpreter compiles the AST to a string representing JS code and then evals it.
@@ -45,7 +43,7 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Assignment: ({ variable, value }) => `${variable.name} = ${compile(value)}`,
 
-  Variable: ({ name }) => `${name}`,
+  Variable: ({ name }) => (name === 'self' ? 'this' : `${name}`),
 
   InstanceOf: ({ left, right }) => `${compile(left)} instanceof ${right}`,
 

@@ -44,7 +44,6 @@ __ = blank:[ \t\r\n]+ { return blank.join('') }
 id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
-self = 'self' { return Variable('this') }
 variable = name:id { return Variable(name) }
 
 arguments = '(' _ args:(expression (_ ',' _ expression)* )? _ ')' { return args ? [args[0], ...args[1].map(([,,,arg])=>arg)] : [] }
@@ -162,7 +161,6 @@ primaryExpression = literal
                   / ifExpression
                   / tryExpression
                   / throwExpression
-                  / self
                   / variable
                   / '(' _ exp:expression _ ')' { return exp }
 
