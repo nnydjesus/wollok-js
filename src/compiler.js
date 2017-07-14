@@ -3,45 +3,44 @@ const { assign } = Object
 // This interpreter compiles the AST to a string representing JS code and then evals it.
 // I know, I know... But this is not meant to be nice or final code. Just a quick rough approach to get a better feeling on the AST shape.
 
-// TODO: Extract into separate module
 const compile = assign(expression => compile[expression.type](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
   Singleton: ({ name, superclass, superArguments, members }) => // TODO: Mixin linearization
     `const ${name} = new class extends ${superclass}{
-      constructor(){super(${superArguments.map(compile).join()})};${members.map(compile).join(';')}
-    };`,
+      constructor(){
+        super(${superArguments.map(compile).join()})
+        ${members.filter(m => m.type === 'Field').map(compile).join(';')}
+      }
+      ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
+    }`,
 
   // TODO Mixin: ({ name, members }) => {},
 
   Class: ({ name, superclass, members }) => // TODO: Mixin linearization
     `class ${name} extends ${superclass} {
-      constructor() {
-        ${members.filter(m => m.type === 'Field').map(({ name, value }) => `this.${name}=${compile(value)}`)}.join(';')
-        this.constructor['__init'+arguments.length+'__'].bind(this)(...arguments)
+      constructor(...$arguments) {
+        ${members.filter(m => m.type === 'Field').map(compile).join(';')}
+        this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
       }
-      ${members.map(compile).join(';')}
+      ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
     }`,
 
   Constructor: ({ parameters, sentences, lookUpCall, baseArguments }) =>
-    `static ___init${parameters.length}___(${parameters.map(compile).join()}) {
-      ${lookUpCall ? 'super' : `this.constructor.__init'${baseArguments.length}___'`}(${baseArguments.map(compile).join()});
+    `static $$init${parameters.length}(${parameters.map(compile).join()}) {
+      ${lookUpCall ? 'super' : `this.constructor.$$init'${baseArguments.length}'`}(${baseArguments.map(compile).join()});
       ${compile(sentences)}
     }`,
 
 
-  Field: ({ variable, writeable }) => {
-    const getter = `get ['${variable.name}']() {return this['___${variable.name}___']}`
-    const setter = `set ['${variable.name}'](___value___) {this['___${variable.name}___'] = ___value___}`
-    return writeable ? getter + setter : getter
-  },
+  Field: ({ variable, value }) => `this.$$${compile(variable)}=${compile(value)}`,
 
-  // TODO: Native?
+  // TODO: Native
   Method: ({ name, parameters, sentences }) => `['${name}'](${parameters.map(compile).join()}){${compile(sentences)}}`,
 
-  VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${variable.name} = ${compile(value)}`,
+  VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
 
-  Assignment: ({ variable, value }) => `${variable.name} = ${compile(value)}`,
+  Assignment: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
   Variable: ({ name }) => (name === 'self' ? 'this' : `${name}`),
 
@@ -66,7 +65,7 @@ const compile = assign(expression => compile[expression.type](expression), {
     ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
 
   Catch: ({ variable, errorType, handler }) => {
-    const evaluation = `const ${variable.name} = ___ERROR___;${compile(handler)}`
+    const evaluation = `const ${compile(variable)} = ___ERROR___;${compile(handler)}`
     return errorType ? `if (___ERROR___ instanceof ${errorType}){${evaluation}}` : evaluation
   },
 

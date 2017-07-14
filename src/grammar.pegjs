@@ -1,5 +1,12 @@
 {
   const path = require('path')
+  let model
+  try {
+    model = require('./model.js')
+  } catch(error) {
+    model = require(path.resolve('./dist/model.js'))
+  }
+
   const {
     Assignment,
     Catch,
@@ -29,7 +36,7 @@
     Try,
     Variable,
     VariableDeclaration
-  } = require(path.resolve('./src/model.js')) // THIS PATH HERE IS NOT GOOD, but pegjs sucks
+  } = model
 }
 
 DEFAULT = file

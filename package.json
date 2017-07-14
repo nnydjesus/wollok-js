@@ -1,11 +1,12 @@
 {
-  "name": "wollokjs",
+  "name": "wollok-js",
   "version": "1.0.0",
   "description": "JS based Wollok engine",
   "repository": "uqbar-project/wollok-js",
   "scripts": {
     "test": "yarn gulp test",
     "lint": "yarn gulp lint",
+    "compile": "babel src --out-dir lib --copy-files && pegjs lib/grammar.pegjs",
     "coverage-test": "NODE_ENV=test nyc --require babel-core/register mocha --compilers js:babel-register --recursive tests",
     "coverage-report": "nyc report --reporter=lcov",
     "coverage-upload": "codecov"
@@ -25,6 +26,7 @@
     "babel-register": "^6.24.1",
     "chai": "^4.0.2",
     "codecov": "^2.2.0",
+    "del": "^3.0.0",
     "eslint-config-airbnb-base": "^11.2.0",
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-mocha": "^4.11.0",

@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import parser from '../src/parser'
+import parser from '../dist/parser'
 import {
   Assignment,
   Catch,
@@ -28,7 +28,7 @@ import {
   Try,
   Variable,
   VariableDeclaration
-} from '../src/model'
+} from '../dist/model'
 
 const FAIL = Symbol('FAIL')
 
