@@ -6,13 +6,13 @@ import { ExtendableError } from '../utils/error'
 export class LinkerError extends ExtendableError { }
 
 export const linkParentStep = node => visit(node, {
-  onNode(node, parent) {
+  enter(node, parent) {
     if (parent) node.parent = parent
   }
 })
 
 export const createScopesStep = (node, context = new Context()) => visit(node, {
-  onNode(node) {
+  enter(node) {
     const { type } = node
 
     if (referenciables[type]) {
@@ -25,7 +25,7 @@ export const createScopesStep = (node, context = new Context()) => visit(node, {
     }
   },
 
-  afterNode({ type }) {
+  exit({ type }) {
     if (isScopeable(type)) {
       context.pop()
     }
@@ -34,7 +34,7 @@ export const createScopesStep = (node, context = new Context()) => visit(node, {
 
 export const linkStep = (node, unresolvables = []) => {
   visit(node, {
-    onNode(n) {
+    enter(n) {
       const { type } = n
       if (linkeables[type]) {
         const name = linkeables[type](n)

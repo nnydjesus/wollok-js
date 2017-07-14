@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeOf } from '../link-expects'
-import { link } from '../../../src/linker/link'
+import { link } from '../../../src/linker/linker'
 import parser from '../../../src/parser'
 import { Method } from '../../../src/model'
 

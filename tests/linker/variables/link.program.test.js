@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { expectUnresolvedVariable } from '../link-expects'
-import { link } from '../../../src/linker/link'
+import { link } from '../../../src/linker/linker'
 import parser from '../../../src/parser'
 
 describe('program', () => {

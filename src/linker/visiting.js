@@ -5,20 +5,20 @@ import winston from 'winston'
 // this should be in the linker !
 const ignoredKeys = ['parent', 'link']
 
-export const visit = (node, { onNode, afterNode = () => {} }, parent) => {
+export const visit = (node, { enter, exit = () => {} }, parent) => {
   if (!node.type) { return node }
   winston.silly(`visiting ${node.type}`)
-  onNode(node, parent)
+  enter(node, parent)
   Object.keys(node).forEach(key => {
     if (ignoredKeys.includes(key)) return
     const value = node[key]
     const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.type).forEach((e, i) => {
       winston.silly(`\tvisiting ${node.type}.${key}[${i}]`)
-      visit(e, { onNode, afterNode }, node)
+      visit(e, { enter, exit }, node)
     })
   })
-  afterNode(node)
+  exit(node)
   return node
 }
 
@@ -39,7 +39,7 @@ export const queryNodeByType = (root, type, filter = () => true) => {
   const matches = []
 
   visit(root, {
-    onNode(node) {
+    enter(node) {
       possibles.push(node.type)
       if (node.type === type && filter(node)) {
         matches.push(node)

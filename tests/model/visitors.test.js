@@ -14,7 +14,7 @@ describe('visitor', () => {
         }
       `)
       const visited = []
-      visit(node, { onNode(e) { visited.push(e.type) } })
+      visit(node, { enter(e) { visited.push(e.type) } })
       expect(visited).to.deep.equal([
         'File',
         'Program',
@@ -35,7 +35,7 @@ describe('visitor', () => {
         }
       `)
       const visited = []
-      visit(node, { onNode: () => {}, afterNode: e => visited.push(e.type) })
+      visit(node, { enter: () => {}, exit: e => visited.push(e.type) })
       expect(visited).to.deep.equal([
         'Variable',
         'Literal',

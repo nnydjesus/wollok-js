@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { link } from '../../src/linker/link'
+import { link } from '../../src/linker/linker'
 import { queryNodeByType } from '../../src/linker/visiting'
 import parser from '../../src/parser'
 
