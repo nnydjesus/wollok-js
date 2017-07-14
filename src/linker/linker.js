@@ -1,5 +1,8 @@
 import { pipe } from '../utils/functions'
-import { linkParentStep, createScopesStep, linkStep, checkAndFailStep } from './steps'
+import { linkParentStep } from './steps/linkParent'
+import { createScopesStep } from './steps/createScopes'
+import { linkStep } from './steps/link'
+import { checkAndFailStep } from './steps/check'
 
 // winston.level = 'silly'
 
