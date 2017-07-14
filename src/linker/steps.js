@@ -1,5 +1,6 @@
 import { Context } from './context'
-import { visit, filtering } from '../visitors/visiting'
+import { visit } from '../visitors/visiting'
+import { filtering } from '../visitors/commons'
 import { referenciables, isScopeable, linkeables } from './definitions'
 import { ExtendableError } from '../utils/error'
 

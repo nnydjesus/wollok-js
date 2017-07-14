@@ -1,5 +1,4 @@
 import winston from 'winston'
-import { filter } from '../utils/functions'
 
 // winston.level = 'silly'
 
@@ -31,14 +30,10 @@ export const visit = (node, { enter, exit = () => {} }, parent) => {
   return node
 }
 
-// common high-level visitors
-
-export const filtering = (condition, { enter, exit }) => ({
-  ...(enter && { enter: filter(condition, enter) }),
-  ...(exit && { exit: filter(condition, exit) })
-})
 
 // AST utils
+// not sure where to move this to :S
+// I think it is only used for tests
 
 export const queryNodeByType = (root, type, filter = () => true) => {
   const possibles = []
