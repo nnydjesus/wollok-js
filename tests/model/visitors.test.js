@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { visit } from '../../src/linker/visiting'
+import { visit } from '../../src/visitors/visiting'
 import parser from '../../src/parser'
 
 describe('visitor', () => {

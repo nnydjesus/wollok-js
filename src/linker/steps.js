@@ -1,5 +1,5 @@
 import { Context } from './context'
-import { visit } from './visiting'
+import { visit, filtering } from '../visitors/visiting'
 import { referenciables, isScopeable, linkeables } from './definitions'
 import { ExtendableError } from '../utils/error'
 
@@ -32,24 +32,24 @@ export const createScopesStep = (node, context = new Context()) => visit(node, {
   }
 })
 
+const isLinkeable = ({ type }) => linkeables[type]
+
 export const linkStep = (node, unresolvables = []) => {
-  visit(node, {
+  visit(node, filtering(isLinkeable, {
     enter(n) {
       const { type } = n
-      if (linkeables[type]) {
-        const name = linkeables[type](n)
-        // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
-        if (name !== 'Object') {
-          const found = findInScope(n, name)
-          if (found) {
-            n.link = found
-          } else {
-            unresolvables.push(name)
-          }
+      const name = linkeables[type](n)
+      // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
+      if (name !== 'Object') {
+        const found = findInScope(n, name)
+        if (found) {
+          n.link = found
+        } else {
+          unresolvables.push(name)
         }
       }
     }
-  })
+  }))
   return { node, unresolvables }
 }
 

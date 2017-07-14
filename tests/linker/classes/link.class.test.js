@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
 import { link } from '../../../src/linker/linker'
-import { queryNodeByType } from '../../../src/linker/visiting'
+import { queryNodeByType } from '../../../src/visitors/visiting'
 import { New, Class } from '../../../src/model'
 import parser from '../../../src/parser'
 

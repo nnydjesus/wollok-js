@@ -1,10 +1,19 @@
 import winston from 'winston'
+import { filter } from '../utils/functions'
 
 // winston.level = 'silly'
 
 // this should be in the linker !
 const ignoredKeys = ['parent', 'link']
 
+/**
+ * Visits a Node and all of its inner nodes (objects with "type" property)
+ * applying the provided Visitor.
+ * 
+ * @param {*} node Node to start visiting
+ * @param {*} Visitor ({ enter(node, parent), exit(node, parent) })
+ * @param {*} parent (not be send from outside, just for recursion)
+ */
 export const visit = (node, { enter, exit = () => {} }, parent) => {
   if (!node.type) { return node }
   winston.silly(`visiting ${node.type}`)
@@ -18,9 +27,18 @@ export const visit = (node, { enter, exit = () => {} }, parent) => {
       visit(e, { enter, exit }, node)
     })
   })
-  exit(node)
+  exit(node, parent)
   return node
 }
+
+// common high-level visitors
+
+export const filtering = (condition, { enter, exit }) => ({
+  ...(enter && { enter: filter(condition, enter) }),
+  ...(exit && { exit: filter(condition, exit) })
+})
+
+// AST utils
 
 export const queryNodeByType = (root, type, filter = () => true) => {
   const possibles = []
