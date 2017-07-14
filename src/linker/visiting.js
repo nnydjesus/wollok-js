@@ -22,18 +22,6 @@ export const visit = (node, { enter, exit = () => {} }, parent) => {
   return node
 }
 
-export const visitor = object => node => visit(node,
-  n => methodByConvention(object, n, 'visit'),
-  n => methodByConvention(object, n, 'after')
-)
-
-function methodByConvention(object, node, preffix) {
-  const method = object[`${preffix}${node.type}`]
-  if (method) {
-    method(node)
-  }
-}
-
 export const queryNodeByType = (root, type, filter = () => true) => {
   const possibles = []
   const matches = []
