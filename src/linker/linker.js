@@ -1,83 +1,27 @@
-import winston from 'winston'
-import { Context } from './context'
-import { VariableDeclaration, Field, Variable, New, Parameter, Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
-import { visit } from './visiting'
+import { pipe } from '../utils/functions'
+import { linkParentStep } from './steps/linkParent'
+import { createScopesStep } from './steps/createScopes'
+import { linkStep } from './steps/link'
+import { checkAndFailStep } from './steps/check'
 
 // winston.level = 'silly'
 
-/* nodes that define new scopes/namespaces */
-const scopeables = [
-  File.name,
-  Program.name,
-  Class.name,
-  Singleton.name,
-  Method.name,
-  Mixin.name,
-  Closure.name,
-  Block.name
-]
-const isScopeable = type => scopeables.includes(type)
+/** 
+ * Performs linking on the given ast nodes.
+ * Each linked node will have a "link"  `Node(type=Variable)` will have a  property pointing to 
+ * the VariableDeclaration|Param.
+ * Also some context-defining nodes like ClassDeclarartion | Closure | Method ...etc
+ * will have a "scope" property with an object with name-variableDeclaration representing the 
+ * locally available variables.
+ */
+export const link = pipe([
 
-const byName = n => n.name
-/* nodes which gets registered in their parent's scope */
-const referenciables = {
-  [VariableDeclaration.name]: _ => byName(_.variable),
-  [Field.name]: _ => byName(_.variable),
-  [Parameter.name]: byName,
-  [Class.name]: byName,
-  [Mixin.name]: byName,
-  [Singleton.name]: byName
-}
+  // try to do both things in one pass
+  linkParentStep,
+  createScopesStep,
 
-const linkeables = {
-  [Variable.name]: v => v.name,
-  [New.name]: n => n.target,
-  [Class.name]: c => c.superclass
-}
+  linkStep,
 
-export default class Linker {
-  link(node) {
-    const context = new Context()
-    visit(node, ::this.onNode(context), ::this.afterNode(context))
-    return node
-  }
+  checkAndFailStep
 
-  onNode(context) {
-    return node => {
-      const { type } = node
-
-      // register it in scope if applies
-      if (referenciables[type]) {
-        const name = referenciables[type](node)
-        winston.silly('>RR> registering', type, '(', name, ')')
-        context.register(node, name)
-      }
-
-      // push it (fucker) if it is a context
-      if (isScopeable(type)) {
-        winston.silly('>>>> pushing', type)
-        context.push(node)
-      }
-
-      // link it if linkable
-      if (linkeables[type]) {
-        winston.silly('???? checking', type)
-        const name = linkeables[type](node)
-        if (name !== 'Object') { // HACK for now I need to resolve ref to Object !!!!!!! 
-          node.link = context.resolve(name)
-        }
-      }
-    }
-  }
-
-  afterNode(context) {
-    return node => {
-      const type = node.type
-
-      if (isScopeable(type)) {
-        winston.silly('<<<< poping', type)
-        context.pop()
-      }
-    }
-  }
-}
+])

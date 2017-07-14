@@ -1,6 +1,6 @@
 import { expect } from 'chai'
-import { link } from '../../src/linker/link'
-import { queryNodeByType } from '../../src/linker/visiting'
+import { link } from '../../src/linker/linker'
+import { queryNodeByType } from '../../src/visitors/visiting'
 import parser from '../../src/parser'
 
 // expect utils for

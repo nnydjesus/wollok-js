@@ -52,7 +52,7 @@ describe('Block scoping', () => {
         }
       `)
     })
-    
+
   })
 
 })
