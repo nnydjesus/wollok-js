@@ -1,6 +1,9 @@
 import { Context } from './context'
 import { visit } from './visiting'
 import { referenciables, isScopeable, linkeables } from './definitions'
+import { ExtendableError } from '../utils/error'
+
+export class LinkerError extends ExtendableError { }
 
 export const linkParentStep = node => visit(node, {
   onNode(node, parent) {
@@ -47,7 +50,15 @@ export const linkStep = (node, unresolvables = []) => {
       }
     }
   })
-  return unresolvables
+  return { node, unresolvables }
+}
+
+export const checkAndFailStep = ({ node, unresolvables }) => {
+  // TODO: backward compat error handling. This should be modelled better
+  if (unresolvables.length > 0) {
+    throw new LinkerError(`Cannot resolve reference to '${unresolvables[0]}' at ???`)
+  }
+  return node
 }
 
 // scoping
