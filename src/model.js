@@ -1,4 +1,6 @@
-const Node = func => body => ({ type: func.name, ...body })
+const isFunction = o => typeof o === 'function'
+
+export const Node = funcOrType => body => ({ type: isFunction(funcOrType) ? funcOrType.name : funcOrType, ...body })
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // TOP LEVEL

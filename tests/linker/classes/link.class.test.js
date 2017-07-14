@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
-import { link } from '../../../src/linker/link'
-import { queryNodeByType } from '../../../src/linker/visiting'
+import { link } from '../../../src/linker/linker'
+import { queryNodeByType } from '../../../src/visitors/visiting'
 import { New, Class } from '../../../src/model'
 import parser from '../../../src/parser'
 
@@ -50,7 +50,7 @@ describe('Class linkage', () => {
 
     // TODO: finally I reached the point where the stack based linking 
     //   is not enough (or the deep-first approach)
-    it.skip('gets linked to a class in the same file (declared AFTER)', () => {
+    it('gets linked to a class in the same file (declared AFTER)', () => {
       expectNoLinkageError(`
         class BirdFactory {
           method create() {
@@ -80,7 +80,7 @@ describe('Class linkage', () => {
       `, 'blah')
     })
 
-    it.skip('gets linked to a class in the same file (declared AFTER)', () => {
+    it('gets linked to a class in the same file (declared AFTER)', () => {
       expectNoLinkageError(`
         class Son inherits Father { }
         class Father { }
