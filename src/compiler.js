@@ -42,8 +42,10 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
-  // TODO: Native
-  Method: ({ name, parameters, sentences }) => `['${name}'](${parameters.map(compile).join()}){${compile(sentences)}}`,
+  // TODO: namespaces for natives
+  Method: ({ name, parameters, sentences, native, parent }) => (native
+    ? `['${name}'](...$parameters){ return $wollok.${parent.name}['${name}'].bind(this)(...$parameters) }`
+    : `['${name}'](${parameters.map(compile).join()}){${compile(sentences)}}`),
 
   VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
 
