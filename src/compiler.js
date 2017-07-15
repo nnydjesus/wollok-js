@@ -6,8 +6,8 @@ const { assign } = Object
 const compile = assign(expression => compile[expression.type](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
-  Singleton: ({ name, superclass, superArguments, members }) => // TODO: Mixin linearization
-    `const ${name} = new class extends ${superclass}{
+  Singleton: ({ name, superclass, mixins, superArguments, members }) =>
+    `const ${name} = new class extends ${mixins.reduce((parent, mixin) => `${mixin}(${parent})`, superclass)} {
       constructor(){
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';')}
@@ -15,10 +15,17 @@ const compile = assign(expression => compile[expression.type](expression), {
       ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
     }`,
 
-  // TODO Mixin: ({ name, members }) => {},
+  Mixin: ({ name, members }) =>
+    `const ${name} = ($superclass) => class extends $superclass {
+      constructor(...$arguments) {
+        ${members.filter(m => m.type === 'Field').map(compile).join(';')}
+        this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
+      }
+      ${members.filter(m => m.type !== 'Field').map(compile).join(';')}    
+    }`,
 
-  Class: ({ name, superclass, members }) => // TODO: Mixin linearization
-    `class ${name} extends ${superclass} {
+  Class: ({ name, superclass, mixins, members }) =>
+    `class ${name} extends ${mixins.reduce((parent, mixin) => `${mixin}(${parent})`, superclass)} {
       constructor(...$arguments) {
         ${members.filter(m => m.type === 'Field').map(compile).join(';')}
         this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
@@ -33,7 +40,7 @@ const compile = assign(expression => compile[expression.type](expression), {
     }`,
 
 
-  Field: ({ variable, value }) => `this.$$${compile(variable)}=${compile(value)}`,
+  Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
   // TODO: Native
   Method: ({ name, parameters, sentences }) => `['${name}'](${parameters.map(compile).join()}){${compile(sentences)}}`,
@@ -96,5 +103,6 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Parameter: ({ name, varArg }) => (varArg ? `...${name}` : name)
 })
+
 
 export default compile
