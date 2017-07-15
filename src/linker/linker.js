@@ -1,8 +1,9 @@
 import { pipe } from '../utils/functions'
+import { flatten } from '../utils/collections'
+import { collect } from '../visitors/commons'
 import { linkParentStep } from './steps/linkParent'
 import { createScopesStep } from './steps/createScopes'
-import { linkStep } from './steps/link'
-import { checkAndFailStep } from './steps/check'
+import { linkStep, isLinkageError } from './steps/link'
 
 // winston.level = 'silly'
 
@@ -16,12 +17,22 @@ import { checkAndFailStep } from './steps/check'
  */
 export const link = pipe([
 
-  // try to do both things in one pass
-  linkParentStep,
-  createScopesStep,
+  linkParentStep, // TODO: try to do both things in one pass
 
-  linkStep,
+  createScopesStep, // sets node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
 
-  checkAndFailStep
+  linkStep // sets Node(Variable).link = VariableDec | Class | Mixin
 
 ])
+
+// retrieves a list of all errors in all nodes
+// errors for the sake of tests are like this { ...error, node }
+// so you can assert about the owner node
+export const collectErrors = (node) => flatten(
+  collect(node, n => (n.errors || [])
+    .map(e => ({
+      ...e,
+      node: n,
+    }))
+  )).filter(isLinkageError)
+

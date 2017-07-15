@@ -38,6 +38,7 @@ describe('Class linkage', () => {
       const niu = queryNodeByType(node, New.name)[0]
       expect(niu.link).to.deep.equal(Bird)
     })
+
     it('throws an error if the referenced class does NOT exist', () => {
       expectUnresolvedVariable('Bird', `
         class BirdFactory {
@@ -45,7 +46,7 @@ describe('Class linkage', () => {
             return new Bird()
           }
         }
-      `, 'blah')
+      `)
     })
 
     // TODO: finally I reached the point where the stack based linking 
