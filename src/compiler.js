@@ -42,7 +42,7 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Assignment: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
-  Variable: ({ name }) => (name === 'self' ? 'this' : `${name}`),
+  Variable: ({ name, link }) => (name === 'self' ? 'this' : `${link.type === 'Field' ? 'this.' : ''}${name}`),
 
   InstanceOf: ({ left, right }) => `${compile(left)} instanceof ${right}`,
 

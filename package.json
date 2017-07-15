@@ -6,7 +6,7 @@
   "scripts": {
     "test": "yarn gulp test",
     "lint": "yarn gulp lint",
-    "compile": "babel src --out-dir lib --copy-files && pegjs lib/grammar.pegjs",
+    "compile": "yarn gulp compile",
     "coverage-test": "NODE_ENV=test nyc --require babel-core/register mocha --compilers js:babel-register --recursive tests",
     "coverage-report": "nyc report --reporter=lcov",
     "coverage-upload": "codecov"
