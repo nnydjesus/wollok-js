@@ -16,11 +16,11 @@ const ignoredKeys = ['parent', 'link']
 // It would be really nice to convert this into a higher-order function like:
 //     visit = ({ enter, exit = () => {} }, parent) => node => {}
 // :)
-export const visit = (node, { enter, exit = () => {} }, parent) => {
+export const visit = (node, { enter, exit = () => {} }, parent, feature) => {
   if (!node.type) { return node }
   winston.silly(`visiting ${node.type}`)
 
-  const folded = enter(node, parent) || node
+  const folded = enter(node, parent, feature) || node
 
   Object.keys(node).forEach(key => {
     if (ignoredKeys.includes(key)) return
@@ -28,10 +28,10 @@ export const visit = (node, { enter, exit = () => {} }, parent) => {
     const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.type).forEach((e, i) => {
       winston.silly(`\tvisiting ${node.type}.${key}[${i}]`)
-      visit(e, { enter, exit }, node)
+      visit(e, { enter, exit }, node, key)
     })
   })
-  return exit(node, parent) || folded
+  return exit(node, parent, feature) || folded
 }
 
 

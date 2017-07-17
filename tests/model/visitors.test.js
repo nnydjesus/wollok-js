@@ -67,6 +67,28 @@ describe('visitor', () => {
         'C > C1'
       ])
     })
+
+    it("passes a 3rd parameter with the parent node's feature name", () => {
+      const node = Node('A')({
+        b: Node('B')({
+          b1: Node('B1')(),
+          b2: Node('B2')()
+        }),
+        c: Node('C')({
+          c1: Node('C1')(),
+        }),
+      })
+      const features = []
+      visit(node, { enter(e, parent, feature) { if (parent) features.push(`${parent.type}.${feature}`) } })
+      expect(features).to.deep.equal([
+        'A.b',
+        'B.b1',
+        'B.b2',
+        'A.c',
+        'C.c1'
+      ])
+    })
+
   })
 
 })
