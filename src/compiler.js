@@ -1,7 +1,6 @@
 const { assign } = Object
 
-// This interpreter compiles the AST to a string representing JS code and then evals it.
-// I know, I know... But this is not meant to be nice or final code. Just a quick rough approach to get a better feeling on the AST shape.
+// TODO: refactor the code generation and extract repeated fragments.
 
 const compile = assign(expression => compile[expression.type](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
@@ -12,6 +11,15 @@ const compile = assign(expression => compile[expression.type](expression), {
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';')}
       }
+      ${members.filter(m => m.type === 'Method').map(({ name }) => `[${name}](...$parameters){
+        const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${name}'))
+        const implementation = implementations.find(selector => {
+          const argDesc = selector.split('$')[1])
+          const argCount = Number.parseInt(argDesc)
+          return argCount === $parameters.length || argCount < $parameters.length && argDesc.endsWith('+')
+        })
+        return implementation ? implementation(...$parameters) : super[${name}](...$parameters)
+      }`).join(';')}
       ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
     }`,
 
@@ -21,6 +29,15 @@ const compile = assign(expression => compile[expression.type](expression), {
         ${members.filter(m => m.type === 'Field').map(compile).join(';')}
         this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
       }
+      ${members.filter(m => m.type === 'Method').map(({ name }) => `[${name}](...$parameters){
+        const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${name}'))
+        const implementation = implementations.find(selector => {
+          const argDesc = selector.split('$')[1])
+          const argCount = Number.parseInt(argDesc)
+          return argCount === $parameters.length || argCount < $parameters.length && argDesc.endsWith('+')
+        })
+        return implementation ? implementation(...$parameters) : super[${name}](...$parameters)
+      }`).join(';')}
       ${members.filter(m => m.type !== 'Field').map(compile).join(';')}    
     }`,
 
@@ -30,6 +47,15 @@ const compile = assign(expression => compile[expression.type](expression), {
         ${members.filter(m => m.type === 'Field').map(compile).join(';')}
         this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
       }
+      ${members.filter(m => m.type === 'Method').map(({ name }) => `[${name}](...$parameters){
+        const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${name}'))
+        const implementation = implementations.find(selector => {
+          const argDesc = selector.split('$')[1])
+          const argCount = Number.parseInt(argDesc)
+          return argCount === $parameters.length || argCount < $parameters.length && argDesc.endsWith('+')
+        })
+        return implementation ? implementation(...$parameters) : super[${name}](...$parameters)
+      }`).join(';')}
       ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
     }`,
 
@@ -43,9 +69,12 @@ const compile = assign(expression => compile[expression.type](expression), {
   Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
   // TODO: namespaces for natives
-  Method: ({ name, parameters, sentences, native, parent }) => (native
-    ? `['${name}'](...$parameters){ return $wollok.${parent.name}['${name}'].bind(this)(...$parameters) }`
-    : `['${name}'](${parameters.map(compile).join()}){${compile(sentences)}}`),
+  Method: ({ name, parameters, sentences, native, parent }) => {
+    const implementationName = `${name}$${parameters.length}${parameters.length && parameters[parameters.length - 1].varArg ? '+' : ''}`
+    return native
+      ? `static ['${implementationName}'](...$parameters){ return $wollok.${parent.name}['${implementationName}'].bind(this)(...$parameters) }`
+      : `static ['${implementationName}'](${parameters.map(compile).join()}){${compile(sentences)}}`
+  },
 
   VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
 

@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import parser from '../dist/parser'
+import parser from './../dist/parser'
 import {
   Assignment,
   Catch,

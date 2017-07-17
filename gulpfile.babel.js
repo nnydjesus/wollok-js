@@ -11,11 +11,16 @@ const task = gulp.task.bind(gulp)
 
 task('clean', () => del(['dist', 'lib']))
 
-task('compile', ['lint', 'clean', 'peg', 'babel'])
+task('compile', ['lint', 'clean', 'wdk', 'peg', 'babel'])
 
 task('peg', ['clean'], () =>
   src('src/**/*.pegjs')
     .pipe(pegjs({ format: 'commonjs' }))
+    .pipe(dest('dist'))
+)
+
+task('wdk', ['clean'], () =>
+  src('src/wdk/**/*.wlk')
     .pipe(dest('dist'))
 )
 
