@@ -9,7 +9,7 @@ import parser from '../../src/parser'
 export const expectNoLinkageError = code => { 
   const n = link(parser.parse(code))
   const errors = collectErrors(n)
-  expect(errors.length).to.be.equals(0)
+  expect(errors.length, `Expecting no errors but found ${errors.map(e => e.node.type + ' ' + e.ref)}`).to.be.equals(0)
   return n
 }
 

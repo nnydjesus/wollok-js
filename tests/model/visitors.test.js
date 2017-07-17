@@ -68,7 +68,7 @@ describe('visitor', () => {
       ])
     })
 
-    it("passes a 3rd parameter with the parent node's feature name", () => {
+    it("passes a parameter with the parent node's feature name", () => {
       const node = Node('A')({
         b: Node('B')({
           b1: Node('B1')(),

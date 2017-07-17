@@ -16,7 +16,7 @@ const ignoredKeys = ['parent', 'link']
 // It would be really nice to convert this into a higher-order function like:
 //     visit = ({ enter, exit = () => {} }, parent) => node => {}
 // :)
-export const visit = (node, { enter, exit = () => {} }, parent, feature) => {
+export const visit = (node, { enter = () => {}, exit = () => {} }, parent, feature) => {
   if (!node.type) { return node }
   winston.silly(`visiting ${node.type}`)
 

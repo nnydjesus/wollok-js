@@ -49,7 +49,7 @@ export const referenciables = {
 // })
 
 export const linkeables = {
-  [Variable.name]: v => v.name,
-  [New.name]: n => n.target,
-  [Class.name]: c => c.superclass
+  [Variable.name]: 'name',
+  [New.name]: 'target',
+  [Class.name]: ['superclass', 'mixins']
 }
