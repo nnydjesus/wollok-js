@@ -47,7 +47,6 @@ export const Send = (target, key) => (...parameters) => Node(Send)({ target, key
 export const Super = (...parameters) => Node(Super)({ parameters })
 
 export const New = (target) => (...parameters) => Node(New)({ target, parameters })
-export const InstanceOf = (left, right) => Node(InstanceOf)({ left, right })
 
 export const If = (condition) => (...thenSentences) => (...elseSentences) => Node(If)({ condition, thenSentences: Block(...thenSentences), elseSentences: Block(...elseSentences) })
 export const Throw = (exception) => Node(Throw)({ exception })

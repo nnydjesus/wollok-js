@@ -15,7 +15,6 @@ import {
   // Field,
   If,
   // Import,
-  InstanceOf,
   List,
   // Method,
   // Mixin,
@@ -88,8 +87,6 @@ const fixture = new Map([
   [Send(Variable('a'), '_--')(), new ReferenceError('a is not defined')],
   [Send(Literal(true), '!_')(), false],
   [Send(Literal(true), 'not_')(), false],
-
-  [InstanceOf(List(), 'Array'), true],
 
   [New('Set')(List(Literal(1), Literal(2))), new Set([1, 2])],
 

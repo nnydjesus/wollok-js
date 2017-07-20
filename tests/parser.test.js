@@ -12,7 +12,6 @@ import {
   File,
   If,
   Import,
-  InstanceOf,
   List,
   Method,
   Mixin,
@@ -291,8 +290,6 @@ const fixture = {
     'a > b': Send(Variable('a'), '>')(Variable('b')),
     'a < b': Send(Variable('a'), '<')(Variable('b')),
     'a + x < -b * y': Send(Send(Variable('a'), '+')(Variable('x')), '<')(Send(Send(Variable('b'), '-_')(), '*')(Variable('y'))),
-    'a instanceof p.C': InstanceOf(Variable('a'), 'p.C'),
-    'a.m() instanceof p.C': InstanceOf(Send(Variable('a'), 'm')(), 'p.C'),
     'a instanceof': FAIL,
     'instanceof t': FAIL
   },
