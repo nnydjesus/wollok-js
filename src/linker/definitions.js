@@ -10,7 +10,6 @@ import { Field, VariableDeclaration, Parameter, Block, Program, File, Class, Met
 /* nodes that define new scopes/namespaces */
 const scopeables = [
   File,
-  Program,
   Class,
   Singleton,
   Method,
