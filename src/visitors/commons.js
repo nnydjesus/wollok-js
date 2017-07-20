@@ -10,7 +10,7 @@ export const filtering = (condition, { enter, exit }) => ({
 
 export const collect = (node, mapper) => {
   const collected = []
-  visit(node, { enter(n) { collected.push(mapper(n)) } })
+  visit({ enter(n) { collected.push(mapper(n)) } })(node)
   return collected
 }
 

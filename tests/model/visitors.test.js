@@ -18,7 +18,7 @@ describe('visitor', () => {
         }),
       })
       const visited = []
-      visit(node, { enter(e) { visited.push(e.type) } })
+      visit({ enter(e) { visited.push(e.type) } })(node)
       expect(visited).to.deep.equal([
         'A',
         'B',
@@ -36,7 +36,7 @@ describe('visitor', () => {
         }
       `)
       const visited = []
-      visit(node, { enter: () => {}, exit: e => visited.push(e.type) })
+      visit({ enter: () => {}, exit: e => visited.push(e.type) })(node)
       expect(visited).to.deep.equal([
         'Variable',
         'Literal',
@@ -58,7 +58,7 @@ describe('visitor', () => {
         }),
       })
       const relations = []
-      visit(node, { enter(e, parent) { if (parent) relations.push(`${parent.type} > ${e.type}`) } })
+      visit({ enter(e, parent) { if (parent) relations.push(`${parent.type} > ${e.type}`) } })(node)
       expect(relations).to.deep.equal([
         'A > B',
         'B > B1',
@@ -79,7 +79,7 @@ describe('visitor', () => {
         }),
       })
       const features = []
-      visit(node, { enter(e, parent, feature) { if (parent) features.push(`${parent.type}.${feature}`) } })
+      visit({ enter(e, parent, feature) { if (parent) features.push(`${parent.type}.${feature}`) } })(node)
       expect(features).to.deep.equal([
         'A.b',
         'B.b1',

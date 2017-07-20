@@ -35,7 +35,7 @@ describe('common visitors', () => {
       const second = { enter(n) { n.value *= 2 } }
 
       const node = Node('blah')({ value: 5 })
-      visit(node, chain(first, second))
+      visit(chain(first, second))(node)
       expect(node.value).to.be.equals(12)
     })
 

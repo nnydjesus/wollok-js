@@ -1,4 +1,5 @@
 import winston from 'winston'
+import { noop } from '../utils/functions'
 
 // winston.level = 'silly'
 
@@ -17,7 +18,7 @@ const ignoredKeys = ['parent']
 // It would be really nice to convert this into a higher-order function like:
 //     visit = ({ enter, exit = () => {} }, parent) => node => {}
 // :)
-export const visit = (node, { enter = () => {}, exit = () => {} }, parent, feature) => {
+export const visit = ({ enter = noop, exit = noop }, parent, feature) => node => {
   if (!node.type || ignoredTypes.includes(node.type)) { return node }
   winston.silly(`visiting ${node.type}`)
 
@@ -29,7 +30,7 @@ export const visit = (node, { enter = () => {}, exit = () => {} }, parent, featu
     const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.type).forEach((e, i) => {
       winston.silly(`\tvisiting ${node.type}.${key}[${i}]`)
-      visit(e, { enter, exit }, node, key)
+      visit({ enter, exit }, node, key)(e)
     })
   })
   return exit(node, parent, feature) || folded
@@ -44,14 +45,14 @@ export const queryNodeByType = (root, type, filter = () => true) => {
   const possibles = []
   const matches = []
 
-  visit(root, {
+  visit({
     enter(node) {
       possibles.push(node.type)
       if (node.type === type && filter(node)) {
         matches.push(node)
       }
     }
-  })
+  })(root)
   if (matches.length === 0) {
     throw new Error(`Could NOT find node ${type}. Visited node types: ${possibles.join()}`)
   }

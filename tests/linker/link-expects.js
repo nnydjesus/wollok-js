@@ -10,7 +10,7 @@ import parser from '../../src/parser'
 export const expectNoLinkageError = code => {
   const n = link(parser.parse(code))
   const errors = collectErrors(n)
-  errors.forEach(e => visit(e.node, unlinkParent))
+  errors.forEach(e => visit(unlinkParent)(e.node))
   const errorsFound = errors.map(e => `${e.node.type}.${e.feature} to '${e.ref}': ${e}`).join(', ')
   expect(errors.length, `Expecting no errors but found (${errors.length}): ${errorsFound}`).to.be.equals(0)
   return n

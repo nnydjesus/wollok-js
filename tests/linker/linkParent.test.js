@@ -3,7 +3,7 @@ import { linkParentStep } from '../../src/linker/steps/linkParent'
 import { visit } from '../../src/visitors/visiting'
 import { Node } from '../../src/model'
 
-const linkParent = node => visit(node, linkParentStep)
+const linkParent = node => visit(linkParentStep)(node)
 
 describe('linkParentStep', () => {
 

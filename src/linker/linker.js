@@ -19,7 +19,7 @@ import { linkStep, isLinkageError } from './steps/link'
 export const link = pipe([
 
   // sets node.parent & node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
-  node => visit(node, chain(linkParentStep, createScopesStep())),
+  visit(chain(linkParentStep, createScopesStep())),
 
   linkStep // sets Node(Variable).link = VariableDec | Class | Mixin
 

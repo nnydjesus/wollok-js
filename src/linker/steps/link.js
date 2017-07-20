@@ -8,17 +8,14 @@ export const Ref = (node) => Node(Ref)({ node })
 
 const isLinkeable = ({ type }) => linkeables[type]
 
-export const linkStep = (node) => {
-  visit(node, filtering(isLinkeable, {
-    exit(n) {
-      const { type } = n
-      array(linkeables[type]).forEach(feature => {
-        link(n, feature)
-      })
-    }
-  }))
-  return node
-}
+export const linkStep = visit(filtering(isLinkeable, {
+  exit(n) {
+    const { type } = n
+    array(linkeables[type]).forEach(feature => {
+      link(n, feature)
+    })
+  }
+}))
 
 const link = (node, feature) => {
   const refValue = node[feature]
