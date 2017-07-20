@@ -1,5 +1,5 @@
 import { isArray, forAll, anySatisfy } from '../utils/collections'
-import { Variable, New, Field, VariableDeclaration, Parameter, Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
+import { Field, VariableDeclaration, Parameter, Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
 
 // This declarations are not the best and most intuitive form, but
 // the minimum to add new cases already understandables by the current linker impl
