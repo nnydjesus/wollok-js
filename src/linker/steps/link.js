@@ -4,7 +4,7 @@ import { linkeables } from '../definitions'
 
 const isLinkeable = ({ type }) => linkeables[type]
 
-export const linkStep = (node, unresolvables = []) => {
+export const linkStep = (node) => {
   visit(node, filtering(isLinkeable, {
     enter(n) {
       const { type } = n
@@ -13,19 +13,34 @@ export const linkStep = (node, unresolvables = []) => {
       // TODO: Not sure what to do with self references.
       const tempIgnore = ['Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception', 'self']
       if (tempIgnore.indexOf(name) < 0) {
-        const found = findInScope(n, name)
-        if (found) {
-          n.link = found
-        } else {
-          unresolvables.push(name)
-        }
+        resolveAndLink(n, name)
       } else {
         n.link = n
       }
     }
   }))
-  return { node, unresolvables }
+  return node
 }
+
+const resolveAndLink = (n, name) => {
+  const found = findInScope(n, name)
+  if (found) {
+    n.link = found
+  } else {
+    appendError(n, name)
+  }
+}
+
+export const LINKAGE_ERROR_TYPE = 'LINKAGE'
+
+const appendError = (node, ref) => {
+  if (!node.errors) {
+    node.errors = []
+  }
+  node.errors.push({ errorType: LINKAGE_ERROR_TYPE, ref })
+}
+
+export const isLinkageError = error => error.errorType === LINKAGE_ERROR_TYPE
 
 const findInScope = (node, name) =>
   node && ((node.scope && node.scope[name]) || findInScope(node.parent, name))
