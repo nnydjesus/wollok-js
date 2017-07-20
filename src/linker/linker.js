@@ -21,7 +21,8 @@ export const link = pipe([
   // sets node.parent & node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
   visit(chain(linkParentStep, createScopesStep())),
 
-  linkStep // sets Node(Variable).link = VariableDec | Class | Mixin
+  // sets Node(Variable).link = VariableDec | Class | Mixin
+  linkStep
 
 ])
 
