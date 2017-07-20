@@ -45,8 +45,11 @@ DEFAULT = file
 // BASICS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-_ = blank:[ \t\r\n]* { return blank.join('') }
-__ = blank:[ \t\r\n]+ { return blank.join('') }
+_ = __? { return ' ' }
+__ = ([ \t\r\n] / comment)+ { return ' ' }
+
+comment = '/*' (!'*/' .)* '*/' _  { return '' }
+        / '//' (!'\n' .)* '\n'? _ { return '' }
 
 id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
@@ -55,7 +58,7 @@ variable = name:id { return Variable(name) }
 
 arguments = '(' _ args:(expression (_ ',' _ expression)* )? _ ')' { return args ? [args[0], ...args[1].map(([,,,arg])=>arg)] : [] }
 parameters = '(' _ parameters: undelimitedParameters _ ')' { return parameters }
-undelimitedParameters = params:(id (_ ',' _ id)* '...'?)? { return params ? [Parameter(params[0], !params[1].length && !!params[2]), ...params[1].map(([,,,param], i)=>Parameter(param, !!params[2] && i === params[1].length - 1))] : [] }
+undelimitedParameters = params:(id (_ ',' _ id)* _ '...'?)? { return params ? [Parameter(params[0], !params[1].length && !!params[3]), ...params[1].map(([,,,param], i)=>Parameter(param, !!params[3] && i === params[1].length - 1))] : [] }
 
 block = '{' _ sentences:sentence* _ '}' { return sentences }
 blockOrSentence = block
@@ -65,7 +68,7 @@ blockOrSentence = block
 // FILE
 //-------------------------------------------------------------------------------------------------------------------------------
 
-file = imports:import* _ elements:libraryElement* _ core:(main:program { return [main]} /test+)? _ { return File(...imports, ...elements, ...core||[]) }
+file = _ imports:import* _ elements:libraryElement* _ core:(main:program { return [main]} /test+)? _ { return File(...imports, ...elements, ...core||[]) }
 
 import = 'import' __ name:qualifiedName all:('.*')? _ { return Import(name + (all||'')) }
 
@@ -113,8 +116,8 @@ Constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super
 
 sentence = _ sentence:( variableDeclaration / return / assignment / expression) _ ';'? _ { return sentence }
 
-variableDeclaration = 'var' __ variable:variable _ value:variableInitialization? { return VariableDeclaration(variable, true, value || Literal(null)) }
-                    / 'const' __ variable:variable _ value:variableInitialization { return VariableDeclaration(variable, false, value) }
+variableDeclaration = mutable:('var'/'const') __ variable:variable _ value:variableInitialization? { return VariableDeclaration(variable, mutable === 'var', value || undefined) }
+
 variableInitialization = '=' _ value:expression { return value }
 
 return = 'return' _ expression:expression { return Return(expression) }
@@ -148,7 +151,7 @@ prefixUnaryExpression    = op:preOp _ right:prefixUnaryExpression { return Send(
                          / postfixUnaryExpression
 postfixUnaryExpression   = left:variable op:postOp { return Assignment(left, Send(left,'_'+op)()) }
                          / send
-send                     = left:primaryExpression tail:('.' id (arguments/c:closure{return [c]}))* { return tail.reduce((target,[nullSafe,key,params])=> Send(target,key)(...params), left) }
+send                     = left:primaryExpression tail:('.' id _ (arguments/c:closure{return [c]}))* { return tail.reduce((target,[,key,,params])=> Send(target,key)(...params), left) }
 
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp
@@ -199,8 +202,8 @@ booleanLiteral = value:('false' / 'true') { return Literal(value === 'true') }
 
 Literal = 'null' { return Literal(null) }
 
-stringLiteral = '"' value:( escapedChar  / [^'\\"] )* '"' { return Literal(value.join('')) }
-              / "'" value:( escapedChar  / [^'\\'] )* "'" { return Literal(value.join('')) }
+stringLiteral = '"' value:( escapedChar  / [^"\\] )* '"' { return Literal(value.join('')) }
+              / "'" value:( escapedChar  / [^'\\] )* "'" { return Literal(value.join('')) }
 escapedChar = '\\b'/'\\t'/'\\n'/'\\f'/'\\r'/'\\u'/'\\"'/"\\'"/'\\\\'
 
 numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.join(''), 16)) }

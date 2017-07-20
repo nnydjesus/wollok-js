@@ -9,6 +9,7 @@ import {
   Constructor,
   Send,
   Field,
+  File,
   If,
   Import,
   InstanceOf,
@@ -38,6 +39,28 @@ const fixture = {
   // BASICS
   //-------------------------------------------------------------------------------------------------------------------------------
 
+
+  comment: {
+    '// some comment': '',
+    '// some comment\n': '',
+    '/* some other comment*/': '',
+    '/* non closed comment': FAIL,
+  },
+
+  _: {
+    ' \
+    // some comment \
+    /* some other comment*/ \
+    ': ' ',
+  },
+
+  __: {
+    ' \
+    // some comment \
+    /* some other comment*/ \
+    ': ' ',
+  },
+
   id: {
     _foo123: '_foo123',
     '  foo': FAIL,
@@ -55,8 +78,13 @@ const fixture = {
   // FILE
   //-------------------------------------------------------------------------------------------------------------------------------
 
+  file: {
+    ' // some comment \n import /* some other comment*/ p ': File(Import('p')),
+  },
+
   import: {
     'import p': Import('p'),
+    'import /* comment */ p': Import('p'),
     'import p.x': Import('p.x'),
     'import p.x.*': Import('p.x.*'),
     'import p.*.x': FAIL,
@@ -101,6 +129,7 @@ const fixture = {
     'class C inherits p.S mixed with p.M { var v; method m() }': Class('C')('p.S', 'p.M')(Field(Variable('v'), true), Method('m')()()),
     'class C inherits p.S mixed with p.M and p.N { var v; method m() }': Class('C')('p.S', 'p.M', 'p.N')(Field(Variable('v'), true), Method('m')()()),
     'class C mixed with p.M and p.N { var v; method m() }': Class('C')('Object', 'p.M', 'p.N')(Field(Variable('v'), true), Method('m')()()),
+    'class C { const a const b }': Class('C')()(Field(Variable('a'), false), Field(Variable('b'), false)),
     'class { var v; method m() }': FAIL,
     'class C': FAIL,
     'class C inherits p.S mixed with p.M': FAIL,
@@ -143,6 +172,8 @@ const fixture = {
 
   Field: {
     'var _foo123': Field(Variable('_foo123'), true),
+    'var _foo123 = b': Field(Variable('_foo123'), true, Variable('b')),
+    'const _foo123': Field(Variable('_foo123'), false),
     'const _foo123 = b': Field(Variable('_foo123'), false, Variable('b')),
     var: FAIL,
     const: FAIL,

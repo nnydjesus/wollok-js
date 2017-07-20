@@ -6,7 +6,7 @@ let parser = null
 
 try {
   const grammar = readFileSync(path.resolve('src/grammar.pegjs'), 'utf8')
-  const ruleNames = grammar.match(/^\w+ +=/gm).map(ruleName => ruleName.slice(0, -2).trim())
+  const ruleNames = grammar.match(/^[\w_]+ +=/gm).map(ruleName => ruleName.slice(0, -2).trim())
 
   parser = generate(grammar, { allowedStartRules: ruleNames })
 } catch (error) {

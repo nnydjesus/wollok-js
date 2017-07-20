@@ -1,7 +1,9 @@
+import { readFileSync } from 'fs'
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import interpret from './../dist/interpreter'
+import compile from './../dist/compiler'
 import { link } from '../src/linker/linker'
+import parser from './../dist/parser'
 import {
   Assignment,
   // Block,
@@ -132,17 +134,21 @@ const fixture = new Map([
 ])
 
 describe('Wollok interpreter', () => {
-  // TODO: Disabled tests because interpreter should be tested on link results
   const fixture = []
-  for (const [ast, expected] of fixture.entries()) {
-    const result = () => interpret(link(ast))
 
-    it(`should interpret ${JSON.stringify(ast)}`, () => {
-      if (expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
-      else if (typeof expected === 'function') expect(escapeCode(result())).to.equal(escapeCode(expected))
-      else expect(result(), `intepreting ${fixture}`).to.deep.equal(expected)
-    })
-  }
+  // const wdk = ['./src/wdk/lang.wlk', './src/wdk/lib.wlk', './src/wdk/vm.wlk'].reduce((files, path) => {
+  //   try { return files + compile(link(parser.parse(readFileSync(path, 'utf8')))) } catch (error) { console.log(error); throw error }
+  // }, readFileSync('./dist/wdk/wdk.js'))
+
+  // for (const [ast, expected] of fixture.entries()) {
+  //   const result = () => eval(wdk + compile(link(ast)))
+
+  //   it(`should interpret ${JSON.stringify(ast)}`, () => {
+  //     if (expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
+  //     else if (typeof expected === 'function') expect(escapeCode(result())).to.equal(escapeCode(expected))
+  //     else expect(result(), `intepreting ${fixture}`).to.deep.equal(expected)
+  //   })
+  // }
 
 })
 
