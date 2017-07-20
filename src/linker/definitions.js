@@ -9,15 +9,15 @@ import { Field, VariableDeclaration, Parameter, Block, Program, File, Class, Met
 
 /* nodes that define new scopes/namespaces */
 const scopeables = [
-  File.name,
-  Program.name,
-  Class.name,
-  Singleton.name,
-  Method.name,
-  Mixin.name,
-  Closure.name,
-  Block.name
-]
+  File,
+  Program,
+  Class,
+  Singleton,
+  Method,
+  Mixin,
+  Closure,
+  Block
+].map(_ => _.name)
 export const isScopeable = type => scopeables.includes(type)
 
 const byName = n => n.name

@@ -2,8 +2,9 @@ import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
 import { link } from '../../../src/linker/linker'
 import { Ref } from '../../../src/linker/steps/link'
-import { queryNodeByType } from '../../../src/visitors/visiting'
-import { New, Class } from '../../../src/model'
+import { unlinkParent } from '../../../src/linker/steps/linkParent'
+import { queryNodeByType, visit } from '../../../src/visitors/visiting'
+import { New, Class, Mixin } from '../../../src/model'
 import parser from '../../../src/parser'
 
 describe('Class linkage', () => {
@@ -89,6 +90,31 @@ describe('Class linkage', () => {
       `)
     })
 
+  })
+
+  describe('Mixins', () => {
+    it('links a single mixins', () => {
+      const node = expectNoLinkageError(`
+        mixin M { }
+        class C mixed with M { }
+      `)
+      const C = queryNodeByType(node, Class.name, c => c.name === 'C')[0]
+      const M = queryNodeByType(node, Mixin.name, s => s.name === 'M')[0]
+      expect(C.mixins).to.deep.equal([Ref(M)])
+    })
+    it('links MANY mixins (3)', () => {
+      const node = expectNoLinkageError(`
+        mixin M1 { }
+        mixin M2 { }
+        mixin M3 { }
+        class C mixed with M1, M2, M3  { }
+      `)
+      const C = queryNodeByType(node, Class.name, c => c.name === 'C')[0]
+      const M1 = queryNodeByType(node, Mixin.name, s => s.name === 'M1')[0]
+      const M2 = queryNodeByType(node, Mixin.name, s => s.name === 'M2')[0]
+      const M3 = queryNodeByType(node, Mixin.name, s => s.name === 'M3')[0]
+      expect(C.mixins).to.deep.equal([Ref(M1), Ref(M2), Ref(M3)])
+    })
   })
 
 

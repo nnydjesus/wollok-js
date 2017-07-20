@@ -1,8 +1,11 @@
+import winston from 'winston'
 import { visit } from '../../visitors/visiting'
 import { filtering } from '../../visitors/commons'
 import { linkeables } from '../definitions'
-import { array, isArray } from '../../utils/collections'
+import { array, isArray, forAll } from '../../utils/collections'
 import { Node } from '../../model'
+
+winston.level = 'debug'
 
 export const Ref = (node) => Node(Ref)({ node })
 
@@ -16,6 +19,7 @@ export const linkStep = visit(filtering(isLinkeable, {
 }))
 
 const doLink = (node, linkDef) => Object.keys(linkDef).forEach(feature => {
+  winston.debug(`Linking ${node.type}.${feature}`)
   link(node, feature, linkDef[feature])
 })
 
@@ -29,15 +33,23 @@ const link = (node, feature, linkType) => {
   // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
   if (refValue === 'Object') { return; }
 
-  const values = isArray(refValue) ? refValue : [refValue]
-  values.forEach(ref => resolveAndLink(node, feature, ref))
+  let resolution;
+  if (isArray(refValue)) {
+    resolution = []
+    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::resolution.push))
+  } else {
+    resolveAndLink(node, feature, refValue, f => { resolution = f })
+  }
+  node[feature] = resolution
 }
-const alreadyLinked = refValue => typeof refValue !== 'string'
+const alreadyLinked = refValue => (
+  isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string'
+)
 
-const resolveAndLink = (n, feature, value) => {
+const resolveAndLink = (n, feature, value, onResolved) => {
   const found = findInScope(n, value)
   if (found) {
-    n[feature] = Ref(found)
+    onResolved(Ref(found))
   } else {
     appendError(n, feature, value)
   }
