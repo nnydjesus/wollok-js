@@ -85,7 +85,7 @@ libraryElement = element: (package / class / namedObject / mixin) _ { return ele
 
 package = 'package' __ name:qualifiedName _ '{' _ elements:libraryElement* _ '}' { return Package(name)(...elements) }
 
-class = 'class' __ name:id superclass:(_ 'inherits' __ qualifiedName)? mixins:mixinInclusion _ '{' _ members:(memberDeclaration/Constructor)* _ '}' { return Class(name)(superclass ? superclass[3] : 'Object',...mixins)(...members) }
+class = 'class' __ name:id superclass:(_ 'inherits' __ qualifiedName)? mixins:mixinInclusion _ '{' _ members:(memberDeclaration/constructor)* _ '}' { return Class(name)(superclass ? superclass[3] : 'Object',...mixins)(...members) }
 
 mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return Mixin(name)(...members) }
 
@@ -102,13 +102,13 @@ methodBody = 'native'
 // MEMBERS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-memberDeclaration = member:(Field / Method) _ ';'? _ { return member }
+memberDeclaration = member:(field / method) _ ';'? _ { return member }
 
-Field = variable:variableDeclaration { return Field(variable.variable, variable.writeable, variable.value) }
+field = variable:variableDeclaration { return Field(variable.variable, variable.writeable, variable.value) }
 
-Method = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return Method(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
+method = override:('override' __)? 'method' __ name:methodName _ parameters:parameters _ sentences:methodBody? { return Method(name, !!override, sentences === 'native')(...parameters)(...!sentences || sentences === 'native' ? [] : sentences) }
 
-Constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super') _ arguments)? _ sentences:block? _ ';'? _ {return Constructor(...parameters)(base ? base[4] : [], !base || base[2] === 'super')(...sentences||[])}
+constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super') _ arguments)? _ sentences:block? _ ';'? _ {return Constructor(...parameters)(base ? base[4] : [], !base || base[2] === 'super')(...sentences||[])}
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
@@ -177,7 +177,7 @@ primaryExpression = literal
 ifExpression = 'if' _ '(' _ condition:expression _ ')' _ thenS:blockOrSentence _ elseS:( _ 'else' _ blockOrSentence )? { return If(condition)(...thenS)(...elseS?elseS[3]:[]) }
 
 tryExpression = 'try' _ body:blockOrSentence _ catches:catch* _ always:('then always' _ blockOrSentence)? { return Try(...body)(...catches)(...always?always[2]:[]) }
-catch = _ 'catch' __ variable:variable _ type:(':' _ qualifiedName)? _ handler:blockOrSentence { return Catch(variable,type?type[2]:undefined)(...handler) }
+catch = _ 'catch' __ parameter:id _ type:(':' _ qualifiedName)? _ handler:blockOrSentence { return Catch(Parameter(parameter),type?type[2]:undefined)(...handler) }
 
 throwExpression = 'throw' _ exception:expression { return Throw(exception) }
 

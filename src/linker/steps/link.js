@@ -9,14 +9,18 @@ export const linkStep = (node, unresolvables = []) => {
     enter(n) {
       const { type } = n
       const name = linkeables[type](n)
-      // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
-      if (name !== 'Object') {
+      // TODO: HACK for now I need to resolve refs to wollok.lang.* and friends !!!!!!! 
+      // TODO: Not sure what to do with self references.
+      const tempIgnore = ['Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception', 'self']
+      if (tempIgnore.indexOf(name) < 0) {
         const found = findInScope(n, name)
         if (found) {
           n.link = found
         } else {
           unresolvables.push(name)
         }
+      } else {
+        n.link = n
       }
     }
   }))

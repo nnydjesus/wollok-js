@@ -136,9 +136,9 @@ const fixture = new Map([
 describe('Wollok interpreter', () => {
   const fixture = []
 
-  // const wdk = ['./src/wdk/lang.wlk', './src/wdk/lib.wlk', './src/wdk/vm.wlk'].reduce((files, path) => {
-  //   try { return files + compile(link(parser.parse(readFileSync(path, 'utf8')))) } catch (error) { console.log(error); throw error }
-  // }, readFileSync('./dist/wdk/wdk.js'))
+  const wdk = ['./src/wdk/lang.wlk'].reduce((files, path) => {
+    try { return files + compile(link(parser.parse(readFileSync(path, 'utf8')))) } catch (error) { console.log(error); throw error }
+  }, readFileSync('./dist/wdk/wdk.js'))
 
   // for (const [ast, expected] of fixture.entries()) {
   //   const result = () => eval(wdk + compile(link(ast)))

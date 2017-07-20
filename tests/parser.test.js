@@ -170,7 +170,7 @@ const fixture = {
   // MEMBERS
   //-------------------------------------------------------------------------------------------------------------------------------
 
-  Field: {
+  field: {
     'var _foo123': Field(Variable('_foo123'), true),
     'var _foo123 = b': Field(Variable('_foo123'), true, Variable('b')),
     'const _foo123': Field(Variable('_foo123'), false),
@@ -181,7 +181,7 @@ const fixture = {
     'const 5': FAIL
   },
 
-  Method: {
+  method: {
     'method m()': Method('m')()(),
     'method m(p)': Method('m')(Parameter('p'))(),
     'method m(p,q)': Method('m')(Parameter('p'), Parameter('q'))(),
@@ -200,7 +200,7 @@ const fixture = {
     'method m(p,q) native { }': FAIL
   },
 
-  Constructor: {
+  constructor: {
     'constructor()': Constructor()()(),
     'constructor () { }': Constructor()()(),
     'constructor(p)': Constructor(Parameter('p'))()(),
@@ -401,14 +401,14 @@ const fixture = {
   tryExpression: {
     'try x++': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))()(),
     'try {x++}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))()(),
-    'try {x++} catch e h': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(),
-    'try {x++} catch e: foo.bar.E h': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try{ x++ }catch e{h}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(),
-    'try{ x++ }catch e : foo.bar.E {h}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'), 'foo.bar.E')(Variable('h')))(),
-    'try {x++} catch e{h} then always f': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e{h} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e'))(Variable('h')))(Variable('f')),
-    'try {x++} catch e1{h1} catch e2{h2}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(),
-    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Variable('e1'))(Variable('h1')), Catch(Variable('e2'))(Variable('h2')))(Variable('f')),
+    'try {x++} catch e h': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e'))(Variable('h')))(),
+    'try {x++} catch e: foo.bar.E h': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e'), 'foo.bar.E')(Variable('h')))(),
+    'try{ x++ }catch e{h}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e'))(Variable('h')))(),
+    'try{ x++ }catch e : foo.bar.E {h}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e'), 'foo.bar.E')(Variable('h')))(),
+    'try {x++} catch e{h} then always f': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e{h} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e'))(Variable('h')))(Variable('f')),
+    'try {x++} catch e1{h1} catch e2{h2}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e1'))(Variable('h1')), Catch(Parameter('e2'))(Variable('h2')))(),
+    'try {x++} catch e1{h1} catch e2{h2} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))(Catch(Parameter('e1'))(Variable('h1')), Catch(Parameter('e2'))(Variable('h2')))(Variable('f')),
     'try {x++} then always {f}': Try(Assignment(Variable('x'), Send(Variable('x'), '_++')()))()(Variable('f')),
     'try {x++} catch e{h} then always': FAIL,
     'try {x++} then always f then always f': FAIL,
