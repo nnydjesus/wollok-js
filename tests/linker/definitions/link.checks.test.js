@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { Parameter, Field } from '../../../src/model'
-import { or } from '../../../src/linker/definitions'
+import { or } from '../../../src/linker/types'
 import { Ref } from '../../../src/linker/steps/link'
 
 describe('Link checks', () => {

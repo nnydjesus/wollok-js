@@ -1,4 +1,4 @@
-import { isArray, forAll, anySatisfy } from '../utils/collections'
+import { a, many, or } from './types'
 import { Field, VariableDeclaration, Parameter, Block, Program, File, Class, Method, Closure, Singleton, Mixin } from '../model'
 
 // This declarations are not the best and most intuitive form, but
@@ -30,11 +30,6 @@ export const referenciables = {
   [Mixin.name]: byName,
   [Singleton.name]: byName
 }
-
-// link type restrictions (validates Ref(node) or [Ref])
-export const a = type => ({ node }) => node.type === type.name
-export const many = type => values => isArray(values) && forAll(values, ref => a(type)(ref))
-export const or = (types) => ref => anySatisfy(types, type => a(type)(ref))
 
 export const linkeables = {
   Variable: { name: or([Field, VariableDeclaration, Parameter]) },
