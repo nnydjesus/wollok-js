@@ -5,7 +5,7 @@ import { linkeables } from '../definitions'
 import { array, isArray, forAll } from '../../utils/collections'
 import { Node } from '../../model'
 
-winston.level = 'debug'
+// winston.level = 'debug'
 
 export const Ref = (node) => Node(Ref)({ node })
 
@@ -28,19 +28,25 @@ const doLink = (node, linkDef) => Object.keys(linkDef).forEach(feature => {
 const link = (node, feature, linkType) => {
   const refValue = node[feature]
 
-  // already linked
   if (alreadyLinked(refValue)) { return }
   // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
-  if (refValue === 'Object') { return; }
+  if (refValue === 'Object') { return }
 
+  // resolve and assign (and / or error)
   let resolution;
   if (isArray(refValue)) {
-    resolution = []
-    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::resolution.push))
+    const r = []
+    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::r.push))
+    if (r.length > 0) { resolution = r }
   } else {
     resolveAndLink(node, feature, refValue, f => { resolution = f })
   }
   node[feature] = resolution
+
+  // check resolved types
+  if (node[feature] && !linkType(node[feature])) {
+    appendWrongLinkTypeError(node, feature, linkType)
+  }
 }
 const alreadyLinked = refValue => (
   isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string'
@@ -57,6 +63,7 @@ const resolveAndLink = (n, feature, value, onResolved) => {
 
 export const LINKAGE_ERROR_TYPE = 'LINKAGE'
 
+// TODO: unify code between this two types of errors
 const appendError = (node, feature, ref) => {
   if (!node.errors) {
     node.errors = []
@@ -66,6 +73,18 @@ const appendError = (node, feature, ref) => {
     feature,
     ref,
     message: `Cannot resolve reference to '${ref}'`
+  })
+}
+
+const appendWrongLinkTypeError = (node, feature, linkType) => {
+  if (!node.errors) {
+    node.errors = []
+  }
+  node.errors.push({
+    errorType: LINKAGE_ERROR_TYPE,
+    feature,
+    // TODO: improve this message
+    message: 'Referencing a wrong type'
   })
 }
 

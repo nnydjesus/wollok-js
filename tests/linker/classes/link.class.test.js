@@ -1,9 +1,8 @@
 import { expect } from 'chai'
-import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
+import { expectWrongLinkTypeAt, expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
 import { link } from '../../../src/linker/linker'
 import { Ref } from '../../../src/linker/steps/link'
-import { unlinkParent } from '../../../src/linker/steps/linkParent'
-import { queryNodeByType, visit } from '../../../src/visitors/visiting'
+import { queryNodeByType } from '../../../src/visitors/visiting'
 import { New, Class, Mixin } from '../../../src/model'
 import parser from '../../../src/parser'
 
@@ -114,6 +113,12 @@ describe('Class linkage', () => {
       const M2 = queryNodeByType(node, Mixin.name, s => s.name === 'M2')[0]
       const M3 = queryNodeByType(node, Mixin.name, s => s.name === 'M3')[0]
       expect(C.mixins).to.deep.equal([Ref(M1), Ref(M2), Ref(M3)])
+    })
+    it('links but detects an error if trying to use a class', () => {
+      expectWrongLinkTypeAt(Class.name, 'mixins', `
+        class M {}
+        class C mixed with M {}
+      `)
     })
   })
 

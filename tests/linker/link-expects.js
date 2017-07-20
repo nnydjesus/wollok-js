@@ -37,3 +37,12 @@ export const expectScopeOf = (program, type, findFilter, expected) => {
     expected
   )
 }
+
+export const expectWrongLinkTypeAt = (type, feature, code) => {
+  const n = link(parser.parse(code))
+  const errors = collectErrors(n)
+  expect(errors.length).to.equals(1)
+  expect(errors[0].feature).to.equals(feature)
+  expect(errors[0].node.type).to.equals(type)
+  expect(errors[0].message).to.equals('Referencing a wrong type')
+}

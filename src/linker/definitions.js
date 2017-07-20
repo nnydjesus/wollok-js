@@ -31,13 +31,13 @@ export const referenciables = {
   [Singleton.name]: byName
 }
 
-// link type restrictions
-const a = type => value => value.type.name === type.name
-const many = type => values => isArray(values) && forAll(values, v => a(type)(v))
-const or = (...types) => value => anySatisfy(types, type => a(type)(value))
+// link type restrictions (validates Ref(node) or [Ref])
+export const a = type => ({ node }) => node.type === type.name
+export const many = type => values => isArray(values) && forAll(values, ref => a(type)(ref))
+export const or = (types) => ref => anySatisfy(types, type => a(type)(ref))
 
 export const linkeables = {
-  Variable: { name: or(Field, VariableDeclaration, Parameter) },
+  Variable: { name: or([Field, VariableDeclaration, Parameter]) },
   New: { target: a(Class) },
   Class: {
     superclass: a(Class),
