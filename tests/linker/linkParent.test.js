@@ -1,6 +1,9 @@
 import { expect } from 'chai'
-import { linkParentStep as linkParent } from '../../src/linker/steps/linkParent'
+import { linkParentStep } from '../../src/linker/steps/linkParent'
+import { visit } from '../../src/visitors/visiting'
 import { Node } from '../../src/model'
+
+const linkParent = node => visit(node, linkParentStep)
 
 describe('linkParentStep', () => {
 

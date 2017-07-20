@@ -3,7 +3,8 @@ import winston from 'winston'
 // winston.level = 'silly'
 
 // this should be in the linker !
-const ignoredKeys = ['parent', 'link']
+const ignoredTypes = 'Ref'
+const ignoredKeys = ['parent']
 
 /**
  * Visits a Node and all of its inner nodes (objects with "type" property)
@@ -17,7 +18,7 @@ const ignoredKeys = ['parent', 'link']
 //     visit = ({ enter, exit = () => {} }, parent) => node => {}
 // :)
 export const visit = (node, { enter = () => {}, exit = () => {} }, parent, feature) => {
-  if (!node.type) { return node }
+  if (!node.type || ignoredTypes.includes(node.type)) { return node }
   winston.silly(`visiting ${node.type}`)
 
   const folded = enter(node, parent, feature) || node

@@ -1,15 +1,18 @@
 import { expect } from 'chai'
+import { unlinkParent } from '../../src/linker/steps/linkParent'
 import { link, collectErrors } from '../../src/linker/linker'
 import { linkeables } from '../../src/linker/definitions'
-import { queryNodeByType } from '../../src/visitors/visiting'
+import { queryNodeByType, visit } from '../../src/visitors/visiting'
 import parser from '../../src/parser'
 
 // expect utils for
 
-export const expectNoLinkageError = code => { 
+export const expectNoLinkageError = code => {
   const n = link(parser.parse(code))
   const errors = collectErrors(n)
-  expect(errors.length, `Expecting no errors but found ${errors.map(e => e.node.type + ' ' + e.ref)}`).to.be.equals(0)
+  errors.forEach(e => visit(e.node, unlinkParent))
+  const errorsFound = errors.map(e => `${e.node.type}.${e.feature} to '${e.ref}': ${e}`).join(', ')
+  expect(errors.length, `Expecting no errors but found (${errors.length}): ${errorsFound}`).to.be.equals(0)
   return n
 }
 

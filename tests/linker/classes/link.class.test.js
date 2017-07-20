@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } from '../link-expects'
 import { link } from '../../../src/linker/linker'
+import { Ref } from '../../../src/linker/steps/link'
 import { queryNodeByType } from '../../../src/visitors/visiting'
 import { New, Class } from '../../../src/model'
 import parser from '../../../src/parser'
@@ -36,7 +37,7 @@ describe('Class linkage', () => {
       `)
       const Bird = queryNodeByType(node, Class.name, c => c.name === 'Bird')[0]
       const niu = queryNodeByType(node, New.name)[0]
-      expect(niu.link).to.deep.equal(Bird)
+      expect(niu.target).to.deep.equal(Ref(Bird))
     })
 
     it('throws an error if the referenced class does NOT exist', () => {
@@ -73,7 +74,7 @@ describe('Class linkage', () => {
       `)
       const Father = queryNodeByType(node, Class.name, c => c.name === 'Father')[0]
       const Son = queryNodeByType(node, Class.name, s => s.name === 'Son')[0]
-      expect(Son.link).to.deep.equal(Father)
+      expect(Son.superclass).to.deep.equal(Ref(Father))
     })
     it('throws an error if the referenced class does NOT exist', () => {
       expectUnresolvedVariable('Father', `

@@ -1,6 +1,7 @@
 import { pipe } from '../utils/functions'
 import { flatten } from '../utils/collections'
-import { collect } from '../visitors/commons'
+import { visit } from '../visitors/visiting'
+import { collect, chain } from '../visitors/commons'
 import { linkParentStep } from './steps/linkParent'
 import { createScopesStep } from './steps/createScopes'
 import { linkStep, isLinkageError } from './steps/link'
@@ -17,9 +18,8 @@ import { linkStep, isLinkageError } from './steps/link'
  */
 export const link = pipe([
 
-  linkParentStep, // TODO: try to do both things in one pass
-
-  createScopesStep, // sets node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
+  // sets node.parent & node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
+  node => visit(node, chain(linkParentStep, createScopesStep())),
 
   linkStep // sets Node(Variable).link = VariableDec | Class | Mixin
 
