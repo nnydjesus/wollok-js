@@ -1,7 +1,3 @@
-import winston from 'winston'
-
-// winston.level = 'silly'
-
 // this should be in the linker !
 const ignoredKeys = ['parent', 'link']
 
@@ -16,9 +12,8 @@ const ignoredKeys = ['parent', 'link']
 // It would be really nice to convert this into a higher-order function like:
 //     visit = ({ enter, exit = () => {} }, parent) => node => {}
 // :)
-export const visit = (node, { enter, exit = () => {} }, parent) => {
+export const visit = (node, { enter, exit = () => { } }, parent) => {
   if (!node.type) { return node }
-  winston.silly(`visiting ${node.type}`)
 
   const folded = enter(node, parent) || node
 
@@ -27,7 +22,6 @@ export const visit = (node, { enter, exit = () => {} }, parent) => {
     const value = node[key]
     const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.type).forEach((e, i) => {
-      winston.silly(`\tvisiting ${node.type}.${key}[${i}]`)
       visit(e, { enter, exit }, node)
     })
   })
