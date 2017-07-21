@@ -1,5 +1,6 @@
 import winston from 'winston'
 import { noop } from '../utils/functions'
+import { propertyValues } from '../utils/object'
 
 // winston.level = 'silly'
 
@@ -24,13 +25,12 @@ export const visit = ({ enter = noop, exit = noop }, parent, feature) => node =>
 
   const folded = enter(node, parent, feature) || node
 
-  Object.keys(node).forEach(key => {
-    if (ignoredKeys.includes(key)) return
-    const value = node[key]
+  propertyValues(node).forEach(({ name, value }) => {
+    if (ignoredKeys.includes(name)) return
     const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.type).forEach((e, i) => {
-      winston.silly(`\tvisiting ${node.type}.${key}[${i}]`)
-      visit({ enter, exit }, node, key)(e)
+      winston.silly(`\tvisiting ${node.type}.${name}[${i}]`)
+      visit({ enter, exit }, node, name)(e)
     })
   })
   return exit(node, parent, feature) || folded
