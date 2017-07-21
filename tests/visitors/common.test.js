@@ -1,13 +1,13 @@
 import { expect } from 'chai'
 import { collect } from '../../src/visitors/commons'
-import parser from '../../src/parser'
+import parse from '../../src/parser'
 
 describe('common visitors', () => {
 
   describe('flatAttribute', () => {
 
     it('collects all types', () => {
-      const node = parser.parse(`
+      const node = parse(`
         program prueba {
           const a = 23
           const b = a

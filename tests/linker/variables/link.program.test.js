@@ -1,12 +1,12 @@
 import { expect } from 'chai'
 import { expectUnresolvedVariable } from '../link-expects'
 import { link } from '../../../src/linker/linker'
-import parser from '../../../src/parser'
+import parse from '../../../src/parser'
 
 describe('program', () => {
 
   it('links a simple Variable ref in a Program', () => {
-    const linked = link(parser.parse(`
+    const linked = link(parse(`
       program prueba {
         const a = 23
         const b = a

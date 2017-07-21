@@ -3,7 +3,7 @@ import { describe, it } from 'mocha'
 import { expect } from 'chai'
 import compile from './../dist/compiler'
 import { link } from '../src/linker/linker'
-import parser from './../dist/parser'
+import parse from './../dist/parser'
 import {
   Assignment,
   // Block,
@@ -134,7 +134,7 @@ describe('Wollok interpreter', () => {
   const fixture = []
 
   const wre = ['./src/wre/lang.wlk'].reduce((files, path) =>
-    files + compile(link(parser.parse(readFileSync(path, 'utf8'))))
+    files + compile(link(parse(readFileSync(path, 'utf8'))))
     , readFileSync('./dist/wre/natives.js'))
 
   // for (const [ast, expected] of fixture.entries()) {

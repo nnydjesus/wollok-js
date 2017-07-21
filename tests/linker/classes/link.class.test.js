@@ -3,12 +3,12 @@ import { expectNoLinkageError, expectUnresolvedVariable, expectScopeHasNames } f
 import { link } from '../../../src/linker/linker'
 import { queryNodeByType } from '../../../src/visitors/visiting'
 import { New, Class } from '../../../src/model'
-import parser from '../../../src/parser'
+import parse from '../../../src/parser'
 
 describe('Class linkage', () => {
 
   it('File scope includes the classes', () => {
-    expectScopeHasNames(link(parser.parse(`
+    expectScopeHasNames(link(parse(`
       class A {}
       class B {}
       class C {}
@@ -16,7 +16,7 @@ describe('Class linkage', () => {
   })
 
   it('File scope includes the mixins, classes, and objects', () => {
-    expectScopeHasNames(link(parser.parse(`
+    expectScopeHasNames(link(parse(`
       class A {}
       mixin M {}
       object c {}

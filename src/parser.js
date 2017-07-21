@@ -14,6 +14,6 @@ try {
   parser = require(`./${grammar}`)
 }
 
-const exportable = parser
+// const exportable = parser
 
-export default exportable
+export default parser.parse // exportable

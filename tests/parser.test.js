@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import parser from './../dist/parser'
+import parse from './../dist/parser'
 import {
   Assignment,
   Catch,
@@ -481,7 +481,7 @@ describe('Wollok parser', () => {
     describe(grammar, () => {
       for (const source in fixture[grammar]) {
         const expected = fixture[grammar][source]
-        const result = () => parser.parse(source, { startRule: grammar })
+        const result = () => parse(source, { startRule: grammar })
 
         if (expected === FAIL) it(`should not parse: ${source}`, () => expect(result).to.throw())
         else it(`should parse: ${source} to: ${JSON.stringify(expected)}`, () => expect(result()).to.deep.equal(expected))
