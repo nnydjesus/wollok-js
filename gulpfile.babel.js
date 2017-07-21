@@ -3,11 +3,9 @@ import mocha from 'gulp-mocha'
 import eslint from 'gulp-eslint'
 import babel from 'gulp-babel'
 import pegjs from 'gulp-pegjs'
-import { exec } from 'child_process'
 import del from 'del'
 
 const task = gulp.task.bind(gulp)
-
 
 task('clean', () => del(['dist', '*.tgz']))
 
@@ -41,7 +39,3 @@ task('lint', () =>
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
 )
-
-task('pack', ['test'], () => exec('cp -t ./dist/ ./package.json ./README.md && cd ./dist && npm pack && cd ..'))
-
-task('default', ['lint', 'test'])

@@ -4,6 +4,7 @@
   "description": "JS based Wollok engine",
   "license": "GPLv3",
   "repository": "uqbar-project/wollok-js",
+  "main": "dist/index.js",
   "files": [
     "dist"
   ],
