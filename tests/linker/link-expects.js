@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import { unlinkParent } from '../../src/linker/steps/linkParent'
-import { link, collectErrors } from '../../src/linker/linker'
+import { link } from '../../src/linker/linker'
+import { collectErrors } from '../../src/linker/errors'
 import { linkeables } from '../../src/linker/definitions'
 import { queryNodeByType, visit } from '../../src/visitors/visiting'
 import parser from '../../src/parser'

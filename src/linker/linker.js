@@ -1,10 +1,9 @@
 import { pipe } from '../utils/functions'
-import { flatten } from '../utils/collections'
 import { visit } from '../visitors/visiting'
-import { collect, chain } from '../visitors/commons'
+import { chain } from '../visitors/commons'
 import { linkParentStep } from './steps/linkParent'
 import { createScopesStep } from './steps/createScopes'
-import { linkStep, isLinkageError } from './steps/link'
+import { linkStep } from './steps/link'
 
 // winston.level = 'silly'
 
@@ -25,15 +24,3 @@ export const link = pipe([
   linkStep
 
 ])
-
-// retrieves a list of all errors in all nodes
-// errors for the sake of tests are like this { ...error, node }
-// so you can assert about the owner node
-export const collectErrors = (node) => flatten(
-  collect(node, n => (n.errors || [])
-    .map(e => ({
-      ...e,
-      node: n,
-    }))
-  )).filter(isLinkageError)
-
