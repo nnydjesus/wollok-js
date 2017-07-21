@@ -2,7 +2,7 @@
   "name": "wollok-js",
   "version": "1.0.0",
   "description": "JS based Wollok engine",
-  "license": "ISC",
+  "license": "GPLv3",
   "repository": "uqbar-project/wollok-js",
   "files": [
     "dist"

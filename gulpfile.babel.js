@@ -9,7 +9,7 @@ import del from 'del'
 const task = gulp.task.bind(gulp)
 
 
-task('clean', () => del(['dist', 'lib']))
+task('clean', () => del(['dist', '*.tgz']))
 
 task('compile', ['lint', 'clean', 'wdk', 'peg', 'babel'])
 
