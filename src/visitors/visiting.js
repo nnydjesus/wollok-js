@@ -24,7 +24,11 @@ export const visit = ({ enter = noop, exit = noop }, parent, feature) => node =>
   winston.silly(`visiting ${node.type}`)
 
   const folded = enter(node, parent, feature) || node
+  visitProperties(node, enter, exit)
+  return exit(node, parent, feature) || folded
+}
 
+const visitProperties = (node, enter, exit) => {
   propertyValues(node).forEach(({ name, value }) => {
     if (ignoredKeys.includes(name)) return
     const list = Array.isArray(value) ? value : (value && [value] || [])
@@ -33,7 +37,6 @@ export const visit = ({ enter = noop, exit = noop }, parent, feature) => node =>
       visit({ enter, exit }, node, name)(e)
     })
   })
-  return exit(node, parent, feature) || folded
 }
 
 
