@@ -2,6 +2,7 @@ import winston from 'winston'
 import { visit } from '../../visitors/visiting'
 import { filtering } from '../../visitors/commons'
 import { linkeables } from '../definitions'
+import { findInScope } from '../scoping'
 import { appendError, createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
 import { isArray, forAll } from '../../utils/collections'
 import { Node } from '../../model'
@@ -59,6 +60,3 @@ const resolveAndLink = (node, feature, value, onResolved) => {
     appendError(node, createUnresolvedLinkageError(feature, value))
   }
 }
-
-const findInScope = (node, name) =>
-  node && ((node.scope && node.scope[name]) || findInScope(node.parent, name))
