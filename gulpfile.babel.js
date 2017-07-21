@@ -39,3 +39,5 @@ task('lint', () =>
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
 )
+
+// TODO: Compile .wlk files and compress them along the natives file before packing.
