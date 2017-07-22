@@ -1,78 +1,78 @@
 const { assign } = Object
 
-// TODO: refactor the code generation and extract repeated fragments.
+const escape = str => ([
+  'abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue', 'debugger', 'default',
+  'delete', 'do', 'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'function', 'goto', 'if',
+  'implements', 'import', 'in', 'instanceof', 'int', 'interface', 'let', 'long', 'native', 'new', 'null', 'package', 'private', 'protected',
+  'public', 'return', 'short', 'static', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
+  'var', 'void', 'volatile', 'while', 'with', 'yield'
+].indexOf(str) >= 0 ? `$${str}` : str)
+
+const compileMethodDispatcher = ({ name }) =>
+  `['${escape(name)}'](){
+    const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${escape(name)}'))
+    const implementation = implementations.find(selector => {
+      const argumentDescriptor = selector.split('$$')[1]
+      const argumentCount = Number.parseInt(argumentDescriptor)
+      return argumentCount === arguments.length || argumentCount < arguments.length && argDescriptor.endsWith('+')
+    })
+    return implementation ? implementation(...arguments) : super['${escape(name)}'](...arguments)
+  }`
 
 const compile = assign(expression => compile[expression.type](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
   Singleton: ({ name, superclass, mixins, superArguments, members }) =>
-    `const ${name} = new class extends ${mixins.reduce((parent, mixin) => `${mixin}(${parent})`, superclass)} {
+    `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
-        ${members.filter(m => m.type === 'Field').map(compile).join(';')}
+        ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
       }
-      ${members.filter(m => m.type === 'Method').map(({ name }) => `[${name}](...$parameters){
-        const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${name}'))
-        const implementation = implementations.find(selector => {
-          const argDesc = selector.split('$')[1])
-          const argCount = Number.parseInt(argDesc)
-          return argCount === $parameters.length || argCount < $parameters.length && argDesc.endsWith('+')
-        })
-        return implementation ? implementation(...$parameters) : super[${name}](...$parameters)
-      }`).join(';')}
-      ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
+      ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher).join(';\n')}
+      ${members.filter(m => m.type === 'Method').map(compile).join(';\n')}
     }`,
 
   Mixin: ({ name, members }) =>
-    `const ${name} = ($superclass) => class extends $superclass {
-      constructor(...$arguments) {
-        ${members.filter(m => m.type === 'Field').map(compile).join(';')}
-        this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
+    `const ${escape(name)} = ($$superclass) => class extends $$superclass {
+      constructor() {
+        ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
+        ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
       }
-      ${members.filter(m => m.type === 'Method').map(({ name }) => `[${name}](...$parameters){
-        const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${name}'))
-        const implementation = implementations.find(selector => {
-          const argDesc = selector.split('$')[1])
-          const argCount = Number.parseInt(argDesc)
-          return argCount === $parameters.length || argCount < $parameters.length && argDesc.endsWith('+')
-        })
-        return implementation ? implementation(...$parameters) : super[${name}](...$parameters)
-      }`).join(';')}
-      ${members.filter(m => m.type !== 'Field').map(compile).join(';')}    
+      ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher).join(';\n')}
+      ${members.filter(m => m.type === 'Method').map(compile).join(';\n')}
     }`,
 
   Class: ({ name, superclass, mixins, members }) =>
-    `class ${name} extends ${mixins.reduce((parent, mixin) => `${mixin}(${parent})`, superclass)} {
-      constructor(...$arguments) {
-        ${members.filter(m => m.type === 'Field').map(compile).join(';')}
-        this.constructor['$$init'+$arguments.length].bind(this)(...arguments)
+    `class ${escape(name)} extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
+      constructor() {
+        const $constructor = (...args) => {
+          ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
+        }
+
+        $constructor(arguments)
+        ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
       }
-      ${members.filter(m => m.type === 'Method').map(({ name }) => `[${name}](...$parameters){
-        const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${name}'))
-        const implementation = implementations.find(selector => {
-          const argDesc = selector.split('$')[1])
-          const argCount = Number.parseInt(argDesc)
-          return argCount === $parameters.length || argCount < $parameters.length && argDesc.endsWith('+')
-        })
-        return implementation ? implementation(...$parameters) : super[${name}](...$parameters)
-      }`).join(';')}
-      ${members.filter(m => m.type !== 'Field').map(compile).join(';')}
+      ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher).join(';\n')}
+      ${members.filter(m => m.type === 'Method').map(compile).join(';\n')}
     }`,
 
   Constructor: ({ parameters, sentences, lookUpCall, baseArguments }) =>
-    `static $$init${parameters.length}(${parameters.map(compile).join()}) {
-      ${lookUpCall ? 'super' : `this.constructor.$$init'${baseArguments.length}'`}(${baseArguments.map(compile).join()});
+    `const constructor$$${parameters.length} = (${parameters.map(compile).join()}) => {
+      ${lookUpCall ? 'super' : '$constructor'}(${baseArguments.map(compile).join()});
       ${compile(sentences)}
-    }`,
-
+    }
+    if(args.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? ` >= + ${parameters.length - 1}` : ` === ${parameters.length}`} ) {
+      constructor$$${parameters.length}(...args)
+    }
+    `,
 
   Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
   // TODO: namespaces for natives
   Method: ({ name, parameters, sentences, native, parent }) => {
-    const implementationName = `${name}$${parameters.length}${parameters.length && parameters[parameters.length - 1].varArg ? '+' : ''}`
+    const implementationName = `${escape(name)}$$${parameters.length}${parameters.length && parameters[parameters.length - 1].varArg ? '+' : ''}`
     return native
-      ? `static ['${implementationName}'](...$parameters){ return $wollok.${parent.name}['${implementationName}'].bind(this)(...$parameters) }`
+      ? `static ['${implementationName}'](){ return $wollok.${parent.name}['${implementationName}'].bind(this)(...arguments) }`
       : `static ['${implementationName}'](${parameters.map(compile).join()}){${compile(sentences)}}`
   },
 
@@ -80,13 +80,11 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Assignment: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
-  Variable: ({ name, link }) => (name === 'self' ? 'this' : `${link.type === 'Field' ? 'this.' : ''}${name}`),
+  Variable: ({ name, link }) => (name === 'self' ? 'this' : `${link.type === 'Field' ? 'this.' : ''}${escape(name)}`),
 
-  InstanceOf: ({ left, right }) => `${compile(left)} instanceof ${right}`,
+  Send: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
 
-  Send: ({ target, key, parameters }) => `${compile(target)}["${key}"](${parameters.map(compile).join()})`,
-
-  New: ({ target, parameters }) => `new ${target}(${parameters.map(compile).join()})`,
+  New: ({ target, parameters }) => `new ${escape(target)}(${parameters.map(compile).join()})`,
 
   Super: ({ parameters }) => `super(${parameters.map(compile).join()})`,
 
@@ -99,7 +97,7 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Try: ({ sentences, catches, always }) =>
     `(()=>{try{${compile(sentences)}}
-    ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';')} throw ___ERROR___}` : ''}
+    ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';\n')} throw ___ERROR___}` : ''}
     ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
 
   Catch: ({ variable, errorType, handler }) => {
@@ -109,7 +107,7 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Literal: ({ value }) => {
     switch (typeof value) {
-      case 'string': return `"${value}"`
+      case 'string': return `"${value.replace(/"/g, '\\"')}"`
       default: return `${value}`
     }
   },
@@ -118,21 +116,21 @@ const compile = assign(expression => compile[expression.type](expression), {
 
   Closure: ({ parameters, sentences }) => `(function (${parameters.map(compile).join()}) {${compile(sentences)}})`,
 
-  File: ({ content }) => content.map(compile).join(';'),
+  File: ({ content }) => content.map(compile).join(';\n'),
   // TODO: Imports
   // TODO: tests
 
-  Program: ({ name, sentences }) => `function ${name}(){${compile(sentences)}}`,
+  Program: ({ name, sentences }) => `function ${escape(name)}(){${compile(sentences)}}`,
 
   Block: ({ sentences }) => {
     const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
     if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
       compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
     }
-    return compiledSentences.join(';')
+    return compiledSentences.join(';\n')
   },
 
-  Parameter: ({ name, varArg }) => (varArg ? `...${name}` : name)
+  Parameter: ({ name, varArg }) => (varArg ? `...${escape(name)}` : escape(name))
 })
 
 

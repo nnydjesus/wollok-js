@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "prepublish": "gulp compile",
+    "prepublish": "gulp compile && gulp wre",
     "test": "gulp test",
     "lint": "gulp lint",
     "compile": "gulp compile",

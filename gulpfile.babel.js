@@ -4,21 +4,17 @@ import eslint from 'gulp-eslint'
 import babel from 'gulp-babel'
 import pegjs from 'gulp-pegjs'
 import del from 'del'
+import { readFileSync, unlinkSync, writeFile } from 'fs'
 
 const task = gulp.task.bind(gulp)
 
 task('clean', () => del(['dist', '*.tgz']))
 
-task('compile', ['lint', 'clean', 'wdk', 'peg', 'babel'])
+task('compile', ['lint', 'clean', 'peg', 'babel'])
 
 task('peg', ['clean'], () =>
   src('src/**/*.pegjs')
     .pipe(pegjs({ format: 'commonjs' }))
-    .pipe(dest('dist'))
-)
-
-task('wdk', ['clean'], () =>
-  src('src/wdk/**/*.wlk')
     .pipe(dest('dist'))
 )
 
@@ -39,5 +35,13 @@ task('lint', () =>
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
 )
+
+task('wre', ['clean', 'compile'], (cb) => {
+  const { compiler, parser, linker } = require('./dist/index')
+  const lang = compiler(linker(parser(readFileSync('src/wre/lang.wlk', 'utf8'))))
+  const natives = readFileSync('dist/wre/natives.js', 'utf8')
+  unlinkSync('dist/wre/natives.js')
+  writeFile('dist/wre/wre.js', `${natives}\n${lang}`, cb)
+})
 
 // TODO: Compile .wlk files and compress them along the natives file before packing.
