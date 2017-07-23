@@ -11,7 +11,7 @@ export const linkStep = (node) => {
       const name = linkeables[type](n)
       // TODO: HACK for now I need to resolve refs to wollok.lang.* and friends !!!!!!! 
       // TODO: Not sure what to do with self references.
-      const tempIgnore = ['Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception', 'self']
+      const tempIgnore = ['Object', 'wollok.lang.Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception', 'self']
       if (tempIgnore.indexOf(name) < 0) {
         resolveAndLink(n, name)
       } else {

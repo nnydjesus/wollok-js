@@ -11,7 +11,7 @@ export const File = (...content) => Node(File)({ content })
 export const Import = (target) => Node(Import)({ target })
 export const Package = (name) => (...elements) => Node(Package)({ name, elements })
 
-export const Class = (name) => (superclass = 'Object', ...mixins) => (...members) => Node(Class)({ name, superclass, mixins, members })
+export const Class = (name) => (superclass = name === 'Object' ? undefined : 'Object', ...mixins) => (...members) => Node(Class)({ name, superclass, mixins, members })
 export const Mixin = (name) => (...members) => Node(Mixin)({ name, members })
 export const Singleton = (name = undefined) => (superclass = 'Object', superArguments = [], ...mixins) => (...members) => Node(Singleton)({ name, superclass, superArguments, mixins, members })
 

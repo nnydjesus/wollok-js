@@ -84,7 +84,7 @@ libraryElement = element: (package / class / namedObject / mixin) _ { return ele
 
 package = 'package' __ name:qualifiedName _ '{' _ elements:libraryElement* _ '}' { return Package(name)(...elements) }
 
-class = 'class' __ name:id superclass:(_ 'inherits' __ qualifiedName)? mixins:mixinInclusion _ '{' _ members:(memberDeclaration/constructor)* _ '}' { return Class(name)(superclass ? superclass[3] : 'Object',...mixins)(...members) }
+class = 'class' __ name:id superclass:(_ 'inherits' __ qualifiedName)? mixins:mixinInclusion _ '{' _ members:(memberDeclaration/constructor)* _ '}' { return Class(name)(superclass ? superclass[3] : undefined,...mixins)(...members) }
 
 mixin = 'mixin' __ name:id _ '{' _ members:memberDeclaration* _ '}' { return Mixin(name)(...members) }
 
