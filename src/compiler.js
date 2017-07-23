@@ -8,26 +8,16 @@ const escape = str => ([
   'var', 'void', 'volatile', 'while', 'with', 'yield', 'Object', 'Exception', 'Set'
 ].indexOf(str) >= 0 ? `$${str}` : str)
 
-// const compileMethodDispatcher = ({ name }) =>
-//   `['${escape(name)}'](){
-//     const implementations = Object.getOwnPropertyNames(this.constructor).filter(selector => selector.startsWith('${escape(name)}'))
-//     const implementation = implementations.find(selector => {
-//       const argumentDescriptor = selector.split('$$')[1]
-//       const argumentCount = Number.parseInt(argumentDescriptor)
-//       return argumentCount === arguments.length || argumentCount < arguments.length && argDescriptor.endsWith('+')
-//     })
-//     return implementation ? implementation(...arguments) : super['${escape(name)}'](...arguments)
-//   }`
-
 const compileMethodDispatcher = members => ({ name }) =>
   `['${escape(name)}'](){
     const implementation$ = (...args) => {
       ${members.filter(({ name: n }) => n === name).map(compile).join(';\n')}
     }
-    implementation(arguments)
+    implementation$(arguments)
   }`
 
 
+// TODO: Add default constructor
 
 const compile = assign(expression => compile[expression.type](expression), {
   // TODO: PACKAGE: ({ name, elements }) => {},
@@ -47,7 +37,7 @@ const compile = assign(expression => compile[expression.type](expression), {
         const $implementation = (...args) => {
           ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
         }
-        $implementation(arguments)
+        $implementation(...arguments)
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
       }
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
@@ -59,7 +49,7 @@ const compile = assign(expression => compile[expression.type](expression), {
         const $implementation = (...args) => {
           ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
         }
-        $implementation(arguments)
+        $implementation(...arguments)
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
       }
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
@@ -76,13 +66,6 @@ const compile = assign(expression => compile[expression.type](expression), {
     `,
 
   Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
-
-  // Method: ({ name, parameters, sentences, native, parent }) => {
-  //   const implementationName = `${escape(name)}$$${parameters.length}${parameters.length && parameters[parameters.length - 1].varArg ? '+' : ''}`
-  //   return native
-  //     ? `static ['${implementationName}'](){ return $wollok.${parent.name}['${implementationName}'].bind(this)(...arguments) }`
-  //     : `static ['${implementationName}'](${parameters.map(compile).join()}){${compile(sentences)}}`
-  // },
 
   // TODO: namespaces for natives
   Method: ({ name, parameters, sentences, native, parent }) =>
