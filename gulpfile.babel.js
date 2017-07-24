@@ -43,7 +43,7 @@ task('wre', ['clean', 'compile'], (cb) => {
   )
 })
 
-task('test', ['compile', 'wre', 'lint'], () =>
+task('test', ['compile'/*, 'wre', 'lint'*/], () =>
   src(['tests/**/*.test.js', 'dist/**/*.js'])
     .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
 )

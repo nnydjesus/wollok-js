@@ -130,7 +130,7 @@ const fixture = new Map([
   // TODO: Test Objects
 ])
 
-import wre from './../dist/wre/wre'
+// import wre from './../dist/wre/wre'
 
 describe('Wollok interpreter', () => {
   const fixture = []
