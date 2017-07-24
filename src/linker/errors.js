@@ -36,4 +36,3 @@ export const collectErrors = (node) => flatten(
       node: n,
     }))
   )).filter(isLinkageError)
-  
