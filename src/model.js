@@ -19,7 +19,7 @@ const nodeBehaviour = {
 }
 
 export const traverse = configuration => assign(model => {
-  const applicableTxs = keys(configuration).filter(model.is)
+  const applicableTxs = keys(configuration).filter(key => model.is(key))
   if (applicableTxs.length < 1) throw new TypeError(`No matching traverse strategy for ${model.type} node`)
   return configuration[applicableTxs[0]](model)
 }, configuration)

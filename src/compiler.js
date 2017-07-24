@@ -44,7 +44,7 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     }`,
 
   Class: ({ name, superclass, mixins, members }) =>
-    `class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
+    `export class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
         const $implementation = (...args) => {
           ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}

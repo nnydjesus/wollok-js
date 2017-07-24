@@ -130,10 +130,11 @@ const fixture = new Map([
   // TODO: Test Objects
 ])
 
+import wre from './../dist/wre/wre'
+
 describe('Wollok interpreter', () => {
   const fixture = []
 
-  // const wre = require('./../dist/wre/wre.js')
 
   // for (const [ast, expected] of fixture.entries()) {
   //   const result = () => eval(wdk + compile(link(ast)))

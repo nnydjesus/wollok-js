@@ -5,6 +5,7 @@ import babel from 'gulp-babel'
 import pegjs from 'gulp-pegjs'
 import del from 'del'
 import { readFileSync, unlinkSync, writeFile } from 'fs'
+import { exec } from 'child_process'
 
 const task = gulp.task.bind(gulp)
 
@@ -36,10 +37,13 @@ task('wre', ['clean', 'compile'], (cb) => {
   const lang = compiler(linker(parser(readFileSync('src/wre/lang.wlk', 'utf8'))))
   const natives = readFileSync('dist/wre/natives.js', 'utf8')
   unlinkSync('dist/wre/natives.js')
-  writeFile('dist/wre/wre.js', `${natives}\n${lang}`, cb)
+  writeFile('dist/wre/wre.js', `${natives}\n${lang}`, () =>
+    // exec('./node_modules/.bin/babel dist/wre/wre.js -o dist/wre/wre.js', cb)
+    cb()
+  )
 })
 
-task('test', ['compile'/*, 'wre', 'lint'*/], () =>
+task('test', ['compile', 'wre', 'lint'], () =>
   src(['tests/**/*.test.js', 'dist/**/*.js'])
     .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
 )
