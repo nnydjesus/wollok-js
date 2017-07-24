@@ -69,6 +69,7 @@
     "no-restricted-syntax": "off",
     "no-eval": "off",
     "no-extend-native": "off",
-    "no-multi-str": "off"
+    "no-multi-str": "off",
+    "spaced-comment": "off"
   }
 }

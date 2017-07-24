@@ -4,6 +4,7 @@ import { expect } from 'chai'
 import compile from './../dist/compiler'
 import { link } from '../src/linker/linker'
 import parse from './../dist/parser'
+import { addDefaultConstructor } from './../dist/transformations'
 import {
   Assignment,
   // Block,
@@ -133,9 +134,7 @@ const fixture = new Map([
 describe('Wollok interpreter', () => {
   const fixture = []
 
-  const wre = ['./src/wre/lang.wlk'].reduce((files, path) =>
-    files + compile(link(parse(readFileSync(path, 'utf8'))))
-    , readFileSync('./dist/wre/natives.js'))
+  // const wre = require('./../dist/wre/wre.js')
 
   // for (const [ast, expected] of fixture.entries()) {
   //   const result = () => eval(wdk + compile(link(ast)))

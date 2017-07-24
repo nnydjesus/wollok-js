@@ -10,7 +10,7 @@ const task = gulp.task.bind(gulp)
 
 task('clean', () => del(['dist', '*.tgz']))
 
-task('compile', ['lint', 'clean', 'peg', 'babel'])
+task('compile', ['clean', 'peg', 'babel'])
 
 task('peg', ['clean'], () =>
   src('src/**/*.pegjs')
@@ -24,12 +24,7 @@ task('babel', ['clean'], () =>
     .pipe(dest('dist'))
 )
 
-task('test', ['compile'], () =>
-  src(['tests/**/*.test.js', 'dist/**/*.js'])
-    .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
-)
-
-task('lint', () =>
+task('lint', ['compile', 'wre'], () =>
   src(['src/**/*.js', 'tests/**/*.js'])
     .pipe(eslint())
     .pipe(eslint.format())
@@ -44,4 +39,7 @@ task('wre', ['clean', 'compile'], (cb) => {
   writeFile('dist/wre/wre.js', `${natives}\n${lang}`, cb)
 })
 
-// TODO: Compile .wlk files and compress them along the natives file before packing.
+task('test', ['compile', /*'wre', 'lint'*/], () =>
+  src(['tests/**/*.test.js', 'dist/**/*.js'])
+    .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
+)

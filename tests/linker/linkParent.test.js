@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { linkParentStep as linkParent } from '../../src/linker/steps/linkParent'
-import { Node } from '../../src/model'
+import { node } from '../../src/model'
 
 describe('linkParentStep', () => {
 
@@ -12,15 +12,15 @@ describe('linkParentStep', () => {
   })
 
   it('does not link the Node/s basic properties', () => {
-    expect(linkParent(Node('root')({
+    expect(linkParent(node('root')({
       name: 'pepe',
       age: 23
-    }))).to.deep.equal(Node('root')({ name: 'pepe', age: 23 }))
+    }))).to.deep.equal(node('root')({ name: 'pepe', age: 23 }))
   })
 
   it('links a Node within a Node', () => {
-    const r = linkParent(Node('root')({
-      address: Node('address')({
+    const r = linkParent(node('root')({
+      address: node('address')({
         street: 'evergreen'
       })
     }))
@@ -28,9 +28,9 @@ describe('linkParentStep', () => {
   })
 
   it('links a two level nesting Node structure', () => {
-    const r = linkParent(Node('root')({
-      address: Node('address')({
-        city: Node('city')({
+    const r = linkParent(node('root')({
+      address: node('address')({
+        city: node('city')({
           name: 'buenos aires'
         })
       })
@@ -42,13 +42,13 @@ describe('linkParentStep', () => {
   describe('arrays properties', () => {
 
     it('are not linked if they have no Nodes', () => {
-      expect(linkParent(Node('root')({ list: [1, 2, 3] })))
-        .to.deep.equal(Node('root')({ list: [1, 2, 3] }))
+      expect(linkParent(node('root')({ list: [1, 2, 3] })))
+        .to.deep.equal(node('root')({ list: [1, 2, 3] }))
     })
 
     it('with Nodes are linked', () => {
-      const Pet = (name, parent) => Node('pet')({ name, ...parent && { parent } })
-      const parent = linkParent(Node('person')({
+      const Pet = (name, parent) => node('pet')({ name, ...parent && { parent } })
+      const parent = linkParent(node('person')({
         pets: [Pet('colita'), Pet('pelusa'), Pet('black')]
       }))
       expect(parent.pets).to.deep.equal([
