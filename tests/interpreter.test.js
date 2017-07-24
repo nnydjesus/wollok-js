@@ -1,10 +1,9 @@
-import { readFileSync } from 'fs'
+// import { readFileSync } from 'fs'
 import { describe, it } from 'mocha'
-import { expect } from 'chai'
-import compile from './../dist/compiler'
-import { link } from '../src/linker/linker'
-import parse from './../dist/parser'
-import { addDefaultConstructor } from './../dist/transformations'
+// import { expect } from 'chai'
+// import compile from './../dist/compiler'
+// import { link } from '../src/linker/linker'
+// import parse from './../dist/parser'
 import {
   Assignment,
   // Block,
