@@ -68,6 +68,7 @@
     "guard-for-in": "off",
     "no-restricted-syntax": "off",
     "no-eval": "off",
-    "no-extend-native": "off"
+    "no-extend-native": "off",
+    "no-multi-str": "off"
   }
 }

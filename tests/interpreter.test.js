@@ -1,6 +1,9 @@
+import { readFileSync } from 'fs'
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import interpret from '../src/interpreter'
+import compile from './../dist/compiler'
+import { link } from '../src/linker/linker'
+import parse from './../dist/parser'
 import {
   Assignment,
   // Block,
@@ -12,7 +15,6 @@ import {
   // Field,
   If,
   // Import,
-  InstanceOf,
   List,
   // Method,
   // Mixin,
@@ -86,8 +88,6 @@ const fixture = new Map([
   [Send(Literal(true), '!_')(), false],
   [Send(Literal(true), 'not_')(), false],
 
-  [InstanceOf(List(), 'Array'), true],
-
   [New('Set')(List(Literal(1), Literal(2))), new Set([1, 2])],
 
   // TODO: Super
@@ -131,15 +131,21 @@ const fixture = new Map([
 ])
 
 describe('Wollok interpreter', () => {
-  for (const [ast, expected] of fixture.entries()) {
-    const result = () => interpret(ast)
+  const fixture = []
 
-    it(`should interpret ${JSON.stringify(ast)}`, () => {
-      if (expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
-      else if (typeof expected === 'function') expect(escapeCode(result())).to.equal(escapeCode(expected))
-      else expect(result(), `intepreting ${fixture}`).to.deep.equal(expected)
-    })
-  }
+  const wre = ['./src/wre/lang.wlk'].reduce((files, path) =>
+    files + compile(link(parse(readFileSync(path, 'utf8'))))
+    , readFileSync('./dist/wre/natives.js'))
+
+  // for (const [ast, expected] of fixture.entries()) {
+  //   const result = () => eval(wdk + compile(link(ast)))
+
+  //   it(`should interpret ${JSON.stringify(ast)}`, () => {
+  //     if (expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
+  //     else if (typeof expected === 'function') expect(escapeCode(result())).to.equal(escapeCode(expected))
+  //     else expect(result(), `intepreting ${fixture}`).to.deep.equal(expected)
+  //   })
+  // }
 
 })
 

@@ -2,13 +2,13 @@ import { expect } from 'chai'
 import { Node } from '../../src/model'
 import { visit } from '../../src/visitors/visiting'
 import { collect, chain } from '../../src/visitors/commons'
-import parser from '../../src/parser'
+import parse from '../../src/parser'
 
 describe('common visitors', () => {
 
   describe('collect', () => {
     it('collects all types', () => {
-      const node = parser.parse(`
+      const node = parse(`
         program prueba {
           const a = 23
           const b = a

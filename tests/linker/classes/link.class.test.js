@@ -4,12 +4,12 @@ import { link } from '../../../src/linker/linker'
 import { Ref } from '../../../src/linker/steps/link'
 import { queryNodeByType } from '../../../src/visitors/visiting'
 import { New, Class, Mixin } from '../../../src/model'
-import parser from '../../../src/parser'
+import parse from '../../../src/parser'
 
 describe('Class linkage', () => {
 
   it('File scope includes the classes', () => {
-    expectScopeHasNames(link(parser.parse(`
+    expectScopeHasNames(link(parse(`
       class A {}
       class B {}
       class C {}
@@ -17,7 +17,7 @@ describe('Class linkage', () => {
   })
 
   it('File scope includes the mixins, classes, and objects', () => {
-    expectScopeHasNames(link(parser.parse(`
+    expectScopeHasNames(link(parse(`
       class A {}
       mixin M {}
       object c {}
@@ -37,7 +37,7 @@ describe('Class linkage', () => {
       `)
       const Bird = queryNodeByType(node, Class.name, c => c.name === 'Bird')[0]
       const niu = queryNodeByType(node, New.name)[0]
-      expect(niu.target).to.deep.equal(Ref(Bird))
+      expect(niu.target).to.deep.equal(Ref('Bird', Bird))
     })
 
     it('throws an error if the referenced class does NOT exist', () => {
@@ -74,7 +74,7 @@ describe('Class linkage', () => {
       `)
       const Father = queryNodeByType(node, Class.name, c => c.name === 'Father')[0]
       const Son = queryNodeByType(node, Class.name, s => s.name === 'Son')[0]
-      expect(Son.superclass).to.deep.equal(Ref(Father))
+      expect(Son.superclass).to.deep.equal(Ref('Father', Father))
     })
     it('throws an error if the referenced class does NOT exist', () => {
       expectUnresolvedVariable('Father', `
@@ -99,7 +99,7 @@ describe('Class linkage', () => {
       `)
       const C = queryNodeByType(node, Class.name, c => c.name === 'C')[0]
       const M = queryNodeByType(node, Mixin.name, s => s.name === 'M')[0]
-      expect(C.mixins).to.deep.equal([Ref(M)])
+      expect(C.mixins).to.deep.equal([Ref('M', M)])
     })
     it('links MANY mixins (3)', () => {
       const node = expectNoLinkageError(`
@@ -112,7 +112,7 @@ describe('Class linkage', () => {
       const M1 = queryNodeByType(node, Mixin.name, s => s.name === 'M1')[0]
       const M2 = queryNodeByType(node, Mixin.name, s => s.name === 'M2')[0]
       const M3 = queryNodeByType(node, Mixin.name, s => s.name === 'M3')[0]
-      expect(C.mixins).to.deep.equal([Ref(M1), Ref(M2), Ref(M3)])
+      expect(C.mixins).to.deep.equal([Ref('M1', M1), Ref('M2', M2), Ref('M3', M3)])
     })
     it('links but detects an error if trying to use a class', () => {
       expectWrongLinkTypeAt(Class.name, 'mixins', `

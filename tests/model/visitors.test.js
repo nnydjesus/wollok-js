@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { visit } from '../../src/visitors/visiting'
 import { Node } from '../../src/model'
-import parser from '../../src/parser'
+import parse from '../../src/parser'
 
 describe('visitor', () => {
 
@@ -17,6 +17,7 @@ describe('visitor', () => {
           c1: Node('C1')(),
         }),
       })
+
       const visited = []
       visit({ enter(e) { visited.push(e.type) } })(node)
       expect(visited).to.deep.equal([
@@ -30,13 +31,15 @@ describe('visitor', () => {
     })
 
     it('accepts an exit() function and calls it after the children', () => {
-      const node = parser.parse(`
+      const node = parse(`
         program prueba {
           const a = 23
         }
       `)
       const visited = []
+
       visit({ enter: () => {}, exit: e => visited.push(e.type) })(node)
+
       expect(visited).to.deep.equal([
         'Variable',
         'Literal',

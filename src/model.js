@@ -11,7 +11,7 @@ export const File = (...content) => Node(File)({ content })
 export const Import = (target) => Node(Import)({ target })
 export const Package = (name) => (...elements) => Node(Package)({ name, elements })
 
-export const Class = (name) => (superclass = 'Object', ...mixins) => (...members) => Node(Class)({ name, superclass, mixins, members })
+export const Class = (name) => (superclass = name === 'Object' ? undefined : 'Object', ...mixins) => (...members) => Node(Class)({ name, superclass, mixins, members })
 export const Mixin = (name) => (...members) => Node(Mixin)({ name, members })
 export const Singleton = (name = undefined) => (superclass = 'Object', superArguments = [], ...mixins) => (...members) => Node(Singleton)({ name, superclass, superArguments, mixins, members })
 
@@ -30,7 +30,7 @@ export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = 
 // SENTENCES
 //-------------------------------------------------------------------------------------------------------------------------------
 
-export const VariableDeclaration = (variable, writeable = true, value = Literal(null)) => Node(VariableDeclaration)({ variable, writeable, value })
+export const VariableDeclaration = (variable, writeable = true, value) => Node(VariableDeclaration)({ variable, writeable, value })
 export const Return = (result) => Node(Return)({ result })
 export const Assignment = (variable, value) => Node(Assignment)({ variable, value })
 
@@ -47,7 +47,6 @@ export const Send = (target, key) => (...parameters) => Node(Send)({ target, key
 export const Super = (...parameters) => Node(Super)({ parameters })
 
 export const New = (target) => (...parameters) => Node(New)({ target, parameters })
-export const InstanceOf = (left, right) => Node(InstanceOf)({ left, right })
 
 export const If = (condition) => (...thenSentences) => (...elseSentences) => Node(If)({ condition, thenSentences: Block(...thenSentences), elseSentences: Block(...elseSentences) })
 export const Throw = (exception) => Node(Throw)({ exception })

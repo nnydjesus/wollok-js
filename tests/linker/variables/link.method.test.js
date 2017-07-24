@@ -1,14 +1,14 @@
 import { expect } from 'chai'
 import { expectNoLinkageError, expectUnresolvedVariable, expectScopeOf } from '../link-expects'
 import { link } from '../../../src/linker/linker'
-import parser from '../../../src/parser'
+import parse from '../../../src/parser'
 import { Method } from '../../../src/model'
 
 describe('Method scoping', () => {
 
   describe('instance variables', () => {
     it('links a ref to a class instance variable', () => {
-      const linked = link(parser.parse(`
+      const linked = link(parse(`
         class Bird {
           var energy = 20
           method fly() {

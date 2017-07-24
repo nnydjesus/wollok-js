@@ -4,12 +4,12 @@ import { link } from '../../src/linker/linker'
 import { collectErrors } from '../../src/linker/errors'
 import { linkeables } from '../../src/linker/definitions'
 import { queryNodeByType, visit } from '../../src/visitors/visiting'
-import parser from '../../src/parser'
+import parse from '../../src/parser'
 
 // expect utils for
 
 export const expectNoLinkageError = code => {
-  const n = link(parser.parse(code))
+  const n = link(parse(code))
   const errors = collectErrors(n)
   errors.forEach(e => visit(unlinkParent)(e.node))
   const errorsFound = errors.map(e => `${e.node.type}.${e.feature} to '${e.ref}': ${e}`).join(', ')
@@ -20,7 +20,7 @@ export const expectNoLinkageError = code => {
 // THIS IMPL SUCKS !! It is really coupled with the current linkable Nodes !
 // but I'm going out of vacations in a couple of hours !! aaaagggg
 export const expectUnresolvedVariable = (variable, code) => {
-  const n = link(parser.parse(code))
+  const n = link(parse(code))
   const errors = collectErrors(n)
 
   expect(errors.length).to.equals(1)
@@ -34,13 +34,13 @@ export const expectUnresolvedVariable = (variable, code) => {
 export const expectScopeHasNames = (node, expected) => expect(Object.keys(node.scope)).to.deep.equal(expected)
 export const expectScopeOf = (program, type, findFilter, expected) => {
   expectScopeHasNames(
-    queryNodeByType(link(parser.parse(program)), type.name, findFilter)[0],
+    queryNodeByType(link(parse(program)), type.name, findFilter)[0],
     expected
   )
 }
 
 export const expectWrongLinkTypeAt = (type, feature, code) => {
-  const n = link(parser.parse(code))
+  const n = link(parse(code))
   const errors = collectErrors(n)
   expect(errors.length).to.equals(1)
   expect(errors[0].feature).to.equals(feature)

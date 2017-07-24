@@ -5,8 +5,6 @@ import { linkParentStep } from './steps/linkParent'
 import { createScopesStep } from './steps/createScopes'
 import { linkStep } from './steps/link'
 
-// winston.level = 'silly'
-
 /** 
  * Performs linking on the given ast nodes.
  * Each linked node will have a "link"  `Node(type=Variable)` will have a  property pointing to 
