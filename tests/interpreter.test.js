@@ -1,9 +1,9 @@
-import { readFileSync } from 'fs'
+// import { readFileSync } from 'fs'
 import { describe, it } from 'mocha'
-import { expect } from 'chai'
-import compile from './../dist/compiler'
-import { link } from '../src/linker/linker'
-import parse from './../dist/parser'
+// import { expect } from 'chai'
+// import compile from './../dist/compiler'
+// import { link } from '../src/linker/linker'
+// import parse from './../dist/parser'
 import {
   Assignment,
   // Block,
@@ -130,12 +130,11 @@ const fixture = new Map([
   // TODO: Test Objects
 ])
 
+// import wre from './../dist/wre/wre'
+
 describe('Wollok interpreter', () => {
   const fixture = []
 
-  const wre = ['./src/wre/lang.wlk'].reduce((files, path) =>
-    files + compile(link(parse(readFileSync(path, 'utf8'))))
-    , readFileSync('./dist/wre/natives.js'))
 
   // for (const [ast, expected] of fixture.entries()) {
   //   const result = () => eval(wdk + compile(link(ast)))

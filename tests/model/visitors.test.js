@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { visit } from '../../src/visitors/visiting'
-import { Node } from '../../src/model'
+import { node as Node } from '../../src/model'
 import parse from '../../src/parser'
 
 describe('visitor', () => {

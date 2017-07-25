@@ -4,7 +4,7 @@ import { linkeables } from '../definitions'
 import { findInScope } from '../scoping'
 import { appendError, createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
 import { isArray, forAll } from '../../utils/collections'
-import { Node } from '../../model'
+import { node as Node } from '../../model'
 
 // winston.level = 'debug'
 
