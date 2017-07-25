@@ -1,3 +1,5 @@
+import { addDefaultConstructor } from './transformations'
+
 const { assign } = Object
 
 const escape = str => ([
@@ -17,9 +19,7 @@ const compileMethodDispatcher = members => ({ name }) =>
   }`
 
 
-// TODO: Add default constructor
-
-const compile = assign(expression => compile[expression.type](expression), {
+const compile = assign(expression => compile[expression.type](addDefaultConstructor(expression)), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
   Singleton: ({ name, superclass, mixins, superArguments, members }) =>
@@ -44,7 +44,7 @@ const compile = assign(expression => compile[expression.type](expression), {
     }`,
 
   Class: ({ name, superclass, mixins, members }) =>
-    `class ${escape(name)} ${name === 'Object' ? '' : `extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
+    `export class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
         const $implementation = (...args) => {
           ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}

@@ -5,12 +5,13 @@ import babel from 'gulp-babel'
 import pegjs from 'gulp-pegjs'
 import del from 'del'
 import { readFileSync, unlinkSync, writeFile } from 'fs'
+import { exec } from 'child_process'
 
 const task = gulp.task.bind(gulp)
 
 task('clean', () => del(['dist', '*.tgz']))
 
-task('compile', ['lint', 'clean', 'peg', 'babel'])
+task('compile', ['clean', 'peg', 'babel'])
 
 task('peg', ['clean'], () =>
   src('src/**/*.pegjs')
@@ -24,12 +25,7 @@ task('babel', ['clean'], () =>
     .pipe(dest('dist'))
 )
 
-task('test', ['compile'], () =>
-  src(['tests/**/*.test.js', 'dist/**/*.js'])
-    .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
-)
-
-task('lint', () =>
+task('lint', ['compile', 'wre'], () =>
   src(['src/**/*.js', 'tests/**/*.js'])
     .pipe(eslint())
     .pipe(eslint.format())
@@ -41,7 +37,13 @@ task('wre', ['clean', 'compile'], (cb) => {
   const lang = compiler(linker(parser(readFileSync('src/wre/lang.wlk', 'utf8'))))
   const natives = readFileSync('dist/wre/natives.js', 'utf8')
   unlinkSync('dist/wre/natives.js')
-  writeFile('dist/wre/wre.js', `${natives}\n${lang}`, cb)
+  writeFile('dist/wre/wre.js', `${natives}\n${lang}`, () =>
+    // exec('./node_modules/.bin/babel dist/wre/wre.js -o dist/wre/wre.js', cb)
+    cb()
+  )
 })
 
-// TODO: Compile .wlk files and compress them along the natives file before packing.
+task('test', ['compile'/*, 'wre', 'lint'*/], () =>
+  src(['tests/**/*.test.js', 'dist/**/*.js'])
+    .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
+)
