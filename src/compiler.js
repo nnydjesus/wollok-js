@@ -84,8 +84,8 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     if (name) {
       // resolved Ref
       if (name.type === 'Ref') {
-        return name.token === 'self' ? 
-          'this' 
+        return name.token === 'self' ?
+          'this'
           : `${name.node && name.node.type === 'Field' ? 'this.' : ''}${escape(name.token)}`
       }
       // unresolved

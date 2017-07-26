@@ -1,3 +1,4 @@
+/* eslint-disable */
 export const $wollok = {
   $lang: {
     runtime: {
