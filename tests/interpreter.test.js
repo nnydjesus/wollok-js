@@ -1,4 +1,4 @@
-import * as wre from './../dist/wre/wre'
+// import * as wre from '../dist/wre/wre'
 
 import {
   Assignment,
