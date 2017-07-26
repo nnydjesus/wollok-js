@@ -1,5 +1,5 @@
 import { visit } from '../../visitors/visiting'
-import { filtering } from '../../visitors/commons'
+import { filtering, onExit } from '../../visitors/commons'
 import { linkeables } from '../definitions'
 import { findInScope } from '../scoping'
 import { appendError, createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
@@ -12,12 +12,10 @@ export const Ref = (token, node) => Node(Ref)({ token, node })
 
 const isLinkeable = ({ type }) => linkeables[type]
 
-export const linkStep = visit(filtering(isLinkeable, {
-  exit(n) {
-    const { type } = n
-    doLink(n, linkeables[type])
-  }
-}))
+export const linkStep = visit(filtering(isLinkeable, onExit(n => {
+  const { type } = n
+  doLink(n, linkeables[type])
+})))
 
 const doLink = (node, linkDef) => Object.keys(linkDef).forEach(feature => {
   link(node, feature, linkDef[feature])

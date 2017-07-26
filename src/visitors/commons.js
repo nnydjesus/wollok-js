@@ -4,6 +4,7 @@ import { filter } from '../utils/functions'
 // common high-level visitors
 
 export const onEnter = enter => ({ enter })
+export const onExit = exit => ({ exit })
 
 export const filtering = (condition, { enter, exit }) => ({
   ...(enter && { enter: filter(condition, enter) }),
