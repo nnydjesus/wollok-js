@@ -1,9 +1,9 @@
 import { pipe } from '../utils/functions'
-import { flatten } from '../utils/collections'
-import { collect } from '../visitors/commons'
+import { visit } from '../visitors/visiting'
+import { chain } from '../visitors/commons'
 import { linkParentStep } from './steps/linkParent'
 import { createScopesStep } from './steps/createScopes'
-import { linkStep, isLinkageError } from './steps/link'
+import { linkStep } from './steps/link'
 
 /** 
  * Performs linking on the given ast nodes.
@@ -15,22 +15,10 @@ import { linkStep, isLinkageError } from './steps/link'
  */
 export const link = pipe([
 
-  linkParentStep, // TODO: try to do both things in one pass
+  // sets node.parent & node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
+  visit(chain(linkParentStep, createScopesStep())),
 
-  createScopesStep, // sets node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
-
-  linkStep // sets Node(Variable).link = VariableDec | Class | Mixin
+  // sets Node(Variable).link = VariableDec | Class | Mixin
+  linkStep
 
 ])
-
-// retrieves a list of all errors in all nodes
-// errors for the sake of tests are like this { ...error, node }
-// so you can assert about the owner node
-export const collectErrors = (node) => flatten(
-  collect(node, n => (n.errors || [])
-    .map(e => ({
-      ...e,
-      node: n,
-    }))
-  )).filter(isLinkageError)
-

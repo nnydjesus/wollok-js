@@ -1,7 +1,9 @@
 import { expect } from 'chai'
-import { link, collectErrors } from '../../src/linker/linker'
+import { unlinkParent } from '../../src/linker/steps/linkParent'
+import { link } from '../../src/linker/linker'
+import { collectErrors } from '../../src/linker/errors'
 import { linkeables } from '../../src/linker/definitions'
-import { queryNodeByType } from '../../src/visitors/visiting'
+import { queryNodeByType, visit } from '../../src/visitors/visiting'
 import parse from '../../src/parser'
 
 // expect utils for
@@ -9,7 +11,9 @@ import parse from '../../src/parser'
 export const expectNoLinkageError = code => {
   const n = link(parse(code))
   const errors = collectErrors(n)
-  expect(errors.length).to.be.equals(0)
+  errors.forEach(e => visit(unlinkParent)(e.node))
+  const errorsFound = errors.map(e => `${e.node.type}.${e.feature} to '${e.ref}': ${e}`).join(', ')
+  expect(errors.length, `Expecting no errors but found (${errors.length}): ${errorsFound}`).to.be.equals(0)
   return n
 }
 
@@ -33,4 +37,13 @@ export const expectScopeOf = (program, type, findFilter, expected) => {
     queryNodeByType(link(parse(program)), type.name, findFilter)[0],
     expected
   )
+}
+
+export const expectWrongLinkTypeAt = (type, feature, code) => {
+  const n = link(parse(code))
+  const errors = collectErrors(n)
+  expect(errors.length).to.equals(1)
+  expect(errors[0].feature).to.equals(feature)
+  expect(errors[0].node.type).to.equals(type)
+  expect(errors[0].message).to.equals('Referencing a wrong type')
 }
