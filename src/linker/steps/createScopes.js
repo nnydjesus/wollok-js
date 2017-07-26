@@ -1,8 +1,7 @@
 import { Context } from '../context'
 import { referenciables, isScopeable } from '../definitions'
-import { visit } from '../../visitors/visiting'
 
-export const createScopesStep = (node, context = new Context()) => visit(node, {
+export const createScopesStep = (context = new Context()) => ({
   enter(node) {
     const { type } = node
 

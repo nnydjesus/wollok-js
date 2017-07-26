@@ -80,7 +80,20 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
 
   Assignment: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
-  Variable: ({ name, link }) => (name === 'self' ? 'this' : `${link.type === 'Field' ? 'this.' : ''}${escape(name)}`),
+  Variable: ({ name }) => {
+    if (name) {
+      // resolved Ref
+      if (name.type === 'Ref') {
+        return name.token === 'self' ?
+          'this'
+          : `${name.node && name.node.type === 'Field' ? 'this.' : ''}${escape(name.token)}`
+      }
+      // unresolved
+      return escape(name)
+    }
+    // not sure why some tests fail because the Variable has no name (?)
+    return undefined
+  },
 
   Send: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
 

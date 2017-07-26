@@ -1,7 +1,7 @@
-import { visit } from '../../visitors/visiting'
+import { onEnter } from '../../visitors/commons'
 
-export const linkParentStep = node => visit(node, {
-  enter(node, parent) {
-    if (parent) node.parent = parent
-  }
+export const linkParentStep = onEnter((node, parent) => {
+  if (parent) node.parent = parent
 })
+
+export const unlinkParent = onEnter(node => { delete node.parent })

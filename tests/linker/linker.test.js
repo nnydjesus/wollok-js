@@ -1,4 +1,7 @@
+import { expect } from 'chai'
 import { expectNoLinkageError } from './link-expects'
+import { scopeFor } from '../../src/linker/scoping'
+import { queryNodeByType } from '../../src/visitors/visiting'
 
 // tests
 
@@ -51,6 +54,25 @@ describe('linker', () => {
       })
     })
 
+  })
+
+  describe('scoping', () => {
+    it('resolves own scope + parent', () => {
+      const n = expectNoLinkageError(`
+        class Person {
+          var name
+          method setName(newName) {
+            name = newName
+          }
+        }
+      `)
+      const setName = queryNodeByType(n, 'Method')[0]
+      expect(Object.keys(scopeFor(setName))).to.deep.equals([
+        'newName',
+        'name',
+        'Person'
+      ])
+    })
   })
 
 })
