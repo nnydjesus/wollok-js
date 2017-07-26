@@ -89,7 +89,9 @@ export const Catch = (variable, errorType) => (...handler) => node(Catch)({ vari
 // CATEGORIES
 //===============================================================================================================================
 
-export const TopLevel = [Import, Package, Class, Mixin, Singleton, Program, Test]
+export const Module = [Class, Mixin, Singleton]
+export const Runnable = [Program, Test]
+export const TopLevel = [Import, Package, ...Module, ...Runnable]
 export const Member = [Field, Method, Constructor]
 export const Sentence = [VariableDeclaration, Return, Assignment]
 export const Expression = [Variable, Literal, List, Closure, Send, Super, New, If, Throw, Try]

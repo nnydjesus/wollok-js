@@ -1,37 +1,25 @@
-// import { readFileSync } from 'fs'
-import { describe, it } from 'mocha'
-// import { expect } from 'chai'
-// import compile from './../dist/compiler'
-// import { link } from '../src/linker/linker'
-// import parse from './../dist/parser'
+import * as wre from './../dist/wre/wre'
+
 import {
   Assignment,
-  // Block,
   Catch,
-  // Class,
   Closure,
-  // Constructor,
-  Send,
-  // Field,
   If,
-  // Import,
   List,
-  // Method,
-  // Mixin,
-  // Singleton,
-  New,
-  // Package,
-  Parameter,
-  // Program,
-  Return,
   Literal,
-  // Super,
-  // Test,
+  New,
+  Parameter,
+  Return,
+  Send,
   Throw,
   Try,
   Variable,
   VariableDeclaration
 } from '../src/model'
+import {
+  describe,
+  it
+} from 'mocha'
 
 const fixture = new Map([
 
@@ -130,11 +118,9 @@ const fixture = new Map([
   // TODO: Test Objects
 ])
 
-// import wre from './../dist/wre/wre'
 
 describe('Wollok interpreter', () => {
   const fixture = []
-
 
   // for (const [ast, expected] of fixture.entries()) {
   //   const result = () => eval(wdk + compile(link(ast)))

@@ -23,7 +23,7 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
   // TODO: PACKAGE: ({ name, elements }) => {},
 
   Singleton: ({ name, superclass, mixins, superArguments, members }) =>
-    `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
+    `export const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
@@ -32,13 +32,12 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     }`,
 
   Mixin: ({ name, members }) =>
-    `const ${escape(name)} = ($$superclass) => class extends $$superclass {
+    `export const ${escape(name)} = ($$superclass) => class extends $$superclass {
       constructor() {
-        const $implementation = (...args) => {
-          ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
-        }
-        $implementation(...arguments)
-        ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
+        let $instance = undefined
+        ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
+        (function(){${members.filter(m => m.type === 'Field').map(compile).join(';\n')}}).call($instance)
+        return $instance
       }
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`,
@@ -46,24 +45,19 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
   Class: ({ name, superclass, mixins, members }) =>
     `export class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
-        const $implementation = (...args) => {
-          ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
-        }
-        $implementation(...arguments)
-        ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
+        let $instance = undefined
+        ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
+        (function(){${members.filter(m => m.type === 'Field').map(compile).join(';\n')}}).call($instance)
+        return $instance
       }
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`,
 
-  Constructor: ({ parameters, sentences, lookUpCall, baseArguments }) =>
-    `const implementation$$${parameters.length} = (${parameters.map(compile).join()}) => {
-      ${lookUpCall ? 'super' : '$implementation'}(${baseArguments.map(compile).join()});
-      ${compile(sentences)}
-    }
-    if(args.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? ` >= + ${parameters.length - 1}` : ` === ${parameters.length}`} ) {
-      implementation$$${parameters.length}(...args)
-    }
-    `,
+  Constructor: ({ parameters, parent, baseArguments, lookUpCall, sentences }) => `
+    if(arguments.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? '+ 1 >=' : '==='} ${parameters.length}) {
+      $instance = ${lookUpCall ? 'super' : `new ${parent.name}`}(${baseArguments.map(compile).join()});
+      (function (${parameters.map(compile).join()}){${compile(sentences)}}).call($instance,...arguments)
+    }`,
 
   Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
