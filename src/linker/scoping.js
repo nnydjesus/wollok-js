@@ -9,3 +9,8 @@ export const scopeFor = node => {
     ...scopeFor(node.parent)
   }
 }
+
+export const lookupParentScope = node => {
+  if (!node) throw new Error('No scopeable node to register referenciable !')
+  return node.scope ? node : lookupParentScope(node.parent)
+}

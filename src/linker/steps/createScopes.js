@@ -1,23 +1,16 @@
-import { Context } from '../context'
+import { onEnter } from '../../visitors/commons'
 import { referenciables, isScopeable } from '../definitions'
+import { lookupParentScope } from '../scoping'
 
-export const createScopesStep = (context = new Context()) => ({
-  enter(node) {
-    const { type } = node
+export const createScopesStep = onEnter(node => {
+  const { type } = node
 
-    if (referenciables[type]) {
-      const name = referenciables[type](node)
-      context.register(node, name)
-    }
+  if (referenciables[type]) {
+    const name = referenciables[type](node)
+    lookupParentScope(node).scope[name] = node
+  }
 
-    if (isScopeable(type)) {
-      context.push(node)
-    }
-  },
-
-  exit({ type }) {
-    if (isScopeable(type)) {
-      context.pop()
-    }
+  if (isScopeable(type)) {
+    node.scope = {}
   }
 })
