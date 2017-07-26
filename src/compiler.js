@@ -22,14 +22,16 @@ const compileMethodDispatcher = members => ({ name }) =>
 const compile = assign(expression => compile[expression.type](addDefaultConstructor(expression)), {
   // TODO: PACKAGE: ({ name, elements }) => {},
 
-  Singleton: ({ name, superclass, mixins, superArguments, members }) =>
-    `export const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
+  Singleton: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
+    const superclass = superclassName.type === 'Ref' ? superclassName.token : superclassName
+    return `export const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
       }
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
-    }`,
+    }`
+  },
 
   Mixin: ({ name, members }) =>
     `export const ${escape(name)} = ($$superclass) => class extends $$superclass {
@@ -42,8 +44,9 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`,
 
-  Class: ({ name, superclass, mixins, members }) =>
-    `export class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
+  Class: ({ name, superclass: superclassName, mixins, members }) => {
+    const superclass = superclassName && superclassName.type === 'Ref' ? superclassName.token : superclassName
+    return `export class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
@@ -51,7 +54,8 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
         return $instance
       }
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
-    }`,
+    }`
+  },
 
   Constructor: ({ parameters, parent, baseArguments, lookUpCall, sentences }) => `
     if(arguments.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? '+ 1 >=' : '==='} ${parameters.length}) {
@@ -75,23 +79,19 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
   Assignment: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
   Variable: ({ name }) => {
-    if (name) {
-      // resolved Ref
-      if (name.type === 'Ref') {
-        return name.token === 'self' ?
-          'this'
-          : `${name.node && name.node.type === 'Field' ? 'this.' : ''}${escape(name.token)}`
-      }
-      // unresolved
-      return escape(name)
+    // resolved Ref
+    if (name.type === 'Ref') {
+      return name.token === 'self' ?
+        'this'
+        : `${name.node && name.node.type === 'Field' ? 'this.' : ''}${escape(name.token)}`
     }
-    // not sure why some tests fail because the Variable has no name (?)
-    return undefined
+    // unresolved
+    return escape(name)
   },
 
   Send: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
 
-  New: ({ target, parameters }) => `new ${escape(target)}(${parameters.map(compile).join()})`,
+  New: ({ target, parameters }) => `new ${escape(target.type === 'Ref' ? target.token : target)}(${parameters.map(compile).join()})`,
 
   Super: ({ parameters }) => `super(${parameters.map(compile).join()})`,
 
