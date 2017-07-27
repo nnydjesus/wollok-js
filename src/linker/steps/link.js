@@ -12,24 +12,22 @@ export const Ref = (token, node) => Node(Ref)({ token, node })
 
 const isLinkeable = ({ type }) => linkeables[type]
 
-export const linkStep = visit(filtering(isLinkeable, n => {
-  const { type } = n
-  doLink(n, linkeables[type])
-  return n
-}))
+export const linkStep = visit(filtering(isLinkeable, n => doLink(n, linkeables[n.type])))
 
-const doLink = (node, linkDef) => Object.keys(linkDef).forEach(feature => {
-  link(node, feature, linkDef[feature])
-})
+const doLink = (node, linkDef) => Object.keys(linkDef)
+  .reduce(
+    (n, feature) => link(n, feature, linkDef[feature]),
+    node
+  )
 
 const tempIgnore = ['Object', 'wollok.lang.Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception']
 
 const link = (node, feature, linkType) => {
   const refValue = node[feature]
 
-  if (alreadyLinked(refValue)) { return }
+  if (alreadyLinked(refValue)) { return node }
   // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
-  if (tempIgnore.indexOf(refValue) >= 0) { return }
+  if (tempIgnore.indexOf(refValue) >= 0) { return node }
 
   // resolve and assign (and / or error)
   node[feature] = resolveLink(node, feature, refValue)
@@ -38,13 +36,15 @@ const link = (node, feature, linkType) => {
   if (node[feature] && !linkType(node[feature])) {
     appendError(node, createWrongTypeLinkageError(feature))
   }
+  return node
 }
 
 const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string')
 const resolveLink = (node, feature, refValue) => {
   if (refValue === 'self') {
     return Ref(refValue, node)
-  } else if (isArray(refValue)) {
+  }
+  if (isArray(refValue)) {
     const r = []
     refValue.forEach(ref => resolveAndLink(node, feature, ref, ::r.push))
     return r.length > 0 ? r : undefined
