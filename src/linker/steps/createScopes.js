@@ -1,19 +1,17 @@
 import { referenciables, isScopeable } from '../definitions'
 import { lookupParentScope } from '../scoping'
 
-export const createScopesStep = node => {
+export const createScopesStep = node => ({
+  ...node,
+  ...isScopeable(node.type) && { scope: {} }
+})
+
+// EFFECT !! this should be completely changed !
+export const registerReferenciable = node => {
   const { type } = node
-
-  const copy = {
-    ...node,
-    ...isScopeable(type) && { scope: {} }
-  }
-
-  // EFFECT !! this should be completely changed !
   if (referenciables[type]) {
-    const name = referenciables[type](copy)
-    lookupParentScope(copy.parent).scope[name] = copy
+    const name = referenciables[type](node)
+    lookupParentScope(node.parent).scope[name] = node
   }
-
-  return copy
+  return node
 }
