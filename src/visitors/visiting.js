@@ -1,4 +1,4 @@
-
+import { toVisitor } from './commons'
 import { noop } from '../utils/functions'
 import { propertyValues } from '../utils/object'
 
@@ -16,7 +16,9 @@ const ignoredKeys = ['parent']
  * @param {*} Visitor ({ enter(node, parent), exit(node, parent) })
  * @param {*} parent (not be send from outside, just for recursion)
  */
-export const visit = ({ enter = noop, exit = noop }, parent, feature) => node => {
+export const visit = fnOrVisitor => visitWithVisitor(toVisitor(fnOrVisitor))
+
+const visitWithVisitor = ({ enter = noop, exit = noop }, parent, feature) => node => {
   if (!node.type || ignoredTypes.includes(node.type)) { return node }
   const folded = enter(node, parent, feature) || node
   visitProperties(node, enter, exit)
@@ -28,7 +30,7 @@ const visitProperties = (node, enter, exit) => {
     if (ignoredKeys.includes(name)) return
     const list = Array.isArray(value) ? value : (value && [value] || [])
     list.filter(e => e.type).forEach(e => {
-      visit({ enter, exit }, node, name)(e)
+      visitWithVisitor({ enter, exit }, node, name)(e)
     })
   })
 }

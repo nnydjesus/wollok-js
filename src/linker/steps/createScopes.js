@@ -1,8 +1,7 @@
-import { onEnter } from '../../visitors/commons'
 import { referenciables, isScopeable } from '../definitions'
 import { lookupParentScope } from '../scoping'
 
-export const createScopesStep = onEnter(node => {
+export const createScopesStep = node => {
   const { type } = node
 
   if (referenciables[type]) {
@@ -13,4 +12,4 @@ export const createScopesStep = onEnter(node => {
   if (isScopeable(type)) {
     node.scope = {}
   }
-})
+}
