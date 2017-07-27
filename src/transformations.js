@@ -1,4 +1,4 @@
-import { Assignment, Block, Catch, Class, Closure, Constructor, Field, File, If, List, Method, Module, New, Node, Package, Return, Runnable, Send, Super, Try, Variable, VariableDeclaration, traverse } from './model'
+import { Assignment, Block, Catch, Class, Closure, Constructor, Field, File, If, List, Method, Module, New, Node, Package, Return, Runnable, Send, Super, Try, VariableDeclaration, traverse } from './model'
 
 export const addDefaultConstructor = traverse({
   [File]: ({ content }) => File(...content.map(addDefaultConstructor)),
