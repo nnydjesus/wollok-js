@@ -1,10 +1,8 @@
 
-export const linkParentStep = (node, parent) => {
-  const copy = { ...node }
-  if (parent)
-    copy.parent = parent
-  return copy
-}
+export const linkParentStep = (node, parent) => ({
+  ...node,
+  ...parent && { parent }
+})
 export const unlinkParent = ({ parent, ...rest }) => ({
   ...rest
 })

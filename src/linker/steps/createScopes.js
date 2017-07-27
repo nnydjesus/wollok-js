@@ -4,13 +4,16 @@ import { lookupParentScope } from '../scoping'
 export const createScopesStep = node => {
   const { type } = node
 
-  if (referenciables[type]) {
-    const name = referenciables[type](node)
-    lookupParentScope(node).scope[name] = node
+  const copy = {
+    ...node,
+    ...isScopeable(type) && { scope: {} }
   }
 
-  if (isScopeable(type)) {
-    node.scope = {}
+  // EFFECT !! this should be completely changed !
+  if (referenciables[type]) {
+    const name = referenciables[type](copy)
+    lookupParentScope(copy.parent).scope[name] = copy
   }
-  return node
+
+  return copy
 }
