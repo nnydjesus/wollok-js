@@ -32,27 +32,27 @@ const link = (node, feature, linkType) => {
   if (tempIgnore.indexOf(refValue) >= 0) { return }
 
   // resolve and assign (and / or error)
-  let resolution;
-  if (refValue === 'self') {
-    resolution = Ref(refValue, node)
-  } else if (isArray(refValue)) {
-    const r = []
-    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::r.push))
-    if (r.length > 0) { resolution = r }
-  } else {
-    resolveAndLink(node, feature, refValue, f => { resolution = f })
-  }
-  node[feature] = resolution
+  node[feature] = resolveLink(node, feature, refValue)
 
   // check resolved types
   if (node[feature] && !linkType(node[feature])) {
     appendError(node, createWrongTypeLinkageError(feature))
   }
 }
-const alreadyLinked = refValue => (
-  isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string'
-)
 
+const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string')
+const resolveLink = (node, feature, refValue) => {
+  if (refValue === 'self') {
+    return Ref(refValue, node)
+  } else if (isArray(refValue)) {
+    const r = []
+    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::r.push))
+    return r.length > 0 ? r : undefined
+  }
+  let value = undefined
+  resolveAndLink(node, feature, refValue, f => { value = f })
+  return value
+}
 const resolveAndLink = (node, feature, value, onResolved) => {
   const found = findInScope(node, value)
   if (found) {
