@@ -1,5 +1,5 @@
 import { toVisitor } from './commons'
-import { noop } from '../utils/functions'
+import { identity } from '../utils/functions'
 import { propertyValues } from '../utils/object'
 
 // winston.level = 'silly'
@@ -18,23 +18,27 @@ const ignoredKeys = ['parent']
  */
 export const visit = fnOrVisitor => visitWithVisitor(toVisitor(fnOrVisitor))
 
-const visitWithVisitor = ({ enter = noop, exit = noop }, parent, feature) => node => {
-  if (!node.type || ignoredTypes.includes(node.type)) { return node }
-  const folded = enter(node, parent, feature) || node
-  visitProperties(node, enter, exit)
-  return exit(node, parent, feature) || folded
+const visitWithVisitor = ({ enter = identity, exit = identity }, parent, feature) => node => {
+  if (!node.type || ignoredTypes.includes(node.type)) return node
+  let folded = enter(node, parent, feature) || node
+  folded = visitProperties(folded, enter, exit) || folded
+  return exit(folded, parent, feature) || folded
 }
 
-const visitProperties = (node, enter, exit) => {
-  propertyValues(node).forEach(({ name, value }) => {
-    if (ignoredKeys.includes(name)) return
-    const list = Array.isArray(value) ? value : (value && [value] || [])
-    list.filter(e => e.type).forEach(e => {
-      visitWithVisitor({ enter, exit }, node, name)(e)
-    })
-  })
-}
-
+const visitProperties = (node, enter, exit) =>
+  propertyValues(node).reduce((copy, { name, value }) => {
+    if (ignoredKeys.includes(name)) {
+      copy[name] = value
+      return copy
+    }
+    const isArray = Array.isArray(value)
+    const list = isArray ? value : (value && [value] || [])
+    const visited = list.map(e =>
+      (e.type ? visitWithVisitor({ enter, exit }, node, name)(e) : e)
+    )
+    copy[name] = isArray ? visited : visited[0]
+    return copy
+  }, node)
 
 // AST utils
 // not sure where to move this to :S

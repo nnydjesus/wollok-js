@@ -1,3 +1,10 @@
 
-export const linkParentStep = (node, parent) => { if (parent) node.parent = parent }
-export const unlinkParent = node => { delete node.parent }
+export const linkParentStep = (node, parent) => {
+  const copy = { ...node }
+  if (parent)
+    copy.parent = parent
+  return copy
+}
+export const unlinkParent = ({ parent, ...rest }) => ({
+  ...rest
+})

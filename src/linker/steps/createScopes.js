@@ -12,4 +12,5 @@ export const createScopesStep = node => {
   if (isScopeable(type)) {
     node.scope = {}
   }
+  return node
 }

@@ -28,6 +28,7 @@ describe('linkParentStep', () => {
         street: 'evergreen'
       })
     }))
+    console.log('>>>>>>', r)
     expect(r.address.parent).to.deep.equal(r)
   })
 

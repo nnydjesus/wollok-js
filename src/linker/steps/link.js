@@ -15,6 +15,7 @@ const isLinkeable = ({ type }) => linkeables[type]
 export const linkStep = visit(filtering(isLinkeable, n => {
   const { type } = n
   doLink(n, linkeables[type])
+  return n
 }))
 
 const doLink = (node, linkDef) => Object.keys(linkDef).forEach(feature => {
