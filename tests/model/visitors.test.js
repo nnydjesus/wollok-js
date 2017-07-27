@@ -1,7 +1,7 @@
-import { expect } from 'chai'
-import { visit } from '../../src/visitors/visiting'
 import { node as Node } from '../../src/model'
+import { expect } from 'chai'
 import parse from '../../src/parser'
+import { visit } from '../../src/visitors/visiting'
 
 describe('visitor', () => {
 
@@ -38,10 +38,10 @@ describe('visitor', () => {
       `)
       const visited = []
 
-      visit({ enter: () => {}, exit: e => visited.push(e.type) })(node)
+      visit({ enter: () => { }, exit: e => visited.push(e.type) })(node)
 
       expect(visited).to.deep.equal([
-        'Variable',
+        'Reference',
         'Literal',
         'VariableDeclaration',
         'Block',

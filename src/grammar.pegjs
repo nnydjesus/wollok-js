@@ -33,7 +33,7 @@
     Test,
     Throw,
     Try,
-    Variable,
+    Reference,
     VariableDeclaration
   } = model
 }
@@ -53,7 +53,7 @@ comment = '/*' (!'*/' .)* '*/' _  { return '' }
 id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
-variable = name:id { return Variable(name) }
+reference = name:id { return Reference(name) }
 
 arguments = '(' _ args:(expression (_ ',' _ expression)* )? _ ')' { return args ? [args[0], ...args[1].map(([,,,arg])=>arg)] : [] }
 parameters = '(' _ parameters: undelimitedParameters _ ')' { return parameters }
@@ -115,21 +115,21 @@ constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super
 
 sentence = _ sentence:( variableDeclaration / return / assignment / expression) _ ';'? _ { return sentence }
 
-variableDeclaration = mutable:('var'/'const') __ variable:variable _ value:variableInitialization? { return VariableDeclaration(variable, mutable === 'var', value || undefined) }
+variableDeclaration = mutable:('var'/'const') __ reference:reference _ value:variableInitialization? { return VariableDeclaration(reference, mutable === 'var', value || undefined) }
 
 variableInitialization = '=' _ value:expression { return value }
 
 return = 'return' _ expression:expression { return Return(expression) }
 
-assignment = left:variable _ '='    _ right:expression { return Assignment(left, right) }
-           / left:variable _ '+='   _ right:expression { return Assignment(left, Send(left, '+'  )(right)) }
-           / left:variable _ '-='   _ right:expression { return Assignment(left, Send(left, '-'  )(right)) }
-           / left:variable _ '*='   _ right:expression { return Assignment(left, Send(left, '*'  )(right)) }
-           / left:variable _ '/='   _ right:expression { return Assignment(left, Send(left, '/'  )(right)) }
-           / left:variable _ '%='   _ right:expression { return Assignment(left, Send(left, '%'  )(right)) }
-           / left:variable _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<' )(right)) }
-           / left:variable _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>' )(right)) }
-           / left:variable _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>')(right)) }
+assignment = left:reference _ '='    _ right:expression { return Assignment(left, right) }
+           / left:reference _ '+='   _ right:expression { return Assignment(left, Send(left, '+'  )(right)) }
+           / left:reference _ '-='   _ right:expression { return Assignment(left, Send(left, '-'  )(right)) }
+           / left:reference _ '*='   _ right:expression { return Assignment(left, Send(left, '*'  )(right)) }
+           / left:reference _ '/='   _ right:expression { return Assignment(left, Send(left, '/'  )(right)) }
+           / left:reference _ '%='   _ right:expression { return Assignment(left, Send(left, '%'  )(right)) }
+           / left:reference _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<' )(right)) }
+           / left:reference _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>' )(right)) }
+           / left:reference _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>')(right)) }
 
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multip
 multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
 prefixUnaryExpression    = op:preOp _ right:prefixUnaryExpression { return Send(right,op+'_')() }
                          / postfixUnaryExpression
-postfixUnaryExpression   = left:variable op:postOp { return Assignment(left, Send(left,'_'+op)()) }
+postfixUnaryExpression   = left:reference op:postOp { return Assignment(left, Send(left,'_'+op)()) }
                          / send
 send                     = left:primaryExpression tail:('.' id _ (arguments/c:closure{return [c]}))* { return tail.reduce((target,[,key,,params])=> Send(target,key)(...params), left) }
 
@@ -169,7 +169,7 @@ primaryExpression = literal
                   / ifExpression
                   / tryExpression
                   / throwExpression
-                  / variable
+                  / reference
                   / '(' _ exp:expression _ ')' { return exp }
 
 ifExpression = 'if' _ '(' _ condition:expression _ ')' _ thenS:blockOrSentence _ elseS:( _ 'else' _ blockOrSentence )? { return If(condition)(...thenS)(...elseS?elseS[3]:[]) }

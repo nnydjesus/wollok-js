@@ -9,11 +9,11 @@ import {
   Literal,
   New,
   Parameter,
+  Reference,
   Return,
   Send,
   Throw,
   Try,
-  Variable,
   VariableDeclaration
 } from '../src/model'
 import {
@@ -28,28 +28,28 @@ const fixture = new Map([
   //-------------------------------------------------------------------------------------------------------------------------------
   // Not very useful tests, but at least serves to check it does not crash...
 
-  [VariableDeclaration(Variable('a'), true), undefined],
-  [VariableDeclaration(Variable('a'), true, Literal(1)), undefined],
-  [VariableDeclaration(Variable('a'), false, Literal(1)), undefined],
+  [VariableDeclaration(Reference('a'), true), undefined],
+  [VariableDeclaration(Reference('a'), true, Literal(1)), undefined],
+  [VariableDeclaration(Reference('a'), false, Literal(1)), undefined],
 
 
-  [Send(Closure()(VariableDeclaration(Variable('a'), true), Variable('a')), 'call')(), null],
-  [Send(Closure()(VariableDeclaration(Variable('a'), true, Literal(1)), Variable('a')), 'call')(), 1],
-  [Send(Closure()(VariableDeclaration(Variable('a'), false, Literal(1)), Variable('a')), 'call')(), 1],
+  [Send(Closure()(VariableDeclaration(Reference('a'), true), Reference('a')), 'call')(), null],
+  [Send(Closure()(VariableDeclaration(Reference('a'), true, Literal(1)), Reference('a')), 'call')(), 1],
+  [Send(Closure()(VariableDeclaration(Reference('a'), false, Literal(1)), Reference('a')), 'call')(), 1],
 
   [Send(Closure()(
-    VariableDeclaration(Variable('a'), true, Literal(1)),
-    Assignment(Variable('a'), Literal(2)),
-    Variable('a')
+    VariableDeclaration(Reference('a'), true, Literal(1)),
+    Assignment(Reference('a'), Literal(2)),
+    Reference('a')
   ), 'call')(), 2],
-  [Assignment(Variable('a'), Literal(1)), new ReferenceError('a is not defined')],
+  [Assignment(Reference('a'), Literal(1)), new ReferenceError('a is not defined')],
 
 
   //-------------------------------------------------------------------------------------------------------------------------------
   // EXPRESSIONS
   //-------------------------------------------------------------------------------------------------------------------------------
 
-  [Variable('a'), new ReferenceError('a is not defined')],
+  [Reference('a'), new ReferenceError('a is not defined')],
 
   [Send(Literal(true), '||')(Literal(false)), true],
   [Send(Literal(true), 'or')(Literal(false)), true],
@@ -71,8 +71,8 @@ const fixture = new Map([
   [Send(Literal(5), '%')(Literal(3)), 2],
 
   [Send(Literal(5), '-_')(), -5],
-  [Assignment(Variable('a'), Assignment(Variable('a'), Send(Variable('a'), '_++')())), new ReferenceError('a is not defined')],
-  [Send(Variable('a'), '_--')(), new ReferenceError('a is not defined')],
+  [Assignment(Reference('a'), Assignment(Reference('a'), Send(Reference('a'), '_++')())), new ReferenceError('a is not defined')],
+  [Send(Reference('a'), '_--')(), new ReferenceError('a is not defined')],
   [Send(Literal(true), '!_')(), false],
   [Send(Literal(true), 'not_')(), false],
 
@@ -83,9 +83,9 @@ const fixture = new Map([
   [If(Literal(true))(Literal(1))(Literal(2)), 1],
   [If(Literal(false))(Literal(1))(Literal(2)), 2],
 
-  [Try(Literal(1))(Catch(Variable('e'))(Literal(2)))(), 1],
+  [Try(Literal(1))(Catch(Reference('e'))(Literal(2)))(), 1],
   [Try(Literal(1))()(Literal(3)), 3],
-  [Try(Throw(Literal('woops')))(Catch(Variable('e'))(Literal(2)))(), 2],
+  [Try(Throw(Literal('woops')))(Catch(Reference('e'))(Literal(2)))(), 2],
 
   [Send(Closure()(
     Return(Literal(2)),
@@ -102,13 +102,13 @@ const fixture = new Map([
   //-------------------------------------------------------------------------------------------------------------------------------
 
   [Literal(null), null],
-  [Variable('this'), this],
+  [Reference('this'), this],
   [Literal(true), true],
   [Literal(1), 1],
   [Literal(7.5), 7.5],
   [Literal('foo'), 'foo'],
   [List(Literal(1), Literal(2)), [1, 2]],
-  [Closure(Parameter('a'))(Variable('a')), (a) => a],
+  [Closure(Parameter('a'))(Reference('a')), (a) => a],
 
   //-------------------------------------------------------------------------------------------------------------------------------
   // LIBRARY ELEMENTS

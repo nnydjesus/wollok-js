@@ -1,6 +1,6 @@
-import { addDefaultConstructor } from './transformations'
+import { Assignment, Block, Catch, Class, Closure, Constructor, Field, File, If, List, Literal, Method, Mixin, New, Parameter, Program, Reference, Return, Send, Singleton, Super, Throw, Try, VariableDeclaration, traverse } from './model'
 
-const { assign } = Object
+import { addDefaultConstructor } from './transformations'
 
 const escape = str => ([
   'abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue', 'debugger', 'default',
@@ -19,12 +19,12 @@ const compileMethodDispatcher = members => ({ name }) =>
   }`
 
 
-const compile = assign(expression => compile[expression.type](addDefaultConstructor(expression)), {
+const compile = traverse({
   // TODO: PACKAGE: ({ name, elements }) => {},
 
-  Singleton: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
+  [Singleton]: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
     const superclass = superclassName.type === 'Ref' ? superclassName.token : superclassName
-    return `export const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
+    return `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
@@ -33,8 +33,8 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     }`
   },
 
-  Mixin: ({ name, members }) =>
-    `export const ${escape(name)} = ($$superclass) => class extends $$superclass {
+  [Mixin]: ({ name, members }) =>
+    `const ${escape(name)} = ($$superclass) => class extends $$superclass {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
@@ -44,9 +44,9 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
       ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`,
 
-  Class: ({ name, superclass: superclassName, mixins, members }) => {
+  [Class]: ({ name, superclass: superclassName, mixins, members }) => {
     const superclass = superclassName && superclassName.type === 'Ref' ? superclassName.token : superclassName
-    return `export class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
+    return `class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
@@ -57,16 +57,16 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     }`
   },
 
-  Constructor: ({ parameters, parent, baseArguments, lookUpCall, sentences }) => `
+  [Constructor]: ({ parameters, parent, baseArguments, lookUpCall, sentences }) => `
     if(arguments.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? '+ 1 >=' : '==='} ${parameters.length}) {
       $instance = ${lookUpCall ? 'super' : `new ${parent.name}`}(${baseArguments.map(compile).join()});
       (function (${parameters.map(compile).join()}){${compile(sentences)}}).call($instance,...arguments)
     }`,
 
-  Field: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
+  [Field]: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
   // TODO: namespaces for natives
-  Method: ({ name, parameters, sentences, native, parent }) =>
+  [Method]: ({ name, parameters, sentences, native, parent }) =>
     `const implementation$$${parameters.length} = ${native
       ? `() => { return wollok.lang.${parent.name}['${escape(name)}'].bind(this)(...args) }`
       : `(${parameters.map(compile).join()}) => {${compile(sentences)}}`}
@@ -74,11 +74,11 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
       implementation$$${parameters.length}(...args)
     }`,
 
-  VariableDeclaration: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
+  [VariableDeclaration]: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
 
-  Assignment: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
+  [Assignment]: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
-  Variable: ({ name }) => {
+  [Reference]: ({ name }) => {
     // resolved Ref
     if (name.type === 'Ref') {
       return name.token === 'self' ?
@@ -89,41 +89,41 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     return escape(name)
   },
 
-  Send: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
+  [Send]: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
 
-  New: ({ target, parameters }) => `new ${escape(target.type === 'Ref' ? target.token : target)}(${parameters.map(compile).join()})`,
+  [New]: ({ target, parameters }) => `new ${escape(target.type === 'Ref' ? target.token : target)}(${parameters.map(compile).join()})`,
 
-  Super: ({ parameters }) => `super(${parameters.map(compile).join()})`,
+  [Super]: ({ parameters }) => `super(${parameters.map(compile).join()})`,
 
-  If: ({ condition, thenSentences, elseSentences }) =>
+  [If]: ({ condition, thenSentences, elseSentences }) =>
     `(() => { if (${compile(condition)}) {${compile(thenSentences)}} else {${compile(elseSentences)}}})()`,
 
-  Return: ({ result }) => `return ${compile(result)}`,
+  [Return]: ({ result }) => `return ${compile(result)}`,
 
-  Throw: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
+  [Throw]: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
 
-  Try: ({ sentences, catches, always }) =>
+  [Try]: ({ sentences, catches, always }) =>
     `(()=>{try{${compile(sentences)}}
     ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';\n')} throw ___ERROR___}` : ''}
     ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
 
-  Catch: ({ variable, errorType, handler }) => {
+  [Catch]: ({ variable, errorType, handler }) => {
     const evaluation = `const ${compile(variable)} = ___ERROR___;${compile(handler)}`
     return errorType ? `if (___ERROR___ instanceof ${errorType}){${evaluation}}` : evaluation
   },
 
-  Literal: ({ value }) => {
+  [Literal]: ({ value }) => {
     switch (typeof value) {
       case 'string': return `"${value.replace(/"/g, '\\"')}"`
       default: return `${value}`
     }
   },
 
-  List: ({ values }) => `[ ${values.map(compile).join()} ]`,
+  [List]: ({ values }) => `[ ${values.map(compile).join()} ]`,
 
-  Closure: ({ parameters, sentences }) => `(function (${parameters.map(compile).join()}) {${compile(sentences)}})`,
+  [Closure]: ({ parameters, sentences }) => `(function (${parameters.map(compile).join()}) {${compile(sentences)}})`,
 
-  File: ({ content }) => {
+  [File]: ({ content }) => {
     const hoist = (unhoisted, hoisted = []) => {
       if (!unhoisted.length) return hoisted
 
@@ -150,9 +150,9 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
   // TODO: Imports
   // TODO: tests
 
-  Program: ({ name, sentences }) => `function ${escape(name)}(){${compile(sentences)}}`,
+  [Program]: ({ name, sentences }) => `function ${escape(name)}(){${compile(sentences)}}`,
 
-  Block: ({ sentences }) => {
+  [Block]: ({ sentences }) => {
     const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
     if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
       compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
@@ -160,8 +160,8 @@ const compile = assign(expression => compile[expression.type](addDefaultConstruc
     return compiledSentences.join(';\n')
   },
 
-  Parameter: ({ name, varArg }) => (varArg ? `...${escape(name)}` : escape(name))
+  [Parameter]: ({ name, varArg }) => (varArg ? `...${escape(name)}` : escape(name))
 })
 
 
-export default compile
+export default model => compile(addDefaultConstructor(model))

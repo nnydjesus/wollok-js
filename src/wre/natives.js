@@ -136,7 +136,7 @@ export const $wollok = {
     },
 
     Closure: {
-      'apply+'(...parameters) { /* TODO:*/ throw new ReferenceError('To be implemented') },
+      apply(...parameters) { /* TODO:*/ throw new ReferenceError('To be implemented') },
       toString() { /* TODO:*/ throw new ReferenceError('To be implemented') },
     },
 

@@ -1,5 +1,5 @@
+import { Block, Class, Closure, Field, File, Method, Mixin, Parameter, Singleton, VariableDeclaration } from '../model'
 import { a, many, or } from './types'
-import { Field, VariableDeclaration, Parameter, Block, File, Class, Method, Closure, Singleton, Mixin } from '../model'
 
 // This declarations are not the best and most intuitive form, but
 // the minimum to add new cases already understandables by the current linker impl
@@ -31,7 +31,7 @@ export const referenciables = {
 }
 
 export const linkeables = {
-  Variable: { name: or([Field, VariableDeclaration, Parameter]) },
+  Reference: { name: or([Field, VariableDeclaration, Parameter]) },
   New: { target: a(Class) },
   Class: {
     superclass: a(Class),

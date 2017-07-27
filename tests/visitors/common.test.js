@@ -1,8 +1,9 @@
+import { chain, collect } from '../../src/visitors/commons'
+
 import { expect } from 'chai'
 import { node } from '../../src/model'
-import { visit } from '../../src/visitors/visiting'
-import { collect, chain } from '../../src/visitors/commons'
 import parse from '../../src/parser'
+import { visit } from '../../src/visitors/visiting'
 
 describe('common visitors', () => {
 
@@ -20,11 +21,11 @@ describe('common visitors', () => {
         'Program',
         'Block',
         'VariableDeclaration',
-        'Variable',
+        'Reference',
         'Literal',
         'VariableDeclaration',
-        'Variable',
-        'Variable'
+        'Reference',
+        'Reference'
       ])
     })
   })

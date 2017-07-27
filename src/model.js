@@ -30,6 +30,7 @@ export const node = builder => body => ({ type: builder instanceof Function ? bu
 // NODES
 //===============================================================================================================================
 
+// TODO: Remove: Replace with Package
 export const File = (...content) => node(File)({ content })
 
 export const Parameter = (name, varArg = false) => node(Parameter)({ name, varArg })
@@ -40,6 +41,7 @@ export const Block = (...sentences) => node(Block)({ sentences })
 // TOP LEVEL
 //-------------------------------------------------------------------------------------------------------------------------------
 
+// TODO: Remove: Replace with metadata in Package
 export const Import = (target) => node(Import)({ target })
 export const Package = (name) => (...elements) => node(Package)({ name, elements })
 
@@ -62,6 +64,7 @@ export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = 
 // SENTENCES
 //-------------------------------------------------------------------------------------------------------------------------------
 
+// TODO: Rename to Variable?
 export const VariableDeclaration = (variable, writeable = true, value) => node(VariableDeclaration)({ variable, writeable, value })
 export const Return = (result) => node(Return)({ result })
 export const Assignment = (variable, value) => node(Assignment)({ variable, value })
@@ -70,8 +73,9 @@ export const Assignment = (variable, value) => node(Assignment)({ variable, valu
 // EXPRESSIONS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-export const Variable = (name) => node(Variable)({ name })
+export const Reference = (name) => node(Reference)({ name })
 export const Literal = (value) => node(Literal)({ value })
+// TODO: Remove: Replace with New to WRE's List
 export const List = (...values) => node(List)({ values })
 export const Closure = (...parameters) => (...sentences) => node(Closure)({ parameters, sentences: Block(...sentences) })
 
@@ -94,8 +98,7 @@ export const Runnable = [Program, Test]
 export const TopLevel = [Import, Package, ...Module, ...Runnable]
 export const Member = [Field, Method, Constructor]
 export const Sentence = [VariableDeclaration, Return, Assignment]
-export const Expression = [Variable, Literal, List, Closure, Send, Super, New, If, Throw, Try]
+export const Expression = [Reference, Literal, List, Closure, Send, Super, New, If, Throw, Try]
 export const Node = [File, ...TopLevel, ...Member, ...Sentence, ...Expression, Catch, Parameter, Block]
 
 Node.forEach(builder => { builder.toString = () => builder.name })
-
