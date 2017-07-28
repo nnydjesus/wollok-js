@@ -1,10 +1,8 @@
 import gulp, { dest, src } from 'gulp'
-import { readFileSync, unlinkSync, writeFile } from 'fs'
 
 import babel from 'gulp-babel'
 import del from 'del'
 import eslint from 'gulp-eslint'
-import { exec } from 'child_process'
 import mocha from 'gulp-mocha'
 import pegjs from 'gulp-pegjs'
 
@@ -26,24 +24,14 @@ task('babel', ['clean'], () =>
     .pipe(dest('dist'))
 )
 
-task('lint', ['compile', 'wre'], () =>
+task('lint', ['compile'], () =>
   src(['src/**/*.js', 'tests/**/*.js'])
     .pipe(eslint())
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
 )
 
-task('wre', ['clean', 'compile'], (cb) => {
-  const { compiler, parser, linker } = require('./dist/index')
-  const lang = compiler(linker(parser(readFileSync('src/wre/lang.wlk', 'utf8'))))
-  const natives = readFileSync('dist/wre/natives.js', 'utf8')
-  unlinkSync('dist/wre/natives.js')
-  writeFile('dist/wre/wre.js', `${natives}\n${lang}`, () =>
-    exec('./node_modules/.bin/babel dist/wre/wre.js -o dist/wre/wre.js', cb)
-  )
-})
-
-task('test', ['compile', 'wre', 'lint'], () =>
+task('test', ['compile', 'lint'], () =>
   src(['tests/**/*.test.js', 'dist/**/*.js'])
     .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
 )

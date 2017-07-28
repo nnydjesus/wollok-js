@@ -1,9 +1,7 @@
-// import * as wre from '../dist/wre/wre'
-
 import {
   Assignment,
   Catch,
-  Closure,
+  Closure as ClosureNode,
   If,
   List,
   Literal,
@@ -16,122 +14,124 @@ import {
   Try,
   VariableDeclaration
 } from '../src/model'
-import {
-  describe,
-  it
-} from 'mocha'
+import { describe, it } from 'mocha'
+import { interpreter, linker, parser } from '../src/index'
 
-const fixture = new Map([
+import { expect } from 'chai'
+import langNatives from '../dist/wre/lang.natives'
+import { readFileSync } from 'fs'
+
+const lang = linker(parser(readFileSync('src/wre/lang.wlk', 'utf8')))
+const interpret = (...asts) => interpreter(langNatives)(lang, ...asts)
+
+describe('Wollok interpreter', () => {
+
+  it('should interpret literals', () => {
+    expect(interpret(Literal(5))).to.equal(5)
+    expect(interpret(Literal(null))).to.equal(null)
+    expect(interpret(Literal('foo'))).to.equal('foo')
+    expect(interpret(Literal(true))).to.equal(true)
+  })
+
+  it('should interpret lists', () => {
+    const list = interpret(List(Literal(1), Literal(2), Literal(3)))
+    expect(list.size()).to.equal(3)
+    expect(list.get(0)).to.equal(1)
+    expect(list.get(1)).to.equal(2)
+    expect(list.get(2)).to.equal(3)
+  })
+
+  it('should interpret closures', () => {
+    expect(interpret(Send(ClosureNode(Parameter())(Literal(5)), 'apply')())).to.equal(5)
+    expect(interpret(Send(ClosureNode(Parameter('x'))(Reference('x')), 'apply')(Literal(5)))).to.equal(5)
+  })
+
+  it('should interpret references', () => {
+    expect(interpret(VariableDeclaration(Reference('a')), Reference('a'))).to.equal(null)
+    expect(interpret(VariableDeclaration(Reference('a'), true, Literal(5)), Reference('a'))).to.equal(5)
+    expect(() => interpret(Reference('a'))).to.throw(ReferenceError, 'a is not defined')
+  })
 
   //-------------------------------------------------------------------------------------------------------------------------------
   // SENTENCES
   //-------------------------------------------------------------------------------------------------------------------------------
   // Not very useful tests, but at least serves to check it does not crash...
 
-  [VariableDeclaration(Reference('a'), true), undefined],
-  [VariableDeclaration(Reference('a'), true, Literal(1)), undefined],
-  [VariableDeclaration(Reference('a'), false, Literal(1)), undefined],
+  // [VariableDeclaration(Reference('a'), true), undefined],
+  // [VariableDeclaration(Reference('a'), true, Literal(1)), undefined],
+  // [VariableDeclaration(Reference('a'), false, Literal(1)), undefined],
 
 
-  [Send(Closure()(VariableDeclaration(Reference('a'), true), Reference('a')), 'call')(), null],
-  [Send(Closure()(VariableDeclaration(Reference('a'), true, Literal(1)), Reference('a')), 'call')(), 1],
-  [Send(Closure()(VariableDeclaration(Reference('a'), false, Literal(1)), Reference('a')), 'call')(), 1],
+  // [Send(ClosureNode()(VariableDeclaration(Reference('a'), true), Reference('a')), 'call')(), null],
+  // [Send(ClosureNode()(VariableDeclaration(Reference('a'), true, Literal(1)), Reference('a')), 'call')(), 1],
+  // [Send(ClosureNode()(VariableDeclaration(Reference('a'), false, Literal(1)), Reference('a')), 'call')(), 1],
 
-  [Send(Closure()(
-    VariableDeclaration(Reference('a'), true, Literal(1)),
-    Assignment(Reference('a'), Literal(2)),
-    Reference('a')
-  ), 'call')(), 2],
-  [Assignment(Reference('a'), Literal(1)), new ReferenceError('a is not defined')],
+  // [Send(ClosureNode()(
+  //   VariableDeclaration(Reference('a'), true, Literal(1)),
+  //   Assignment(Reference('a'), Literal(2)),
+  //   Reference('a')
+  // ), 'call')(), 2],
+  // [Assignment(Reference('a'), Literal(1)), new ReferenceError('a is not defined')],
 
 
   //-------------------------------------------------------------------------------------------------------------------------------
   // EXPRESSIONS
   //-------------------------------------------------------------------------------------------------------------------------------
 
-  [Reference('a'), new ReferenceError('a is not defined')],
+  // [Send(Literal(true), '||')(Literal(false)), true],
+  // [Send(Literal(true), 'or')(Literal(false)), true],
+  // [Send(Literal(true), '&&')(Literal(false)), false],
+  // [Send(Literal(true), 'and')(Literal(false)), false],
+  // [Send(Literal(5), '===')(Literal(3)), false],
+  // [Send(Literal(5), '!==')(Literal(3)), true],
+  // [Send(Literal(5), '==')(Literal(3)), false],
+  // [Send(Literal(5), '!=')(Literal(3)), true],
+  // [Send(Literal(5), '>=')(Literal(3)), true],
+  // [Send(Literal(5), '<=')(Literal(3)), false],
+  // [Send(Literal(5), '>')(Literal(3)), true],
+  // [Send(Literal(5), '<')(Literal(3)), false],
+  // [Send(Literal(5), '+')(Literal(3)), 8],
+  // [Send(Literal(5), '-')(Literal(3)), 2],
+  // [Send(Literal(5), '**')(Literal(3)), 125],
+  // [Send(Literal(5), '*')(Literal(3)), 15],
+  // [Send(Literal(5), '/')(Literal(3)), 5 / 3],
+  // [Send(Literal(5), '%')(Literal(3)), 2],
 
-  [Send(Literal(true), '||')(Literal(false)), true],
-  [Send(Literal(true), 'or')(Literal(false)), true],
-  [Send(Literal(true), '&&')(Literal(false)), false],
-  [Send(Literal(true), 'and')(Literal(false)), false],
-  [Send(Literal(5), '===')(Literal(3)), false],
-  [Send(Literal(5), '!==')(Literal(3)), true],
-  [Send(Literal(5), '==')(Literal(3)), false],
-  [Send(Literal(5), '!=')(Literal(3)), true],
-  [Send(Literal(5), '>=')(Literal(3)), true],
-  [Send(Literal(5), '<=')(Literal(3)), false],
-  [Send(Literal(5), '>')(Literal(3)), true],
-  [Send(Literal(5), '<')(Literal(3)), false],
-  [Send(Literal(5), '+')(Literal(3)), 8],
-  [Send(Literal(5), '-')(Literal(3)), 2],
-  [Send(Literal(5), '**')(Literal(3)), 125],
-  [Send(Literal(5), '*')(Literal(3)), 15],
-  [Send(Literal(5), '/')(Literal(3)), 5 / 3],
-  [Send(Literal(5), '%')(Literal(3)), 2],
+  // [Send(Literal(5), '-_')(), -5],
+  // [Assignment(Reference('a'), Assignment(Reference('a'), Send(Reference('a'), '_++')())), new ReferenceError('a is not defined')],
+  // [Send(Reference('a'), '_--')(), new ReferenceError('a is not defined')],
+  // [Send(Literal(true), '!_')(), false],
+  // [Send(Literal(true), 'not_')(), false],
 
-  [Send(Literal(5), '-_')(), -5],
-  [Assignment(Reference('a'), Assignment(Reference('a'), Send(Reference('a'), '_++')())), new ReferenceError('a is not defined')],
-  [Send(Reference('a'), '_--')(), new ReferenceError('a is not defined')],
-  [Send(Literal(true), '!_')(), false],
-  [Send(Literal(true), 'not_')(), false],
+  // [New('Set')(List(Literal(1), Literal(2))), new Set([1, 2])],
 
-  [New('Set')(List(Literal(1), Literal(2))), new Set([1, 2])],
+
 
   // TODO: Super
 
-  [If(Literal(true))(Literal(1))(Literal(2)), 1],
-  [If(Literal(false))(Literal(1))(Literal(2)), 2],
+  // [If(Literal(true))(Literal(1))(Literal(2)), 1],
+  // [If(Literal(false))(Literal(1))(Literal(2)), 2],
 
-  [Try(Literal(1))(Catch(Reference('e'))(Literal(2)))(), 1],
-  [Try(Literal(1))()(Literal(3)), 3],
-  [Try(Throw(Literal('woops')))(Catch(Reference('e'))(Literal(2)))(), 2],
+  // [Try(Literal(1))(Catch(Reference('e'))(Literal(2)))(), 1],
+  // [Try(Literal(1))()(Literal(3)), 3],
+  // [Try(Throw(Literal('woops')))(Catch(Reference('e'))(Literal(2)))(), 2],
 
-  [Send(Closure()(
-    Return(Literal(2)),
-    Literal(1)
-  ), 'call')(), 2],
-  [Send(Closure()(
-    Literal(1),
-    Return(Literal(2))
-  ), 'call')(), 2],
-
-
-  //-------------------------------------------------------------------------------------------------------------------------------
-  // LITERALS
-  //-------------------------------------------------------------------------------------------------------------------------------
-
-  [Literal(null), null],
-  [Reference('this'), this],
-  [Literal(true), true],
-  [Literal(1), 1],
-  [Literal(7.5), 7.5],
-  [Literal('foo'), 'foo'],
-  [List(Literal(1), Literal(2)), [1, 2]],
-  [Closure(Parameter('a'))(Reference('a')), (a) => a],
+  // [Send(ClosureNode()(
+  //   Return(Literal(2)),
+  //   Literal(1)
+  // ), 'call')(), 2],
+  // [Send(ClosureNode()(
+  //   Literal(1),
+  //   Return(Literal(2))
+  // ), 'call')(), 2],
 
   //-------------------------------------------------------------------------------------------------------------------------------
   // LIBRARY ELEMENTS
   //-------------------------------------------------------------------------------------------------------------------------------
 
   // TODO: Test Classes
+  // TODO: Test Mixins
   // TODO: Test Objects
-])
 
-
-describe('Wollok interpreter', () => {
-  const fixture = []
-
-  // for (const [ast, expected] of fixture.entries()) {
-  //   const result = () => eval(wdk + compile(link(ast)))
-
-  //   it(`should interpret ${JSON.stringify(ast)}`, () => {
-  //     if (expected instanceof Error) expect(result).to.throw(expected.constructor, expected.message)
-  //     else if (typeof expected === 'function') expect(escapeCode(result())).to.equal(escapeCode(expected))
-  //     else expect(result(), `intepreting ${fixture}`).to.deep.equal(expected)
-  //   })
-  // }
 
 })
-
-const escapeCode = (code) => code.toString().replace(/[\n\t ]/g, '', '')
