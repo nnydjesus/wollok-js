@@ -118,7 +118,7 @@ describe('Class linkage', () => {
       expectWrongLinkTypeAt(Class.name, 'mixins', `
         class M {}
         class C mixed with M {}
-      `)
+      `, 'expected [Mixin] but found [Class]')
     })
   })
 

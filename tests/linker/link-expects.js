@@ -11,9 +11,10 @@ import parse from '../../src/parser'
 export const expectNoLinkageError = code => {
   const n = link(parse(code))
   const errors = collectErrors(n)
+  // console.log('>>>>>> ERRORS', errors)
   errors.forEach(e => visit(unlinkParent)(e.node))
-  const errorsFound = errors.map(e => `${e.node.type}.${e.feature} to '${e.ref}': ${e}`).join(', ')
-  expect(errors.length, `Expecting no errors but found (${errors.length}): ${errorsFound}`).to.be.equals(0)
+  const errorsFound = errors.map(e => `${e.node.type}.${e.feature}: "${e.message}". ${e}`).join(', ')
+  expect(errors.length, `Expecting no errors but found (${errors.length}): ${JSON.stringify(errorsFound)}`).to.be.equals(0)
   return n
 }
 
@@ -39,11 +40,11 @@ export const expectScopeOf = (program, type, findFilter, expected) => {
   )
 }
 
-export const expectWrongLinkTypeAt = (type, feature, code) => {
+export const expectWrongLinkTypeAt = (type, feature, code, expectedTypeError) => {
   const n = link(parse(code))
   const errors = collectErrors(n)
   expect(errors.length).to.equals(1)
   expect(errors[0].feature).to.equals(feature)
   expect(errors[0].node.type).to.equals(type)
-  expect(errors[0].message).to.equals('Referencing a wrong type')
+  expect(errors[0].message).to.equals(`Referencing a wrong type ${expectedTypeError}`)
 }

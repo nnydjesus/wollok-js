@@ -1,16 +1,14 @@
 import { visit } from '../../visitors/visiting'
 import { filtering } from '../../visitors/commons'
-import { linkeables } from '../definitions'
+import { linkeables, isLinkeable } from '../definitions'
 import { findInScope } from '../scoping'
-import { appendError, createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
+import { createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
 import { isArray, forAll } from '../../utils/collections'
 import { node as Node } from '../../model'
 
 // winston.level = 'debug'
 
 export const Ref = (token, node) => Node(Ref)({ token, node })
-
-const isLinkeable = ({ type }) => linkeables[type]
 
 export const linkStep = visit(filtering(isLinkeable, n => doLink(n, linkeables[n.type])))
 
@@ -30,34 +28,51 @@ const link = (node, feature, linkType) => {
   if (tempIgnore.indexOf(refValue) >= 0) { return node }
 
   // resolve and assign (and / or error)
-  node[feature] = resolveLink(node, feature, refValue)
-
-  // check resolved types
-  if (node[feature] && !linkType(node[feature])) {
-    appendError(node, createWrongTypeLinkageError(feature))
+  const resolution = resolveLink(node, feature, refValue)
+  // console.log('>>>>>> Resolution', resolution)
+  return {
+    ...node,
+    // resolved
+    ...resolution.resolved && {
+      [feature]: resolution.target
+    },
+    // unresolved
+    ...!resolution.resolved && {
+      errors: [...(node.errors || []), createUnresolvedLinkageError(feature, refValue)]
+    },
+    // resolved but wrong type
+    ...(resolution.resolved && !linkType(resolution.target)) && {
+      errors: [...(node.errors || []), createWrongTypeLinkageError(feature, linkType, resolution.target)]
+    }
   }
-  return node
 }
 
 const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string')
 const resolveLink = (node, feature, refValue) => {
   if (refValue === 'self') {
-    return Ref(refValue, node)
+    return {
+      feature,
+      resolved: true,
+      target: Ref(refValue, node)
+    }
   }
+  // array references: needs to be improved (errors handling?)
   if (isArray(refValue)) {
-    const r = []
-    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::r.push))
-    return r.length > 0 ? r : undefined
+    const arrayTarget = refValue.map(ref => resolveAndLink(node, feature, ref))
+    return {
+      feature,
+      resolved: arrayTarget.every(r => r.resolved),
+      target: arrayTarget.map(_ => _.target)
+    }
   }
-  let value = undefined
-  resolveAndLink(node, feature, refValue, f => { value = f })
-  return value
+  // simple ref
+  return resolveAndLink(node, feature, refValue)
 }
-const resolveAndLink = (node, feature, value, onResolved) => {
-  const found = findInScope(node, value)
-  if (found) {
-    onResolved(Ref(value, found))
-  } else {
-    appendError(node, createUnresolvedLinkageError(feature, value))
+const resolveAndLink = (node, feature, ref) => {
+  const target = findInScope(node, ref)
+  return {
+    feature,
+    resolved: !!target,
+    target: Ref(ref, target)
   }
 }

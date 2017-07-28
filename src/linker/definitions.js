@@ -38,3 +38,5 @@ export const linkeables = {
     mixins: many(Mixin)
   }
 }
+
+export const isLinkeable = ({ type }) => linkeables[type]
