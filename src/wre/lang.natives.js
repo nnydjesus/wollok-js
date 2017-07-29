@@ -44,7 +44,11 @@ export default {
     findOrElse(predicate, continuation) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     add(element) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     remove(element) { /* TODO:*/ throw new ReferenceError('To be implemented') },
-    size() { return this.$inner.length },
+    size() {
+      const size = new Integer();
+      size.$inner = this.$inner.length;
+      return size
+    },
     clear() { /* TODO:*/ throw new ReferenceError('To be implemented') },
     join(separator) { /* TODO:*/ if (arguments.length === 0 || arguments.length === 1) throw new ReferenceError('To be implemented') },
     equals(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
@@ -63,9 +67,19 @@ export default {
 
   Integer: {
     '==='(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
-    '+'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
+    '+'(other) {
+      const innerResponse = other.$inner ? this.$inner + other.$inner : this.$inner + other
+      const response = innerResponse % 1 === 0 ? new Integer() : new Double()
+      response.$inner = innerResponse
+      return response
+    },
     '-'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
-    '*'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
+    '*'(other) {
+      const innerResponse = other.$inner ? this.$inner * other.$inner : this.$inner * other
+      const response = innerResponse % 1 === 0 ? new Integer() : new Double()
+      response.$inner = innerResponse
+      return response
+    },
     '/'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '**'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '%'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
@@ -81,6 +95,7 @@ export default {
     gcd(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     randomUpTo(max) { /* TODO:*/ throw new ReferenceError('To be implemented') },
   },
+
   Double: {
     '==='(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '+'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },

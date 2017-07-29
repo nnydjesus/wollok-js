@@ -29,6 +29,7 @@
     "babel-preset-env": "^1.6.0",
     "babel-register": "^6.24.1",
     "chai": "^4.0.2",
+    "chai-also": "^0.1.0",
     "codecov": "^2.2.0",
     "del": "^3.0.0",
     "eslint-config-airbnb-base": "^11.2.0",

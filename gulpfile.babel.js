@@ -1,8 +1,10 @@
 import gulp, { dest, src } from 'gulp'
+import { readFileSync, writeFile } from 'fs'
 
 import babel from 'gulp-babel'
 import del from 'del'
 import eslint from 'gulp-eslint'
+import { exec } from 'child_process'
 import mocha from 'gulp-mocha'
 import pegjs from 'gulp-pegjs'
 
@@ -30,6 +32,16 @@ task('lint', ['compile'], () =>
     .pipe(eslint.format())
     .pipe(eslint.failAfterError())
 )
+
+task('wre', ['compile'], (cb) => {
+  const { compiler, parser, linker } = require('./dist/index')
+  const { default: natives } = require('./dist/wre/lang.natives.js')
+  const lang = compiler(linker(parser(readFileSync('src/wre/lang.wlk', 'utf8'))), natives)
+  writeFile('dist/wre/wre.js', lang, () =>
+    // exec('./node_modules/.bin/babel dist/wre/wre.js -o dist/wre/wre.js', cb)
+    cb
+  )
+})
 
 task('test', ['compile', 'lint'], () =>
   src(['tests/**/*.test.js', 'dist/**/*.js'])

@@ -7,7 +7,7 @@ const escape = str => ([
   'delete', 'do', 'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'function', 'goto', 'if',
   'implements', 'import', 'in', 'instanceof', 'int', 'interface', 'let', 'long', 'native', 'new', 'null', 'package', 'private', 'protected',
   'public', 'return', 'short', 'static', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
-  'var', 'void', 'volatile', 'while', 'with', 'yield', 'Object', 'Exception', 'Set'
+  'var', 'void', 'volatile', 'while', 'with', 'yield', 'Object', 'Boolean', 'String', 'Set'
 ].indexOf(str) >= 0 ? `$${str}` : str)
 
 const compileWithNatives = (natives = {}) => {
@@ -104,34 +104,56 @@ const compileWithNatives = (natives = {}) => {
 
     [Throw]: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
 
-    [Try]: ({ sentences, catches, always }) =>
-      `(()=>{try{${compile(sentences)}}
-    ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';\n')} throw ___ERROR___}` : ''}
-    ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
+    [Try]: ({ sentences, catches, always }) => `(()=> {
+      let $response;
+      try {
+        $response = (()=>{${compile(sentences)}})()
+      }
+      catch($error){
+        ${always.sentences.length ? `(()=>{${compile(always)}})();` : ''}
+        ${catches.map(compile).join(';\n')}
+        throw $error
+      }
+      return ${always.sentences.length ? `(()=>{${compile(always)}})()` : '$response'}
+    })()`,
 
-    [Catch]: ({ variable, errorType, handler }) => {
-      const evaluation = `const ${compile(variable)} = ___ERROR___;${compile(handler)}`
-      return errorType ? `if (___ERROR___ instanceof ${errorType}){${evaluation}}` : evaluation
-    },
+    [Catch]: ({ variable, errorType, handler }) =>
+      `if (${errorType ? `$error instanceof ${errorType}` : 'true'} ) {
+        return ((${compile(variable)}) => {${compile(handler)}})($error)
+      }`,
 
     [Literal]: ({ value }) => {
       switch (typeof value) {
-        case 'string': return `"${value.replace(/"/g, '\\"')}"`
+        case 'number': return `(()=>{
+          const $value = new ${value % 1 === 0 ? 'Integer' : 'Double'}()
+          $value.$inner = ${value}
+          return $value
+        })()`
+        case 'string': return `(()=>{
+          const $value = new $String()
+          $value.$inner = "${value.replace(/"/g, '\\"')}"
+          return $value
+        })()`
+        case 'boolean': return `(()=>{
+          const $value = new $Boolean()
+          $value.$inner = ${value}
+          return $value
+        })()`
         default: return `${value}`
       }
     },
 
     [List]: ({ values }) => `(() => {
-    const l = new List();
-    l.$inner = [ ${values.map(compile).join()} ]
-    return l
-  })()`,
+      const l = new List();
+      l.$inner = [ ${values.map(compile).join()} ]
+      return l
+    })()`,
 
     [Closure]: ({ parameters, sentences }) => `(() => {
-    const c = new Closure();
-    c.$inner = function (${parameters.map(compile).join()}) { ${compile(sentences)} }
-    return c
-  })()`,
+      const c = new Closure();
+      c.$inner = function (${parameters.map(compile).join()}) { ${compile(sentences)} }
+      return c
+    })()`,
 
     [File]: ({ content }) => {
       const hoist = (unhoisted, hoisted = []) => {
@@ -148,7 +170,7 @@ const compileWithNatives = (natives = {}) => {
         const unhoistedParentIndex = others.findIndex(e => next.superclass === e.name)
         if (unhoistedParentIndex >= 0) {
           const [parent, ...otherUnhoisted] = others.splice(unhoistedParentIndex)
-          return hoist([parent, next, ...otherUnhoisted], hoisted)
+          return hoist([parent, next, ...others, ...otherUnhoisted], hoisted)
         }
 
         return hoist(others, [...hoisted, next])
