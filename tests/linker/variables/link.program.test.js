@@ -11,7 +11,7 @@ describe('program', () => {
         const b = a
       }
     `))
-    const [a, b] = linked.content[0].sentences.sentences
+    const b = linked.content[0].sentences.sentences[1]
     expectToBeLinkedToVariable(b.value.name, 'a')
   })
 
