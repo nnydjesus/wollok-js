@@ -1,12 +1,15 @@
 import { visit } from './visiting'
-import { filter } from '../utils/functions'
+import { filter, isFunction } from '../utils/functions'
 
 // common high-level visitors
 
 export const onEnter = enter => ({ enter })
 export const onExit = exit => ({ exit })
 
-export const filtering = (condition, { enter, exit }) => ({
+export const filtering = (condition, fnOrVisitor) =>
+  filteringVisitor(condition, isFunction(fnOrVisitor) ? { enter: fnOrVisitor } : fnOrVisitor)
+
+const filteringVisitor = (condition, { enter, exit }) => ({
   ...(enter && { enter: filter(condition, enter) }),
   ...(exit && { exit: filter(condition, exit) })
 })
