@@ -1,8 +1,8 @@
 import { visit } from '../../visitors/visiting'
 import { filtering } from '../../visitors/commons'
-import { linkeables } from '../definitions'
+import { linkeables, isLinkeable } from '../definitions'
 import { findInScope } from '../scoping'
-import { appendError, createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
+import { createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
 import { isArray, forAll } from '../../utils/collections'
 import { node as Node } from '../../model'
 
@@ -10,53 +10,68 @@ import { node as Node } from '../../model'
 
 export const Ref = (token, node) => Node(Ref)({ token, node })
 
-const isLinkeable = ({ type }) => linkeables[type]
+export const linkStep = visit(filtering(isLinkeable, n => doLink(n, linkeables[n.type])))
 
-export const linkStep = visit(filtering(isLinkeable, n => {
-  const { type } = n
-  doLink(n, linkeables[type])
-}))
-
-const doLink = (node, linkDef) => Object.keys(linkDef).forEach(feature => {
-  link(node, feature, linkDef[feature])
-})
+const doLink = (node, linkDef) => Object.keys(linkDef)
+  .reduce(
+    (n, feature) => link(n, feature, linkDef[feature]),
+    node
+  )
 
 const tempIgnore = ['Object', 'wollok.lang.Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception']
 
 const link = (node, feature, linkType) => {
   const refValue = node[feature]
 
-  if (alreadyLinked(refValue)) { return }
+  if (alreadyLinked(refValue)) { return node }
   // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
-  if (tempIgnore.indexOf(refValue) >= 0) { return }
+  if (tempIgnore.indexOf(refValue) >= 0) { return node }
 
   // resolve and assign (and / or error)
-  let resolution;
-  if (refValue === 'self') {
-    resolution = Ref(refValue, node)
-  } else if (isArray(refValue)) {
-    const r = []
-    refValue.forEach(ref => resolveAndLink(node, feature, ref, ::r.push))
-    if (r.length > 0) { resolution = r }
-  } else {
-    resolveAndLink(node, feature, refValue, f => { resolution = f })
-  }
-  node[feature] = resolution
-
-  // check resolved types
-  if (node[feature] && !linkType(node[feature])) {
-    appendError(node, createWrongTypeLinkageError(feature))
+  const resolution = resolveLink(node, feature, refValue)
+  return {
+    ...node,
+    // resolved
+    ...resolution.resolved && {
+      [feature]: resolution.target
+    },
+    // unresolved
+    ...!resolution.resolved && {
+      errors: [...(node.errors || []), createUnresolvedLinkageError(feature, refValue)]
+    },
+    // resolved but wrong type
+    ...(resolution.resolved && !linkType(resolution.target)) && {
+      errors: [...(node.errors || []), createWrongTypeLinkageError(feature, linkType, resolution.target)]
+    }
   }
 }
-const alreadyLinked = refValue => (
-  isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string'
-)
 
-const resolveAndLink = (node, feature, value, onResolved) => {
-  const found = findInScope(node, value)
-  if (found) {
-    onResolved(Ref(value, found))
-  } else {
-    appendError(node, createUnresolvedLinkageError(feature, value))
+const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string')
+const resolveLink = (node, feature, refValue) => {
+  if (refValue === 'self') {
+    return {
+      feature,
+      resolved: true,
+      target: Ref(refValue, node)
+    }
+  }
+  // array references: needs to be improved (errors handling?)
+  if (isArray(refValue)) {
+    const arrayTarget = refValue.map(ref => resolveAndLink(node, feature, ref))
+    return {
+      feature,
+      resolved: arrayTarget.every(r => r.resolved),
+      target: arrayTarget.map(_ => _.target)
+    }
+  }
+  // simple ref
+  return resolveAndLink(node, feature, refValue)
+}
+const resolveAndLink = (node, feature, ref) => {
+  const target = findInScope(node, ref)
+  return {
+    feature,
+    resolved: !!target,
+    target: Ref(ref, target)
   }
 }

@@ -1,3 +1,4 @@
+export const identity = e => e
 export const noop = () => {}
 export const isFunction = o => typeof o === 'function'
 

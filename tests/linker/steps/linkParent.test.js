@@ -3,6 +3,7 @@ import { expect } from 'chai'
 import { linkParentStep } from '../../../src/linker/steps/linkParent'
 import { visit } from '../../../src/visitors/visiting'
 import { node } from '../../../src/model'
+import { expectParentToBeLinkedTo } from '../link-expects'
 
 const linkParent = node => visit(linkParentStep)(node)
 
@@ -28,7 +29,8 @@ describe('linkParentStep', () => {
         street: 'evergreen'
       })
     }))
-    expect(r.address.parent).to.deep.equal(r)
+    expect(r.address.parent).not.to.be.undefined
+    expect(r.address.parent.type).to.be.equal('root')
   })
 
   it('links a two level nesting Node structure', () => {
@@ -39,8 +41,8 @@ describe('linkParentStep', () => {
         })
       })
     }))
-    expect(r.address.parent).to.deep.equal(r)
-    expect(r.address.city.parent).to.deep.equal(r.address)
+    expectParentToBeLinkedTo(r.address, r)
+    expectParentToBeLinkedTo(r.address.city, r.address)
   })
 
   describe('arrays properties', () => {
@@ -55,11 +57,9 @@ describe('linkParentStep', () => {
       const parent = linkParent(node('person')({
         pets: [Pet('colita'), Pet('pelusa'), Pet('black')]
       }))
-      expect(parent.pets).to.deep.equal([
-        Pet('colita', parent),
-        Pet('pelusa', parent),
-        Pet('black', parent),
-      ])
+      expectParentToBeLinkedTo(parent.pets[0], parent)
+      expectParentToBeLinkedTo(parent.pets[1], parent)
+      expectParentToBeLinkedTo(parent.pets[2], parent)
     })
 
   })

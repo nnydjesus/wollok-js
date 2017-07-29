@@ -40,6 +40,15 @@ describe('common visitors', () => {
       expect(root.value).to.be.equals(12)
     })
 
+    it('chains 2 functions', () => {
+      const first = n => ({ ...n, value: n.value + 1 })
+      const second = n => ({ ...n, value: n.value * 2 })
+
+      const root = node('blah')({ value: 5 })
+      const out = visit(chain(first, second))(root)
+      expect(out.value).to.be.equals(12)
+    })
+
   })
 
 })

@@ -1,4 +1,4 @@
-import { flatten } from '../utils/collections'
+import { flatten, isArray } from '../utils/collections'
 import { collect } from '../visitors/commons'
 
 export const LINKAGE_ERROR_TYPE = 'LINKAGE'
@@ -10,12 +10,13 @@ export const createUnresolvedLinkageError = (feature, ref) => ({
   message: `Cannot resolve reference to '${ref}'`
 })
 
-export const createWrongTypeLinkageError = (feature) => ({
+export const createWrongTypeLinkageError = (feature, expectedTypeDef, target) => ({
   errorType: LINKAGE_ERROR_TYPE,
   feature,
   // TODO: improve this message
-  message: 'Referencing a wrong type'
+  message: `Referencing a wrong type expected ${expectedTypeDef} but found ${actualType(target)}`
 })
+const actualType = target => (isArray(target) ? `[${target.map(_ => _.node.type)}]` : target.type)
 
 export const appendError = (node, error) => {
   if (!node.errors) {

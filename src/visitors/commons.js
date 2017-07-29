@@ -5,9 +5,10 @@ import { filter, isFunction } from '../utils/functions'
 
 export const onEnter = enter => ({ enter })
 export const onExit = exit => ({ exit })
+export const toVisitor = fnOrVisitor => (isFunction(fnOrVisitor) ? ({ enter: fnOrVisitor }) : fnOrVisitor)
 
 export const filtering = (condition, fnOrVisitor) =>
-  filteringVisitor(condition, isFunction(fnOrVisitor) ? { enter: fnOrVisitor } : fnOrVisitor)
+  filteringVisitor(condition, toVisitor(fnOrVisitor))
 
 const filteringVisitor = (condition, { enter, exit }) => ({
   ...(enter && { enter: filter(condition, enter) }),
@@ -20,16 +21,17 @@ export const collect = (node, mapper) => {
   return collected
 }
 
-export const chain = (...visitors) => ({
-  ...chained('enter', visitors),
-  ...chained('exit', visitors)
-})
+export const chain = (...visitorsOrFunctions) => {
+  const visitors = visitorsOrFunctions.map(toVisitor)
+  return ({
+    ...chained('enter', visitors),
+    ...chained('exit', visitors)
+  })
+}
+
 const chained = (fnName, visitors) => ({
-  [fnName]: (node, parent) => {
-    const reduced = visitors.reduce(
-      (acc, visitor) => (visitor[fnName] ? (visitor[fnName](acc, parent) || acc) : acc),
-      node
-    )
-    return reduced
-  }
+  [fnName]: (node, parent, feature, index) => visitors.reduce(
+    (acc, visitor) => (visitor[fnName] ? (visitor[fnName](acc, parent, feature, index) || acc) : acc),
+    node
+  )
 })

@@ -1,13 +1,15 @@
 language: node_js
+dist: precise
 node_js:
   - "7.10.0"
 
 script:
   - npm install
   - npm run compile
-  - npm run coverage-test
+  - npm run test
+  # - npm run coverage-test
   - npm run lint
 
-after_success:
-  - npm run coverage-report
-  - npm run coverage-upload
+# after_success:
+#   - npm run coverage-report
+#   - npm run coverage-upload

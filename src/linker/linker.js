@@ -2,7 +2,7 @@ import { pipe } from '../utils/functions'
 import { visit } from '../visitors/visiting'
 import { chain } from '../visitors/commons'
 import { linkParentStep } from './steps/linkParent'
-import { createScopesStep } from './steps/createScopes'
+import { createScopesStep, registerReferenciable } from './steps/createScopes'
 import { linkStep } from './steps/link'
 
 /** 
@@ -16,7 +16,7 @@ import { linkStep } from './steps/link'
 export const link = pipe([
 
   // sets node.parent & node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
-  visit(chain(linkParentStep, createScopesStep)),
+  visit(chain(linkParentStep, /* createPath, */ createScopesStep, registerReferenciable)),
 
   // tries to resolve linkeables attributes with a reference to the node itself
   // sets node.attribute = Ref{ token: originalString, node } or node.errors = [ Error ]
