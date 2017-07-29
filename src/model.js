@@ -19,6 +19,7 @@ const nodeBehaviour = {
 }
 
 export const traverse = configuration => assign(model => {
+  if (!model.type) throw new TypeError(`Can't traverse ${model} because it's not a node`)
   const applicableTxs = keys(configuration).filter(key => model.is(key))
   if (applicableTxs.length < 1) throw new TypeError(`No matching traverse strategy for ${model.type} node`)
   return configuration[applicableTxs[0]](model)
@@ -65,7 +66,7 @@ export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = 
 //-------------------------------------------------------------------------------------------------------------------------------
 
 // TODO: Rename to Variable?
-export const VariableDeclaration = (variable, writeable = true, value) => node(VariableDeclaration)({ variable, writeable, value })
+export const VariableDeclaration = (variable, writeable = true, value = Literal(null)) => node(VariableDeclaration)({ variable, writeable, value })
 export const Return = (result) => node(Return)({ result })
 export const Assignment = (variable, value) => node(Assignment)({ variable, value })
 

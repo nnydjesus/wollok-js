@@ -7,161 +7,195 @@ const escape = str => ([
   'delete', 'do', 'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'function', 'goto', 'if',
   'implements', 'import', 'in', 'instanceof', 'int', 'interface', 'let', 'long', 'native', 'new', 'null', 'package', 'private', 'protected',
   'public', 'return', 'short', 'static', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
-  'var', 'void', 'volatile', 'while', 'with', 'yield', 'Object', 'Exception', 'Set'
+  'var', 'void', 'volatile', 'while', 'with', 'yield', 'Object', 'Boolean', 'String', 'Set'
 ].indexOf(str) >= 0 ? `$${str}` : str)
 
-const compileMethodDispatcher = members => ({ name }) =>
-  `['${escape(name)}'](){
+const compileWithNatives = (natives = {}) => {
+
+  const compileMethodDispatcher = members => ({ name }) =>
+    `this['${escape(name)}'] = (function(){
     const implementation$ = (...args) => {
       ${members.filter(({ name: n }) => n === name).map(compile).join(';\n')}
     }
-    implementation$(arguments)
-  }`
+    return implementation$(...arguments)
+  }).bind(this)`
 
+  const compile = traverse({
+    // TODO: PACKAGE: ({ name, elements }) => {},
 
-const compile = traverse({
-  // TODO: PACKAGE: ({ name, elements }) => {},
-
-  [Singleton]: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
-    const superclass = superclassName.type === 'Ref' ? superclassName.token : superclassName
-    return `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
+    [Singleton]: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
+      const superclass = superclassName.type === 'Ref' ? superclassName.token : superclassName
+      return `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
+        ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
       }
-      ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`
-  },
+    },
 
-  [Mixin]: ({ name, members }) =>
-    `const ${escape(name)} = ($$superclass) => class extends $$superclass {
+    [Mixin]: ({ name, members }) =>
+      `const ${escape(name)} = ($$superclass) => class extends $$superclass {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
         (function(){${members.filter(m => m.type === 'Field').map(compile).join(';\n')}}).call($instance)
+        ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
         return $instance
       }
-      ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`,
 
-  [Class]: ({ name, superclass: superclassName, mixins, members }) => {
-    const superclass = superclassName && superclassName.type === 'Ref' ? superclassName.token : superclassName
-    return `class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
+    [Class]: ({ name, superclass: superclassName, mixins, members }) => {
+      const superclass = superclassName && superclassName.type === 'Ref' ? superclassName.token : superclassName
+      return `class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
         (function(){${members.filter(m => m.type === 'Field').map(compile).join(';\n')}}).call($instance)
+        ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
         return $instance
       }
-      ${members.filter(m => m.type === 'Method').map(compileMethodDispatcher(members)).join(';\n')}
     }`
-  },
+    },
 
-  [Constructor]: ({ parameters, parent, baseArguments, lookUpCall, sentences }) => `
+    [Constructor]: ({ parameters, parent, baseArguments, lookUpCall, sentences }) => `
     if(arguments.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? '+ 1 >=' : '==='} ${parameters.length}) {
       $instance = ${lookUpCall ? 'super' : `new ${parent.name}`}(${baseArguments.map(compile).join()});
       (function (${parameters.map(compile).join()}){${compile(sentences)}}).call($instance,...arguments)
     }`,
 
-  [Field]: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
+    [Field]: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
-  // TODO: namespaces for natives
-  [Method]: ({ name, parameters, sentences, native, parent }) =>
-    `const implementation$$${parameters.length} = ${native
-      ? `() => { return wollok.lang.${parent.name}['${escape(name)}'].bind(this)(...args) }`
-      : `(${parameters.map(compile).join()}) => {${compile(sentences)}}`}
-    if(args.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? ` >= + ${parameters.length - 1}` : ` === ${parameters.length}`} ) {
-      implementation$$${parameters.length}(...args)
-    }`,
+    [Method]: ({ name, parameters, sentences, native, parent }) => {
+      if (native && !(natives[parent.name] && natives[parent.name][name])) throw new TypeError(`Missing native implementation for ${parent.name}.${name}(...)`)
+      return `const implementation$$${parameters.length} = ${native
+        ? `(function ${natives[parent.name][name].toString().slice(natives[parent.name][name].toString().indexOf('('))}).bind(this)`
+        : `(${parameters.map(compile).join()}) => {${compile(sentences)}}`}
+        if (args.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? ` >= + ${parameters.length - 1}` : ` === ${parameters.length}`} ) {
+          return implementation$$${parameters.length} (...args)
+        }`
+    },
 
-  [VariableDeclaration]: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
+    [VariableDeclaration]: ({ variable, writeable, value }) => `${writeable ? 'let' : 'const'} ${compile(variable)} = ${compile(value)}`,
 
-  [Assignment]: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
+    [Assignment]: ({ variable, value }) => `${compile(variable)} = ${compile(value)}`,
 
-  [Reference]: ({ name }) => {
-    // resolved Ref
-    if (name.type === 'Ref') {
-      return name.token === 'self' ?
-        'this'
-        : `${name.node && name.node.type === 'Field' ? 'this.' : ''}${escape(name.token)}`
-    }
-    // unresolved
-    return escape(name)
-  },
+    [Reference]: ({ name }) => {
+      // resolved Ref
+      if (name.type === 'Ref') {
+        return name.token === 'self' ?
+          'this'
+          : `${name.node && name.node.type === 'Field' ? 'this.' : ''}${escape(name.token)}`
+      }
+      // unresolved
+      return escape(name)
+    },
 
-  [Send]: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
+    [Send]: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
 
-  [New]: ({ target, parameters }) => `new ${escape(target.type === 'Ref' ? target.token : target)}(${parameters.map(compile).join()})`,
+    [New]: ({ target, parameters }) => `new ${escape(target.type === 'Ref' ? target.token : target)}(${parameters.map(compile).join()})`,
 
-  [Super]: ({ parameters }) => `super(${parameters.map(compile).join()})`,
+    [Super]: ({ parameters }) => `super(${parameters.map(compile).join()})`,
 
-  [If]: ({ condition, thenSentences, elseSentences }) =>
-    `(() => { if (${compile(condition)}) {${compile(thenSentences)}} else {${compile(elseSentences)}}})()`,
+    [If]: ({ condition, thenSentences, elseSentences }) =>
+      `(() => { if (${compile(condition)}) {${compile(thenSentences)}} else {${compile(elseSentences)}}})()`,
 
-  [Return]: ({ result }) => `return ${compile(result)}`,
+    [Return]: ({ result }) => `return ${compile(result)}`,
 
-  [Throw]: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
+    [Throw]: ({ exception }) => `(() => { throw ${compile(exception)} })()`,
 
-  [Try]: ({ sentences, catches, always }) =>
-    `(()=>{try{${compile(sentences)}}
-    ${catches.length ? `catch(___ERROR___){${catches.map(compile).join(';\n')} throw ___ERROR___}` : ''}
-    ${always.sentences.length ? `finally{${compile(always)}}` : ''}})()`,
+    [Try]: ({ sentences, catches, always }) => `(()=> {
+      let $response;
+      try {
+        $response = (()=>{${compile(sentences)}})()
+      }
+      catch($error){
+        ${always.sentences.length ? `(()=>{${compile(always)}})();` : ''}
+        ${catches.map(compile).join(';\n')}
+        throw $error
+      }
+      return ${always.sentences.length ? `(()=>{${compile(always)}})()` : '$response'}
+    })()`,
 
-  [Catch]: ({ variable, errorType, handler }) => {
-    const evaluation = `const ${compile(variable)} = ___ERROR___;${compile(handler)}`
-    return errorType ? `if (___ERROR___ instanceof ${errorType}){${evaluation}}` : evaluation
-  },
+    [Catch]: ({ variable, errorType, handler }) =>
+      `if (${errorType ? `$error instanceof ${errorType}` : 'true'} ) {
+        return ((${compile(variable)}) => {${compile(handler)}})($error)
+      }`,
 
-  [Literal]: ({ value }) => {
-    switch (typeof value) {
-      case 'string': return `"${value.replace(/"/g, '\\"')}"`
-      default: return `${value}`
-    }
-  },
+    [Literal]: ({ value }) => {
+      switch (typeof value) {
+        case 'number': return `(()=>{
+          const $value = new ${value % 1 === 0 ? 'Integer' : 'Double'}()
+          $value.$inner = ${value}
+          return $value
+        })()`
+        case 'string': return `(()=>{
+          const $value = new $String()
+          $value.$inner = "${value.replace(/"/g, '\\"')}"
+          return $value
+        })()`
+        case 'boolean': return `(()=>{
+          const $value = new $Boolean()
+          $value.$inner = ${value}
+          return $value
+        })()`
+        default: return `${value}`
+      }
+    },
 
-  [List]: ({ values }) => `[ ${values.map(compile).join()} ]`,
+    [List]: ({ values }) => `(() => {
+      const l = new List();
+      l.$inner = [ ${values.map(compile).join()} ]
+      return l
+    })()`,
 
-  [Closure]: ({ parameters, sentences }) => `(function (${parameters.map(compile).join()}) {${compile(sentences)}})`,
+    [Closure]: ({ parameters, sentences }) => `(() => {
+      const c = new Closure();
+      c.$inner = function (${parameters.map(compile).join()}) { ${compile(sentences)} }
+      return c
+    })()`,
 
-  [File]: ({ content }) => {
-    const hoist = (unhoisted, hoisted = []) => {
-      if (!unhoisted.length) return hoisted
+    [File]: ({ content }) => {
+      const hoist = (unhoisted, hoisted = []) => {
+        if (!unhoisted.length) return hoisted
 
-      const [next, ...others] = unhoisted
+        const [next, ...others] = unhoisted
 
-      const hoistedParentIndex = hoisted.findIndex(e => next.superclass === e.name)
-      if (hoistedParentIndex >= 0) {
-        const [parent, ...otherHoisted] = hoisted.splice(hoistedParentIndex)
-        return hoist(others, [...hoisted, parent, next, ...otherHoisted])
+        const hoistedParentIndex = hoisted.findIndex(e => next.superclass === e.name)
+        if (hoistedParentIndex >= 0) {
+          const [parent, ...otherHoisted] = hoisted.splice(hoistedParentIndex)
+          return hoist(others, [...hoisted, parent, next, ...otherHoisted])
+        }
+
+        const unhoistedParentIndex = others.findIndex(e => next.superclass === e.name)
+        if (unhoistedParentIndex >= 0) {
+          const [parent, ...otherUnhoisted] = others.splice(unhoistedParentIndex)
+          return hoist([parent, next, ...others, ...otherUnhoisted], hoisted)
+        }
+
+        return hoist(others, [...hoisted, next])
       }
 
-      const unhoistedParentIndex = others.findIndex(e => next.superclass === e.name)
-      if (unhoistedParentIndex >= 0) {
-        const [parent, ...otherUnhoisted] = others.splice(unhoistedParentIndex)
-        return hoist([parent, next, ...otherUnhoisted], hoisted)
+      return hoist(content).map(compile).join(';\n')
+    },
+
+    // TODO: Imports
+    // TODO: tests
+
+    [Program]: ({ name, sentences }) => `function ${escape(name)}(){${compile(sentences)}}`,
+
+    [Block]: ({ sentences }) => {
+      const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
+      if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
+        compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
       }
+      return compiledSentences.join(';\n')
+    },
 
-      return hoist(others, [...hoisted, next])
-    }
+    [Parameter]: ({ name, varArg }) => (varArg ? `...${escape(name)}` : escape(name))
+  })
 
-    return hoist(content).map(compile).join(';\n')
-  },
+  return compile
+}
 
-  // TODO: Imports
-  // TODO: tests
-
-  [Program]: ({ name, sentences }) => `function ${escape(name)}(){${compile(sentences)}}`,
-
-  [Block]: ({ sentences }) => {
-    const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
-    if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
-      compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
-    }
-    return compiledSentences.join(';\n')
-  },
-
-  [Parameter]: ({ name, varArg }) => (varArg ? `...${escape(name)}` : escape(name))
-})
-
-
-export default model => compile(addDefaultConstructor(model))
+export default (model, natives) => compileWithNatives(natives)(addDefaultConstructor(model))
