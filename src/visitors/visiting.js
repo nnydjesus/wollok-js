@@ -1,12 +1,12 @@
 import { toVisitor } from './commons'
-import { identity } from '../utils/functions'
+import { identity, isFunction } from '../utils/functions'
 import { propertyValues } from '../utils/object'
 
 // winston.level = 'silly'
 
 // this should be in the linker !
 const ignoredTypes = 'Ref'
-const ignoredKeys = ['parent']
+const ignoredKeys = ['parent', 'path', 'scope']
 
 /**
  * Visits a Node and all of its inner nodes (objects with "type" property)
@@ -18,27 +18,32 @@ const ignoredKeys = ['parent']
  */
 export const visit = fnOrVisitor => visitWithVisitor(toVisitor(fnOrVisitor))
 
-const visitWithVisitor = ({ enter = identity, exit = identity }, parent, feature) => node => {
+const visitWithVisitor = ({ enter = identity, exit = identity }, parent, feature, index) => node => {
   if (!node.type || ignoredTypes.includes(node.type)) return node
-  let folded = enter(node, parent, feature) || node
+  let folded = enter(node, parent, feature, index) || node
   folded = visitProperties(folded, enter, exit) || folded
-  return exit(folded, parent, feature) || folded
+  return exit(folded, parent, feature, index) || folded
 }
 
-const visitProperties = (node, enter, exit) =>
-  propertyValues(node).reduce((copy, { name, value }) => {
-    if (ignoredKeys.includes(name)) {
-      copy[name] = value
-      return copy
-    }
-    const isArray = Array.isArray(value)
-    const list = isArray ? value : (value && [value] || [])
-    const visited = list.map(e =>
-      (e.type ? visitWithVisitor({ enter, exit }, node, name)(e) : e)
-    )
-    copy[name] = isArray ? visited : visited[0]
-    return copy
-  }, node)
+const visitProperties = (node, enter, exit) => propertyValues(node).reduce(
+  (copy, { name, value }) => visitProperty(copy, name, value, enter, exit), node)
+
+const visitProperty = (node, name, value, enter, exit) => ({
+  ...node,
+  [name]: shouldIgnore(name, value) ? value : newPropertyValue(node, name, value, enter, exit)
+})
+
+const shouldIgnore = (name, value) => ignoredKeys.includes(name) || isFunction(value)
+
+const newPropertyValue = (node, name, value, enter, exit) => {
+  const isArray = Array.isArray(value)
+  const list = isArray ? value : (value && [value] || [])
+
+  const mapped = list.map((e, i) =>
+    (e.type ? visitWithVisitor({ enter, exit }, node, name, isArray ? i : undefined)(e) : e)
+  )
+  return isArray ? mapped : mapped[0]
+}
 
 // AST utils
 // not sure where to move this to :S

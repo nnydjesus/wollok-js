@@ -28,9 +28,10 @@ export const chain = (...visitorsOrFunctions) => {
     ...chained('exit', visitors)
   })
 }
+
 const chained = (fnName, visitors) => ({
-  [fnName]: (node, parent) => visitors.reduce(
-    (acc, visitor) => (visitor[fnName] ? (visitor[fnName](acc, parent) || acc) : acc),
+  [fnName]: (node, parent, feature, index) => visitors.reduce(
+    (acc, visitor) => (visitor[fnName] ? (visitor[fnName](acc, parent, feature, index) || acc) : acc),
     node
   )
 })

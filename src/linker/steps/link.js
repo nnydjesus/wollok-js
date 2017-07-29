@@ -29,7 +29,6 @@ const link = (node, feature, linkType) => {
 
   // resolve and assign (and / or error)
   const resolution = resolveLink(node, feature, refValue)
-  // console.log('>>>>>> Resolution', resolution)
   return {
     ...node,
     // resolved
