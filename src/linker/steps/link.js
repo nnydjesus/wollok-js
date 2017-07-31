@@ -8,7 +8,7 @@ import { node as Node } from '../../model'
 
 // winston.level = 'debug'
 
-export const Ref = (token, node) => Node('Ref')({ token, node })
+export const Link = (parent, token, path) => Node('Link')({ parent, token, path })
 
 export const linkStep = visit(filtering(isLinkeable, n => doLink(n, linkeables[n.type])))
 
@@ -27,22 +27,20 @@ const link = (node, feature) => {
   // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
   if (tempIgnore.indexOf(refValue) >= 0) { return node }
 
-  // resolve and assign (and / or error)
   const resolution = resolveLink(node, feature, refValue)
-  // console.log('RESOLVED FEATURE', feature, 'to', resolution)
   return {
     ...node,
     // resolved
     ...resolution.resolved && {
-      [feature]: resolution.target
+      [feature]: resolution.link
     },
     // unresolved
     ...!resolution.resolved && {
       errors: [...(node.errors || []), createUnresolvedLinkageError(feature, refValue)]
     },
     // resolved but wrong type
-    // ...(resolution.resolved && !linkType(resolution.target)) && {
-    //   errors: [...(node.errors || []), createWrongTypeLinkageError(feature, linkType, resolution.target)]
+    // ...(resolution.resolved && !linkType(resolution.link)) && {
+    //   errors: [...(node.errors || []), createWrongTypeLinkageError(feature, linkType, resolution.link)]
     // }
   }
 }
@@ -53,7 +51,7 @@ const resolveLink = (node, feature, refValue) => {
     return {
       feature,
       resolved: true,
-      target: { ...Ref(refValue, node.path), parent: node }
+      link: Link(node, refValue, node.path)
     }
   }
   // array references: needs to be improved (errors handling?)
@@ -62,20 +60,17 @@ const resolveLink = (node, feature, refValue) => {
     return {
       feature,
       resolved: arrayTarget.every(r => r.resolved),
-      target: arrayTarget.map(_ => ({
-        ..._.target,
-        parent: node
-      }))
+      link: arrayTarget.map(_ => _.link)
     }
   }
   // simple ref
   return resolveAndLink(node, feature, refValue)
 }
 const resolveAndLink = (node, feature, ref) => {
-  const target = findInScope(node, ref)
+  const targetPath = findInScope(node, ref)
   return {
     feature,
-    resolved: !!target,
-    target: { ...Ref(ref, target), parent: node }
+    resolved: !!targetPath,
+    link: Link(node, ref, targetPath)
   }
 }

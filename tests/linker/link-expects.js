@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { unlinkParent } from '../../src/linker/steps/linkParent'
+import { Link } from '../../src/linker/steps/link'
 import { link } from '../../src/linker/linker'
 import { collectErrors } from '../../src/linker/errors'
 import { linkeables } from '../../src/linker/definitions'
@@ -8,14 +9,15 @@ import parse from '../../src/parser'
 import { isArray } from '../../src/utils/collections'
 
 // expect utils for
+const getPath = _ => _.path
 
 export const expectToBeLinkedTo = (ref, expectedOrExpecteds) => {
   if (isArray(ref)) {
-    expect(ref.map(_ => _.type)).to.deep.equals(ref.map(() => 'Ref'))
-  } else { expect(ref.type).to.be.equals('Ref') }
+    expect(ref.map(_ => _.type)).to.deep.equals(ref.map(() => Link.name))
+  } else { expect(ref.type).to.be.equals(Link.name) }
 
-  expect(isArray(ref) ? ref.map(_ => _.node) : ref.node).to.deep.equal(isArray(expectedOrExpecteds)
-    ? expectedOrExpecteds.map(_ => _.path)
+  expect(isArray(ref) ? ref.map(getPath) : ref.path).to.deep.equal(isArray(expectedOrExpecteds)
+    ? expectedOrExpecteds.map(getPath)
     : expectedOrExpecteds.path
   )
 }

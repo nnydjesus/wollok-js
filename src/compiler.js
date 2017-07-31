@@ -1,5 +1,5 @@
 import { Assignment, Block, Catch, Class, Closure, Constructor, Field, File, If, List, Literal, Method, Mixin, New, Parameter, Program, Reference, Return, Send, Singleton, Super, Throw, Try, VariableDeclaration, traverse } from './model'
-import { Ref } from './linker/steps/link'
+import { Link } from './linker/steps/link'
 import { resolvePath } from './linker/scoping'
 
 import { addDefaultConstructor } from './transformations'
@@ -26,7 +26,7 @@ const compileWithNatives = (natives = {}) => {
     // TODO: PACKAGE: ({ name, elements }) => {},
 
     [Singleton]: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
-      const superclass = superclassName.type === Ref.name ? superclassName.token : superclassName
+      const superclass = superclassName.type === Link.name ? superclassName.token : superclassName
       return `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
@@ -48,7 +48,7 @@ const compileWithNatives = (natives = {}) => {
     }`,
 
     [Class]: ({ name, superclass: superclassName, mixins, members }) => {
-      const superclass = superclassName && superclassName.type === Ref.name ? superclassName.token : superclassName
+      const superclass = superclassName && superclassName.type === Link.name ? superclassName.token : superclassName
       return `class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
       constructor() {
         let $instance = undefined
@@ -84,17 +84,17 @@ const compileWithNatives = (natives = {}) => {
 
     [Reference]: ({ name }) => {
       // unresolved
-      if (name.type !== Ref.name) return escape(name)
+      if (name.type !== Link.name) return escape(name)
       // resolved
-      const { token, node } = name
+      const { token, path } = name
       if (token === 'self') { return 'this' }
-      const resolved = resolvePath(name, node)
+      const resolved = resolvePath(name, path)
       return (`${resolved.type === 'Field' ? 'this.' : ''}${escape(token)}`)
     },
 
     [Send]: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
 
-    [New]: ({ target, parameters }) => `new ${escape(target.type === Ref.name ? target.token : target)}(${parameters.map(compile).join()})`,
+    [New]: ({ target, parameters }) => `new ${escape(target.type === Link.name ? target.token : target)}(${parameters.map(compile).join()})`,
 
     [Super]: ({ parameters }) => `super(${parameters.map(compile).join()})`,
 
