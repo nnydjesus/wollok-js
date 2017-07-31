@@ -1,4 +1,4 @@
-import { expectUnresolvedVariable, expectToBeLinkedToVariable } from '../link-expects'
+import { expectUnresolvedVariable, expectToBeLinkedTo } from '../link-expects'
 import { link } from '../../../src/linker/linker'
 import parse from '../../../src/parser'
 
@@ -11,8 +11,8 @@ describe('program', () => {
         const b = a
       }
     `))
-    const b = linked.content[0].sentences.sentences[1]
-    expectToBeLinkedToVariable(b.value.name, 'a')
+    const [a, b] = linked.content[0].sentences.sentences
+    expectToBeLinkedTo(b.value.name, a)
   })
 
   it('fails if a variable cannot be resolved in a program', () => {

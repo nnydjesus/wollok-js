@@ -1,28 +1,13 @@
 import {
   Assignment,
   Catch,
-  Class,
   Closure,
-  Constructor,
-  Field,
-  File,
-  If,
-  Import,
   List,
   Literal,
-  Method,
-  Mixin,
   New,
-  Package,
   Parameter,
-  Program,
   Reference,
-  Return,
   Send,
-  Singleton,
-  Super,
-  SuperType,
-  Test,
   Throw,
   Try,
   VariableDeclaration
@@ -47,7 +32,7 @@ const expectErrorOnInterpretationOf = (...asts) => ({
   }
 })
 
-const interpret = (...asts) => interpreter(langNatives)(lang, ...asts)
+// const interpret = (...asts) => interpreter(langNatives)(lang, ...asts)
 
 describe('Wollok interpreter', () => {
 

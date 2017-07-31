@@ -15,6 +15,10 @@ const nodeBehaviour = {
       clone[key] = diff[key] instanceof Function ? diff[key](clone[key]) : diff[key]
     }
     return clone
+  },
+
+  root() {
+    return !this.parent ? this : this.parent.root()
   }
 }
 

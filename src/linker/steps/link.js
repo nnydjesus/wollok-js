@@ -2,13 +2,13 @@ import { visit } from '../../visitors/visiting'
 import { filtering } from '../../visitors/commons'
 import { linkeables, isLinkeable } from '../definitions'
 import { findInScope } from '../scoping'
-import { createUnresolvedLinkageError, createWrongTypeLinkageError } from '../errors'
+import { createUnresolvedLinkageError } from '../errors'
 import { isArray, forAll } from '../../utils/collections'
 import { node as Node } from '../../model'
 
 // winston.level = 'debug'
 
-export const Ref = (token, node) => Node(Ref)({ token, node })
+export const Ref = (token, node) => Node('Ref')({ token, node })
 
 export const linkStep = visit(filtering(isLinkeable, n => doLink(n, linkeables[n.type])))
 
@@ -20,7 +20,7 @@ const doLink = (node, linkDef) => Object.keys(linkDef)
 
 const tempIgnore = ['Object', 'wollok.lang.Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception']
 
-const link = (node, feature, linkType) => {
+const link = (node, feature) => {
   const refValue = node[feature]
 
   if (alreadyLinked(refValue)) { return node }
@@ -29,6 +29,7 @@ const link = (node, feature, linkType) => {
 
   // resolve and assign (and / or error)
   const resolution = resolveLink(node, feature, refValue)
+  // console.log('RESOLVED FEATURE', feature, 'to', resolution)
   return {
     ...node,
     // resolved
@@ -40,9 +41,9 @@ const link = (node, feature, linkType) => {
       errors: [...(node.errors || []), createUnresolvedLinkageError(feature, refValue)]
     },
     // resolved but wrong type
-    ...(resolution.resolved && !linkType(resolution.target)) && {
-      errors: [...(node.errors || []), createWrongTypeLinkageError(feature, linkType, resolution.target)]
-    }
+    // ...(resolution.resolved && !linkType(resolution.target)) && {
+    //   errors: [...(node.errors || []), createWrongTypeLinkageError(feature, linkType, resolution.target)]
+    // }
   }
 }
 
@@ -52,7 +53,7 @@ const resolveLink = (node, feature, refValue) => {
     return {
       feature,
       resolved: true,
-      target: Ref(refValue, node)
+      target: { ...Ref(refValue, node.path), parent: node }
     }
   }
   // array references: needs to be improved (errors handling?)
@@ -61,7 +62,10 @@ const resolveLink = (node, feature, refValue) => {
     return {
       feature,
       resolved: arrayTarget.every(r => r.resolved),
-      target: arrayTarget.map(_ => _.target)
+      target: arrayTarget.map(_ => ({
+        ..._.target,
+        parent: node
+      }))
     }
   }
   // simple ref
@@ -72,6 +76,6 @@ const resolveAndLink = (node, feature, ref) => {
   return {
     feature,
     resolved: !!target,
-    target: Ref(ref, target)
+    target: { ...Ref(ref, target), parent: node }
   }
 }
