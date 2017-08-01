@@ -1,4 +1,4 @@
-import { Block, Class, Closure, Field, File, Method, Mixin, Parameter, Singleton, VariableDeclaration } from '../model'
+import { File, Class, Field, Method, Closure, Block, Mixin, Parameter, Module, VariableDeclaration } from '../model'
 import { a, many, or } from './types'
 
 // This declarations are not the best and most intuitive form, but
@@ -8,26 +8,21 @@ import { a, many, or } from './types'
 //  based on needs.
 
 /* nodes that define new scopes/namespaces */
-const scopeables = [
-  File,
-  Class,
-  Singleton,
-  Method,
-  Mixin,
-  Closure,
-  Block
-].map(_ => _.name)
-export const isScopeable = type => scopeables.includes(type)
+export const scopes = {
+  [File]: _ => _.content,
+  [Module]: _ => _.members.filter(m => m.is(Field)),
+  [Method]: _ => _.parameters,
+  [Closure]: _ => _.parameters,
+  [Block]: _ => _.sentences.filter(s => s.is(VariableDeclaration))
+}
 
 const byName = n => n.name
 /* nodes which gets registered in their parent's scope */
 export const referenciables = {
-  [VariableDeclaration.name]: _ => byName(_.variable),
-  [Field.name]: _ => byName(_.variable),
-  [Parameter.name]: byName,
-  [Class.name]: byName,
-  [Mixin.name]: byName,
-  [Singleton.name]: byName
+  [VariableDeclaration]: _ => byName(_.variable),
+  [Field]: _ => byName(_.variable),
+  [Parameter]: byName,
+  [Module]: byName,
 }
 
 export const linkeables = {
@@ -39,4 +34,5 @@ export const linkeables = {
   }
 }
 
+// TODO: use findValueByType(linkeables, type) and dispatch
 export const isLinkeable = ({ type }) => linkeables[type]

@@ -10,24 +10,26 @@ import { node as Node } from '../../model'
 
 export const Link = (parent, token, path) => Node('Link')({ parent, token, path })
 
-export const linkStep = visit(filtering(isLinkeable, n => doLink(n, linkeables[n.type])))
+export const linkStep = visit(filtering(isLinkeable, (n, context) =>
+  doLink(n, linkeables[n.type], context)
+))
 
-const doLink = (node, linkDef) => Object.keys(linkDef)
+const doLink = (node, linkDef, context) => Object.keys(linkDef)
   .reduce(
-    (n, feature) => link(n, feature, linkDef[feature]),
+    (n, feature) => link(n, feature, linkDef[feature], context),
     node
   )
 
 const tempIgnore = ['Object', 'wollok.lang.Object', 'console', 'StringPrinter', 'wollok.lang.Exception', 'runtime', 'Exception']
 
-const link = (node, feature) => {
+const link = (node, feature, linkType, context) => {
   const refValue = node[feature]
 
   if (alreadyLinked(refValue)) { return node }
   // HACK for now I need to resolve refs to wollok.lang.Object and friends !!!!!!! 
   if (tempIgnore.indexOf(refValue) >= 0) { return node }
 
-  const resolution = resolveLink(node, feature, refValue)
+  const resolution = resolveLink(node, feature, refValue, context)
   return {
     ...node,
     // resolved
@@ -46,7 +48,7 @@ const link = (node, feature) => {
 }
 
 const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string')
-const resolveLink = (node, feature, refValue) => {
+const resolveLink = (node, feature, refValue, context) => {
   if (refValue === 'self') {
     return {
       feature,
@@ -56,7 +58,7 @@ const resolveLink = (node, feature, refValue) => {
   }
   // array references: needs to be improved (errors handling?)
   if (isArray(refValue)) {
-    const arrayTarget = refValue.map(ref => resolveAndLink(node, feature, ref))
+    const arrayTarget = refValue.map(ref => resolveAndLink(node, feature, ref, context))
     return {
       feature,
       resolved: arrayTarget.every(r => r.resolved),
@@ -64,10 +66,10 @@ const resolveLink = (node, feature, refValue) => {
     }
   }
   // simple ref
-  return resolveAndLink(node, feature, refValue)
+  return resolveAndLink(node, feature, refValue, context)
 }
-const resolveAndLink = (node, feature, ref) => {
-  const targetPath = findInScope(node, ref)
+const resolveAndLink = (node, feature, ref, context) => {
+  const targetPath = findInScope((context.parents || []).concat([node]), ref)
   return {
     feature,
     resolved: !!targetPath,
