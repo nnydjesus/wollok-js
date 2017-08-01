@@ -34,8 +34,4 @@ import compile from './compiler'
 // Number.prototype['>..'] = function (other) { return (this + 1)['..'](other) }
 // Number.prototype['-_'] = function () { return -this }
 
-const _eval = s =>
-  eval(s)
-  // { console.log(' >> ', s); eval(s) }
-
-export default (natives) => (...asts) => _eval(asts.map(ast => compile(ast, natives)).join(';'))
+export default (natives) => (...asts) => eval(asts.map(ast => compile(ast, natives)).join(';'))
