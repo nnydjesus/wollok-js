@@ -1,3 +1,4 @@
+import { collect } from '../visitors/commons'
 
 export const findInScope = (node, name) =>
   node && ((node.scope && node.scope[name]) || findInScope(node.parent, name))
@@ -16,17 +17,22 @@ export const lookupParentScope = node => {
 }
 
 // TODO: slice is to remove 'root' !
-export const resolvePath = (fromNode, path) => path.slice(1).reduce(
-  (n, feature) => (
-    feature.indexOf('[') >= 0 ?
-      parsingIndexed(feature, ({ feature, index }) => n[feature][index])
-      : n[feature]
-  )
-  , fromNode.root())
+export const resolvePath = (fromNode, path) => {
+  try {
+    return path.slice(1).reduce((n, feature) => accessPathPart(n, parsePathPart(feature))
+      , fromNode.root())
+  } catch (e) {
+    throw new Error(`Error accessing path ${path.join('.')}: "${e.message}"`)
+  }
+}
 
-// TODO: improve this with a RegExp :P
-const parsingIndexed = (token, cb) => {
-  const feature = token.slice(0, token.indexOf('['))
-  const index = parseInt(token.slice(token.indexOf('[') + 1, token.indexOf(']')))
-  return cb({ feature, index })
+export const parsePathPart = part => {
+  /* eslint no-unused-vars: 0 */
+  const [_, feature, index] = part.split(/^([^[]*)\[?(\d*)\]?$/)
+  return { feature, ...index && { index: parseInt(index) } }
+}
+
+const accessPathPart = (node, part) => {
+  const value = node[part.feature]
+  return part.index !== undefined ? value[part.index] : value
 }

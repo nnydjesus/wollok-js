@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { resolvePath } from '../../src/linker/scoping'
+import { resolvePath, parsePathPart } from '../../src/linker/scoping'
 import { node } from '../../src/model'
 
 describe('resolvePath', () => {
@@ -25,7 +25,7 @@ describe('resolvePath', () => {
     expect(resolvePath(n, ['root', 'city', 'capital'])).to.deep.equal(n.city.capital)
   })
 
-  it('resolves a path to an array element', () => {
+  it('resolves a path to an array element.only', () => {
     const n = node('person')({
       pets: [
         node('pet', { name: 'pelusa' }),
@@ -59,6 +59,29 @@ describe('resolvePath', () => {
     expect(resolvePath(n, ['root', 'persons[0]', 'pets[1]'])).to.deep.equal(n.persons[0].pets[1])
     expect(resolvePath(n, ['root', 'persons[1]', 'pets[0]'])).to.deep.equal(n.persons[1].pets[0])
     expect(resolvePath(n, ['root', 'persons[1]', 'pets[1]'])).to.deep.equal(n.persons[1].pets[1])
+  })
+
+  describe('regexp for path (parsePathPart)', () => {
+
+    it('parses a simple property', () => {
+      expect(parsePathPart('hola')).to.deep.equals({
+        feature: 'hola'
+      })
+    })
+
+    it('parses a simple property with upperCase', () => {
+      expect(parsePathPart('thenSentences')).to.deep.equals({
+        feature: 'thenSentences'
+      })
+    })
+
+    it('parses an indexed property', () => {
+      expect(parsePathPart('hola[2]')).to.deep.equals({
+        feature: 'hola',
+        index: 2
+      })
+    })
+
   })
 
 })
