@@ -1,5 +1,5 @@
 
-export const linkParentStep = (node, parent) => ({
+export const linkParentStep = (node, { parent }) => ({
   ...node,
   ...parent && { parent }
 })

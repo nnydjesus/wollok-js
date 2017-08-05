@@ -1,12 +1,20 @@
+import { propertyValues } from './utils/object'
+
 const { assign, keys } = Object
 
 //===============================================================================================================================
 // BEHAVIOUR
 //===============================================================================================================================
 
+export const typeComplies = (type, typeOrCategory) => typeOrCategory.toString().split(',').some(t => type === t)
+export const findValueByType = (behaviors, type) =>
+  propertyValues(behaviors)
+    .reduce((acc, { name, value }) => (typeComplies(type, name) ? value : acc), undefined)
+export const dispatchByType = (behaviors, defolt) => e => (findValueByType(behaviors, e.type) || defolt)(e)
+
 const nodeBehaviour = {
   is(typeOrCategory) {
-    return typeOrCategory.toString().split(',').some(type => this.type === type)
+    return typeComplies(this.type, typeOrCategory)
   },
 
   copy(diff) {
@@ -15,6 +23,10 @@ const nodeBehaviour = {
       clone[key] = diff[key] instanceof Function ? diff[key](clone[key]) : diff[key]
     }
     return clone
+  },
+
+  root() {
+    return !this.parent ? this : this.parent.root()
   }
 }
 

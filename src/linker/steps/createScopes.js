@@ -1,17 +1,17 @@
-import { referenciables, isScopeable } from '../definitions'
-import { lookupParentScope } from '../scoping'
+import { referenciables, scopes } from '../definitions'
+import { dispatchByType } from '../../model'
 
 export const createScopesStep = node => ({
   ...node,
-  ...isScopeable(node.type) && { scope: {} }
+  ...isScopeable(node.type) && { scope: createScope(node) }
 })
 
-// EFFECT !! this should be completely changed !
-export const registerReferenciable = node => {
-  const { type } = node
-  if (referenciables[type]) {
-    const name = referenciables[type](node)
-    lookupParentScope(node.parent).scope[name] = node
-  }
-  return node
-}
+const scopeElementsFor = dispatchByType(scopes, () => [])
+const nameFor = dispatchByType(referenciables, _ => _.name)
+
+const isScopeable = type => !!scopeElementsFor(type, () => false)
+const createScope = node => scopeElementsFor(node).reduce((scope, e) => ({
+  ...scope,
+  [nameFor(e)]: e.path
+}), {})
+

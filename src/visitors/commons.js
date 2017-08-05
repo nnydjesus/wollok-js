@@ -17,7 +17,7 @@ const filteringVisitor = (condition, { enter, exit }) => ({
 
 export const collect = (node, mapper) => {
   const collected = []
-  visit({ enter(n) { collected.push(mapper(n)) } })(node)
+  visit({ enter(n, context) { collected.push(mapper(n, context)) } })(node)
   return collected
 }
 
@@ -30,8 +30,8 @@ export const chain = (...visitorsOrFunctions) => {
 }
 
 const chained = (fnName, visitors) => ({
-  [fnName]: (node, parent, feature, index) => visitors.reduce(
-    (acc, visitor) => (visitor[fnName] ? (visitor[fnName](acc, parent, feature, index) || acc) : acc),
+  [fnName]: (node, context) => visitors.reduce(
+    (acc, visitor) => (visitor[fnName] ? (visitor[fnName](acc, context) || acc) : acc),
     node
   )
 })
