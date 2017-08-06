@@ -176,7 +176,9 @@ const compileWithNatives = (natives = {}) => {
         return hoist(others, [...hoisted, next])
       }
 
-      return hoist(content).map(compile).join(';\n')
+      const compiled = hoist(content).map(compile)
+      // console.log('WCOMPILED:', compiled)
+      return compiled.join(';\n')
     },
 
     // TODO: Imports

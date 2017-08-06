@@ -1,10 +1,9 @@
-import gulp, { dest, src } from 'gulp'
+import gulp, { dest, src, watch } from 'gulp'
 import { readFileSync, writeFile } from 'fs'
 
 import babel from 'gulp-babel'
 import del from 'del'
 import eslint from 'gulp-eslint'
-import { exec } from 'child_process'
 import mocha from 'gulp-mocha'
 import pegjs from 'gulp-pegjs'
 
@@ -47,3 +46,6 @@ task('test', ['compile', 'lint'], () =>
   src(['tests/**/*.test.js', 'dist/**/*.js'])
     .pipe(mocha({ reporter: 'spec', compilers: ['js:babel-core/register'] }))
 )
+
+/* eslint prefer-arrow-callback: 0 */
+task('watch', () => gulp.watch('src/**/*.js', ['compile']))
