@@ -1,17 +1,25 @@
 import { expect } from 'chai'
 import { unlinkParent } from '../../src/linker/steps/linkParent'
+import { Link } from '../../src/linker/steps/link'
 import { link } from '../../src/linker/linker'
 import { collectErrors } from '../../src/linker/errors'
 import { linkeables } from '../../src/linker/definitions'
 import { queryNodeByType, visit } from '../../src/visitors/visiting'
 import parse from '../../src/parser'
+import { isArray } from '../../src/utils/collections'
 
 // expect utils for
+const getPath = _ => _.path
 
-export const expectToBeLinkedToVariable = (ref, varName) => {
-  expect(ref.type).to.be.equal('Ref')
-  expect(ref.node.type).to.be.equal('VariableDeclaration')
-  expect(ref.node.variable.name).to.be.equal(varName)
+export const expectToBeLinkedTo = (ref, expectedOrExpecteds) => {
+  if (isArray(ref)) {
+    expect(ref.map(_ => _.type)).to.deep.equals(ref.map(() => Link.name))
+  } else { expect(ref.type).to.be.equals(Link.name) }
+
+  expect(isArray(ref) ? ref.map(getPath) : ref.path).to.deep.equal(isArray(expectedOrExpecteds)
+    ? expectedOrExpecteds.map(getPath)
+    : expectedOrExpecteds.path
+  )
 }
 
 export const expectNoLinkageError = code => {
@@ -22,6 +30,10 @@ export const expectNoLinkageError = code => {
   const errorsFound = errors.map(e => `${e.node.type}.${e.feature}: "${e.message}". ${e}`).join(', ')
   expect(errors.length, `Expecting no errors but found (${errors.length}): ${JSON.stringify(errorsFound)}`).to.be.equals(0)
   return n
+}
+
+export const expectPath = (node, path) => {
+  expect(node.path).to.deep.equal(path)
 }
 
 export const expectParentToBeLinkedTo = (child, expectedParent) => {

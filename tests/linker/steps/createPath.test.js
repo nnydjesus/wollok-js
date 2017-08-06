@@ -3,6 +3,7 @@ import { expect } from 'chai'
 import { createPath } from '../../../src/linker/steps/createPaths'
 import { visit } from '../../../src/visitors/visiting'
 import { node } from '../../../src/model'
+import { expectPath } from '../link-expects'
 
 const doStep = node => visit(createPath)(node)
 
@@ -43,9 +44,9 @@ describe('creatPath', () => {
         })
       })
     }))
-    expect(r.path).to.deep.equal(['root'])
-    expect(r.address.path).to.deep.equal(['root', 'address'])
-    expect(r.address.street.path).to.deep.equal(['root', 'address', 'street'])
+    expectPath(r, ['root'])
+    expectPath(r.address, ['root', 'address'])
+    expectPath(r.address.street, ['root', 'address', 'street'])
   })
 
   it('creates paths for nodes within an array property including the index', () => {
@@ -56,9 +57,9 @@ describe('creatPath', () => {
         node('pet')({ name: 'aaron' }),
       ]
     }))
-    expect(r.pets[0].path).to.deep.equal(['root', 'pets[0]'])
-    expect(r.pets[1].path).to.deep.equal(['root', 'pets[1]'])
-    expect(r.pets[2].path).to.deep.equal(['root', 'pets[2]'])
+    expectPath(r.pets[0], ['root', 'pets[0]'])
+    expectPath(r.pets[1], ['root', 'pets[1]'])
+    expectPath(r.pets[2], ['root', 'pets[2]'])
   })
 
 })

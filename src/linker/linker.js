@@ -2,8 +2,9 @@ import { pipe } from '../utils/functions'
 import { visit } from '../visitors/visiting'
 import { chain } from '../visitors/commons'
 import { linkParentStep } from './steps/linkParent'
-import { createScopesStep, registerReferenciable } from './steps/createScopes'
+import { createScopesStep } from './steps/createScopes'
 import { linkStep } from './steps/link'
+import { createPath } from './steps/createPaths'
 
 /** 
  * Performs linking on the given ast nodes.
@@ -15,8 +16,17 @@ import { linkStep } from './steps/link'
  */
 export const link = pipe([
 
-  // sets node.parent & node.scope =  { varA: Node(VariableDec), varB: Node(VariableDec) }
-  visit(chain(linkParentStep, /* createPath, */ createScopesStep, registerReferenciable)),
+  // sets 
+  //  - node.parent
+  //  - node.path = ['root', 'a', 'b[0]', ... ]
+  //
+  visit(chain(linkParentStep, createPath)),
+
+  //  - node.scope =  { 
+  //      varA: ['root', 'sentences[0]'],  // Path to the VariableDeclaration node.
+  //      varB: ['root', 'sentences[3]'],
+  //    }
+  visit(createScopesStep),
 
   // tries to resolve linkeables attributes with a reference to the node itself
   // sets node.attribute = Ref{ token: originalString, node } or node.errors = [ Error ]

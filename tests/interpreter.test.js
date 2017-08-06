@@ -1,28 +1,13 @@
 import {
   Assignment,
   Catch,
-  Class,
   Closure,
-  Constructor,
-  Field,
-  File,
-  If,
-  Import,
   List,
   Literal,
-  Method,
-  Mixin,
   New,
-  Package,
   Parameter,
-  Program,
   Reference,
-  Return,
   Send,
-  Singleton,
-  Super,
-  SuperType,
-  Test,
   Throw,
   Try,
   VariableDeclaration
@@ -37,19 +22,23 @@ import { readFileSync } from 'fs'
 
 chai.use(also)
 
-const lang = linker(parser(readFileSync('src/wre/lang.wlk', 'utf8')))
-const expectInterpretationOf = (...asts) => expect(interpreter(langNatives)(lang, ...asts))
-const expectErrorOnInterpretationOf = (...asts) => ({
-  to: {
-    be(errorType, errorDescription) {
-      expect(() => interpreter(langNatives)(lang, ...asts)).to.throw(errorType, errorDescription)
-    }
-  }
-})
-
-const interpret = (...asts) => interpreter(langNatives)(lang, ...asts)
+// const interpret = (...asts) => interpreter(langNatives)(lang, ...asts)
 
 describe('Wollok interpreter', () => {
+  let cachedLang;
+
+  const lang = () => {
+    if (!cachedLang) cachedLang = linker(parser(readFileSync('src/wre/lang.wlk', 'utf8')))
+    return cachedLang
+  }
+  const expectInterpretationOf = (...asts) => expect(interpreter(langNatives)(lang(), ...asts))
+  const expectErrorOnInterpretationOf = (...asts) => ({
+    to: {
+      be(errorType, errorDescription) {
+        expect(() => interpreter(langNatives)(lang(), ...asts)).to.throw(errorType, errorDescription)
+      }
+    }
+  })
 
   describe('literals', () => {
 

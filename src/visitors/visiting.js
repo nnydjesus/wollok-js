@@ -18,29 +18,39 @@ const ignoredKeys = ['parent', 'path', 'scope']
  */
 export const visit = fnOrVisitor => visitWithVisitor(toVisitor(fnOrVisitor))
 
-const visitWithVisitor = ({ enter = identity, exit = identity }, parent, feature, index) => node => {
+// type Context { 
+//   parent, feature, index
+// }
+
+const visitWithVisitor = ({ enter = identity, exit = identity }, context = {}) => node => {
   if (!node.type || ignoredTypes.includes(node.type)) return node
-  let folded = enter(node, parent, feature, index) || node
-  folded = visitProperties(folded, enter, exit) || folded
-  return exit(folded, parent, feature, index) || folded
+  let folded = enter(node, context) || node
+  folded = visitProperties(context, folded, enter, exit) || folded
+  return exit(folded, context) || folded
 }
 
-const visitProperties = (node, enter, exit) => propertyValues(node).reduce(
-  (copy, { name, value }) => visitProperty(copy, name, value, enter, exit), node)
+const visitProperties = (context, node, enter, exit) => propertyValues(node).reduce(
+  (copy, { name, value }) => visitProperty(context, copy, name, value, enter, exit), node)
 
-const visitProperty = (node, name, value, enter, exit) => ({
+const visitProperty = (context, node, name, value, enter, exit) => ({
   ...node,
-  [name]: shouldIgnore(name, value) ? value : newPropertyValue(node, name, value, enter, exit)
+  [name]: shouldIgnore(name, value) ? value : newPropertyValue(context, node, name, value, enter, exit)
 })
 
 const shouldIgnore = (name, value) => ignoredKeys.includes(name) || isFunction(value)
 
-const newPropertyValue = (node, name, value, enter, exit) => {
+const newPropertyValue = (context, node, name, value, enter, exit) => {
   const isArray = Array.isArray(value)
   const list = isArray ? value : (value && [value] || [])
+  const childContext = {
+    parents: [...(context.parents || []), node],
+    parent: node,
+    feature: name
+  }
+  const createChildContext = isArray ? (index => ({ ...childContext, index })) : () => childContext
 
   const mapped = list.map((e, i) =>
-    (e.type ? visitWithVisitor({ enter, exit }, node, name, isArray ? i : undefined)(e) : e)
+    (e.type ? visitWithVisitor({ enter, exit }, createChildContext(i))(e) : e)
   )
   return isArray ? mapped : mapped[0]
 }
