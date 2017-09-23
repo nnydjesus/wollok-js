@@ -56,11 +56,11 @@ export const Block = (...sentences) => node(Block)({ sentences })
 
 // TODO: Remove: Replace with metadata in Package
 export const Import = (target) => node(Import)({ target })
-export const Package = (name) => (...elements) => node(Package)({ name, elements })
+export const Package = (name, location={}) => (...elements) => node(Package)({ name, elements, location})
 
-export const Class = (name) => (superclass = name === 'Object' ? undefined : 'Object', ...mixins) => (...members) => node(Class)({ name, superclass, mixins, members })
-export const Mixin = (name) => (...members) => node(Mixin)({ name, members })
-export const Singleton = (name = undefined) => (superclass = 'Object', superArguments = [], ...mixins) => (...members) => node(Singleton)({ name, superclass, superArguments, mixins, members })
+export const Class = (name, location={}) => (superclass = name === 'Object' ? undefined : 'Object', ...mixins) => (...members) => node(Class)({ name, superclass, mixins, members, location})
+export const Mixin = (name, location={}) => (...members) => node(Mixin)({ name, members, location })
+export const Singleton = (name = undefined, location={}) => (superclass = 'Object', superArguments = [], ...mixins) => (...members) => node(Singleton)({ name, superclass, superArguments, mixins, members, location})
 
 export const Program = (name) => (...sentences) => node(Program)({ name, sentences: Block(...sentences) })
 export const Test = (description) => (...sentences) => node(Program)({ description, sentences: Block(...sentences) })
@@ -69,9 +69,9 @@ export const Test = (description) => (...sentences) => node(Program)({ descripti
 // MEMBERS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-export const Field = (variable, writeable = true, value = Literal(null)) => node(Field)({ variable, writeable, value })
-export const Method = (name, override = false, native = false) => (...parameters) => (...sentences) => node(Method)({ name, override, native, parameters, sentences: Block(...sentences) })
-export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = true) => (...sentences) => node(Constructor)({ parameters, sentences: Block(...sentences), lookUpCall, baseArguments })
+export const Field = (variable, writeable = true, value = Literal(null), location={}) => node(Field)({ variable, writeable, value , location})
+export const Method = (name, override = false, native = false, location={}) => (...parameters) => (...sentences) => node(Method)({ name, override, native, parameters, sentences: Block(...sentences), location })
+export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = true, location={}) => (...sentences) => node(Constructor)({ parameters, sentences: Block(...sentences), lookUpCall, baseArguments, location })
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // SENTENCES
