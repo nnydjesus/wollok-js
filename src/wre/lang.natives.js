@@ -66,14 +66,19 @@ export default {
   },
 
   Integer: {
-    '==='(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
+    '==='(other) { other.$inner? this.$inner === other.$inner: this.$inner === other},
     '+'(other) {
       const innerResponse = other.$inner ? this.$inner + other.$inner : this.$inner + other
       const response = innerResponse % 1 === 0 ? new Integer() : new Double()
       response.$inner = innerResponse
       return response
     },
-    '-'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
+    '-'(other) {
+      const innerResponse = other.$inner ? this.$inner - other.$inner : this.$inner - other
+      const response = innerResponse % 1 === 0 ? new Integer() : new Double()
+      response.$inner = innerResponse
+      return response
+    },
     '*'(other) {
       const innerResponse = other.$inner ? this.$inner * other.$inner : this.$inner * other
       const response = innerResponse % 1 === 0 ? new Integer() : new Double()
@@ -84,7 +89,7 @@ export default {
     '**'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '%'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     div(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
-    toString() { /* TODO:*/ throw new ReferenceError('To be implemented') },
+    toString() {return this.$inner },
     stringValue() { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '>'(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '>='(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
@@ -134,7 +139,7 @@ export default {
     contains(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     substring(startIndex, length) { /* TODO:*/ if (arguments.length === 1 || arguments.length === 2) throw new ReferenceError('To be implemented') },
     replace(expression, replacement) { /* TODO:*/ throw new ReferenceError('To be implemented') },
-    toString() { /* TODO:*/ throw new ReferenceError('To be implemented') },
+    toString() { return this.$inner },
     toSmartString(alreadyShown) { /* TODO:*/ throw new ReferenceError('To be implemented') },
     '=='(other) { /* TODO:*/ throw new ReferenceError('To be implemented') },
   },

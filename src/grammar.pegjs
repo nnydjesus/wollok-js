@@ -69,11 +69,11 @@ blockOrSentence = block
 
 file = _ imports:import* _ elements:libraryElement* _ core:(main:program { return [main]} /test+)? _ { return File(...imports, ...elements, ...core||[]) }
 
-import = 'import' __ name:qualifiedName all:('.*')? _ { return Import(name + (all||'')) }
+import = 'import' __ name:qualifiedName all:('.*')? _ { return Import(name + (all||''), location()) }
 
-program = _ 'program' __ name:id _ sentences:block _ { return Program(name)(...sentences) }
+program = _ 'program' __ name:id _ sentences:block _ { return Program(name, location())(...sentences) }
 
-test = _ 'test' _ description:stringLiteral _ sentences:block _ { return Test(description)(...sentences) }
+test = _ 'test' _ description:stringLiteral _ sentences:block _ { return Test(description, location())(...sentences) }
 
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -115,21 +115,21 @@ constructor = 'constructor' _ parameters:parameters _ base:('=' _ ('self'/'super
 
 sentence = _ sentence:( variableDeclaration / return / assignment / expression) _ ';'? _ { return sentence }
 
-variableDeclaration = mutable:('var'/'const') __ reference:reference _ value:variableInitialization? { return VariableDeclaration(reference, mutable === 'var', value || undefined) }
+variableDeclaration = mutable:('var'/'const') __ reference:reference _ value:variableInitialization? { return VariableDeclaration(reference, mutable === 'var', value || undefined, location()) }
 
 variableInitialization = '=' _ value:expression { return value }
 
 return = 'return' _ expression:expression { return Return(expression) }
 
 assignment = left:reference _ '='    _ right:expression { return Assignment(left, right) }
-           / left:reference _ '+='   _ right:expression { return Assignment(left, Send(left, '+'  )(right)) }
-           / left:reference _ '-='   _ right:expression { return Assignment(left, Send(left, '-'  )(right)) }
-           / left:reference _ '*='   _ right:expression { return Assignment(left, Send(left, '*'  )(right)) }
-           / left:reference _ '/='   _ right:expression { return Assignment(left, Send(left, '/'  )(right)) }
-           / left:reference _ '%='   _ right:expression { return Assignment(left, Send(left, '%'  )(right)) }
-           / left:reference _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<' )(right)) }
-           / left:reference _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>' )(right)) }
-           / left:reference _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>')(right)) }
+           / left:reference _ '+='   _ right:expression { return Assignment(left, Send(left, '+',   location())(right)) }
+           / left:reference _ '-='   _ right:expression { return Assignment(left, Send(left, '-',   location())(right)) }
+           / left:reference _ '*='   _ right:expression { return Assignment(left, Send(left, '*',   location())(right)) }
+           / left:reference _ '/='   _ right:expression { return Assignment(left, Send(left, '/',   location())(right)) }
+           / left:reference _ '%='   _ right:expression { return Assignment(left, Send(left, '%',   location())(right)) }
+           / left:reference _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<',  location())(right)) }
+           / left:reference _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>',  location())(right)) }
+           / left:reference _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>', location())(right)) }
 
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -138,18 +138,18 @@ assignment = left:reference _ '='    _ right:expression { return Assignment(left
 
 expression = orExpression
 
-orExpression             = left:andExpression            tail:( _ orOp  _ andExpression           )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-andExpression            = left:equalityExpression       tail:( _ andOp _ equalityExpression      )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-orderExpression          = left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op)(right), left) }
-prefixUnaryExpression    = op:preOp _ right:prefixUnaryExpression { return Send(right,op+'_')() }
+orExpression             = left:andExpression            tail:( _ orOp  _ andExpression           )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+andExpression            = left:equalityExpression       tail:( _ andOp _ equalityExpression      )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+equalityExpression       = left:orderExpression          tail:( _ eqOp  _ orderExpression         )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+orderExpression          = left:otherOpExpression        tail:( _ ordOp _ otherOpExpression       )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+otherOpExpression        = left:additiveExpression       tail:( _ otherOp _ additiveExpression    )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+additiveExpression       = left:multiplicativeExpression tail:( _ addOp _ multiplicativeExpression)* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+multiplicativeExpression = left:prefixUnaryExpression    tail:( _ mulOp _ prefixUnaryExpression   )* { return tail.reduce((prev, [,op,,right]) => Send(prev,op, location())(right), left) }
+prefixUnaryExpression    = op:preOp _ right:prefixUnaryExpression { return Send(right,op+'_', location())() }
                          / postfixUnaryExpression
-postfixUnaryExpression   = left:reference op:postOp { return Assignment(left, Send(left,'_'+op)()) }
+postfixUnaryExpression   = left:reference op:postOp { return Assignment(left, Send(left,'_'+op, location())()) }
                          / send
-send                     = left:primaryExpression tail:('.' id _ (arguments/c:closure{return [c]}))* { return tail.reduce((target,[,key,,params])=> Send(target,key)(...params), left) }
+send                     = left:primaryExpression tail:('.' id _ (arguments/c:closure{return [c]}))* { return tail.reduce((target,[,key,,params])=> Send(target,key, location())(...params), left) }
 
 
 operator = orOp / andOp / eqOp / ordOp /otherOp / addOp / mulOp / preOp / postOp

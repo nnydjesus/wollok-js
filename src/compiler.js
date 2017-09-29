@@ -185,12 +185,12 @@ const compileWithNatives = (natives = {}) => {
     // TODO: Imports
     // TODO: tests
 
-    [Program]: ({ name, sentences }) => `function ${escape(name)}(){${compile(sentences)}}`,
+    [Program]: ({ name, sentences }) => `var ${escape(name)} = function ${escape(name)}(){${compile(sentences)}}; ${escape(name)}()`,
 
     [Block]: ({ sentences }) => {
       const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
       if (compiledSentences.length && !compiledSentences[compiledSentences.length - 1].startsWith('return')) {
-        compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
+        // compiledSentences[compiledSentences.length - 1] = `return ${compiledSentences[compiledSentences.length - 1]}`
       }
       return compiledSentences.join(';\n')
     },

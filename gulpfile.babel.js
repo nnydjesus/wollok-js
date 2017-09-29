@@ -6,6 +6,7 @@ import del from 'del'
 import eslint from 'gulp-eslint'
 import mocha from 'gulp-mocha'
 import pegjs from 'gulp-pegjs'
+import exec from 'exec'
 
 const task = gulp.task.bind(gulp)
 
@@ -36,7 +37,7 @@ task('wre', ['compile'], (cb) => {
   const { compiler, parser, linker } = require('./dist/index')
   const { default: natives } = require('./dist/wre/lang.natives.js')
   const lang = compiler(linker(parser(readFileSync('src/wre/lang.wlk', 'utf8'))), natives)
-  writeFile('dist/wre/wre.js', lang, () =>
+  writeFile('dist/wre/wre.txt', lang, () =>
     // exec('./node_modules/.bin/babel dist/wre/wre.js -o dist/wre/wre.js', cb)
     cb
   )

@@ -55,15 +55,15 @@ export const Block = (...sentences) => node(Block)({ sentences })
 //-------------------------------------------------------------------------------------------------------------------------------
 
 // TODO: Remove: Replace with metadata in Package
-export const Import = (target) => node(Import)({ target })
+export const Import = (target, location={}) => node(Import)({ target, location})
 export const Package = (name, location={}) => (...elements) => node(Package)({ name, elements, location})
 
 export const Class = (name, location={}) => (superclass = name === 'Object' ? undefined : 'Object', ...mixins) => (...members) => node(Class)({ name, superclass, mixins, members, location})
 export const Mixin = (name, location={}) => (...members) => node(Mixin)({ name, members, location })
 export const Singleton = (name = undefined, location={}) => (superclass = 'Object', superArguments = [], ...mixins) => (...members) => node(Singleton)({ name, superclass, superArguments, mixins, members, location})
 
-export const Program = (name) => (...sentences) => node(Program)({ name, sentences: Block(...sentences) })
-export const Test = (description) => (...sentences) => node(Program)({ description, sentences: Block(...sentences) })
+export const Program = (name, location={}) => (...sentences) => node(Program)({ name, location, sentences: Block(...sentences) })
+export const Test = (description, location={}) => (...sentences) => node(Test)({ description, location, sentences: Block(...sentences) })
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // MEMBERS
@@ -78,7 +78,7 @@ export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = 
 //-------------------------------------------------------------------------------------------------------------------------------
 
 // TODO: Rename to Variable?
-export const VariableDeclaration = (variable, writeable = true, value = Literal(null)) => node(VariableDeclaration)({ variable, writeable, value })
+export const VariableDeclaration = (variable, writeable = true, value = Literal(null), location={}) => node(VariableDeclaration)({ variable, writeable, value, location})
 export const Return = (result) => node(Return)({ result })
 export const Assignment = (variable, value) => node(Assignment)({ variable, value })
 
@@ -92,7 +92,7 @@ export const Literal = (value) => node(Literal)({ value })
 export const List = (...values) => node(List)({ values })
 export const Closure = (...parameters) => (...sentences) => node(Closure)({ parameters, sentences: Block(...sentences) })
 
-export const Send = (target, key) => (...parameters) => node(Send)({ target, key, parameters })
+export const Send = (target, key, location={}) => (...parameters) => node(Send)({ target, key, location, parameters })
 export const Super = (...parameters) => node(Super)({ parameters })
 
 export const New = (target) => (...parameters) => node(New)({ target, parameters })
