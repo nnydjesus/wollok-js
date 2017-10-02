@@ -46,7 +46,7 @@ export const node = builder => body => ({ type: builder instanceof Function ? bu
 // TODO: Remove: Replace with Package
 export const File = (...content) => node(File)({ content })
 
-export const Parameter = (name, varArg = false) => node(Parameter)({ name, varArg })
+export const Parameter = (name, varArg = false, location={}) => node(Parameter)({ name, varArg, location})
 
 export const Block = (...sentences) => node(Block)({ sentences })
 
@@ -80,13 +80,13 @@ export const Constructor = (...parameters) => (baseArguments = [], lookUpCall = 
 // TODO: Rename to Variable?
 export const VariableDeclaration = (variable, writeable = true, value = Literal(null), location={}) => node(VariableDeclaration)({ variable, writeable, value, location})
 export const Return = (result) => node(Return)({ result })
-export const Assignment = (variable, value) => node(Assignment)({ variable, value })
+export const Assignment = (variable, value, location={}) => node(Assignment)({ variable, value, location})
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // EXPRESSIONS
 //-------------------------------------------------------------------------------------------------------------------------------
 
-export const Reference = (name) => node(Reference)({ name })
+export const Reference = (name, location) => node(Reference)({ name, location})
 export const Literal = (value) => node(Literal)({ value })
 // TODO: Remove: Replace with New to WRE's List
 export const List = (...values) => node(List)({ values })

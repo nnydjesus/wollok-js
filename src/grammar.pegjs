@@ -53,11 +53,11 @@ comment = '/*' (!'*/' .)* '*/' _  { return '' }
 id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
-reference = name:id { return Reference(name) }
+reference = name:id { return Reference(name, location()) }
 
 arguments = '(' _ args:(expression (_ ',' _ expression)* )? _ ')' { return args ? [args[0], ...args[1].map(([,,,arg])=>arg)] : [] }
 parameters = '(' _ parameters: undelimitedParameters _ ')' { return parameters }
-undelimitedParameters = params:(id (_ ',' _ id)* _ '...'?)? { return params ? [Parameter(params[0], !params[1].length && !!params[3]), ...params[1].map(([,,,param], i)=>Parameter(param, !!params[3] && i === params[1].length - 1))] : [] }
+undelimitedParameters = params:(id (_ ',' _ id)* _ '...'?)? { return params ? [Parameter(params[0], !params[1].length && !!params[3], location()), ...params[1].map(([,,,param], i)=>Parameter(param, !!params[3] && i === params[1].length - 1, location()))] : [] }
 
 block = '{' _ sentences:sentence* _ '}' { return sentences }
 blockOrSentence = block
@@ -121,15 +121,15 @@ variableInitialization = '=' _ value:expression { return value }
 
 return = 'return' _ expression:expression { return Return(expression) }
 
-assignment = left:reference _ '='    _ right:expression { return Assignment(left, right) }
-           / left:reference _ '+='   _ right:expression { return Assignment(left, Send(left, '+',   location())(right)) }
-           / left:reference _ '-='   _ right:expression { return Assignment(left, Send(left, '-',   location())(right)) }
-           / left:reference _ '*='   _ right:expression { return Assignment(left, Send(left, '*',   location())(right)) }
-           / left:reference _ '/='   _ right:expression { return Assignment(left, Send(left, '/',   location())(right)) }
-           / left:reference _ '%='   _ right:expression { return Assignment(left, Send(left, '%',   location())(right)) }
-           / left:reference _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<',  location())(right)) }
-           / left:reference _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>',  location())(right)) }
-           / left:reference _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>', location())(right)) }
+assignment = left:reference _ '='    _ right:expression { return Assignment(left, right, location()) }
+           / left:reference _ '+='   _ right:expression { return Assignment(left, Send(left, '+',   location())(right), location()) }
+           / left:reference _ '-='   _ right:expression { return Assignment(left, Send(left, '-',   location())(right), location()) }
+           / left:reference _ '*='   _ right:expression { return Assignment(left, Send(left, '*',   location())(right), location()) }
+           / left:reference _ '/='   _ right:expression { return Assignment(left, Send(left, '/',   location())(right), location()) }
+           / left:reference _ '%='   _ right:expression { return Assignment(left, Send(left, '%',   location())(right), location()) }
+           / left:reference _ '<<='  _ right:expression { return Assignment(left, Send(left, '<<',  location())(right), location()) }
+           / left:reference _ '>>='  _ right:expression { return Assignment(left, Send(left, '>>',  location())(right), location()) }
+           / left:reference _ '>>>=' _ right:expression { return Assignment(left, Send(left, '>>>', location())(right), location()) }
 
 
 //-------------------------------------------------------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ primaryExpression = literal
 ifExpression = 'if' _ '(' _ condition:expression _ ')' _ thenS:blockOrSentence _ elseS:( _ 'else' _ blockOrSentence )? { return If(condition)(...thenS)(...elseS?elseS[3]:[]) }
 
 tryExpression = 'try' _ body:blockOrSentence _ catches:catch* _ always:('then always' _ blockOrSentence)? { return Try(...body)(...catches)(...always?always[2]:[]) }
-catch = _ 'catch' __ parameter:id _ type:(':' _ qualifiedName)? _ handler:blockOrSentence { return Catch(Parameter(parameter),type?type[2]:undefined)(...handler) }
+catch = _ 'catch' __ parameter:id _ type:(':' _ qualifiedName)? _ handler:blockOrSentence { return Catch(Parameter(parameter, false, location()),type?type[2]:undefined)(...handler) }
 
 throwExpression = 'throw' _ exception:expression { return Throw(exception) }
 
