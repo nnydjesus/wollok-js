@@ -1,117 +1,4 @@
 /**
- * Base class for all Exceptions.
- * Every exception and its subclasses indicates conditions that a reasonable application might want to catch.
- * 
- * @author jfernandes
- * @since 1.0
- */
-class Exception {
-	const message
-	const cause
-
-	/** Constructs a new exception with no detailed message. */
-	constructor()
-	/** Constructs a new exception with the specified detail message. */
-	constructor(_message) = self(_message, null)
-	/** Constructs a new exception with the specified detail message and cause. */
-	constructor(_message, _cause) { message = _message ; cause = _cause }
-	
-	/** Prints this exception and its backtrace to the console */
-	method printStackTrace() { self.printStackTrace(console) }
-
-	/** Prints this exception and its backtrace as a string value */
-	method getStackTraceAsString() {
-		const printer = new StringPrinter()
-		self.printStackTrace(printer)
-		return printer.getBuffer()
-	}
-	
-	/** Prints this exception and its backtrace to the specified printer */
-	method printStackTrace(printer) { self.printStackTraceWithPreffix("", printer) }
-	
-	/** @private */
-	method printStackTraceWithPreffix(preffix, printer) {
-		printer.println(preffix +  self.className() + (if (message != null) (": " + message.toString()) else ""))
-		
-		// TODO: eventually we will need a stringbuffer or something to avoid memory consumption
-		self.getStackTrace().forEach { e =>
-			printer.println("\tat " + e.contextDescription() + " [" + e.location() + "]")
-		}
-		
-		if (cause != null)
-			cause.printStackTraceWithPreffix("Caused by: ", printer)
-	}
-	
-	/** @private */
-	method createStackTraceElement(contextDescription, location) = new StackTraceElement(contextDescription, location)
-
-	/** Provides programmatic access to the stack trace information printed by printStackTrace() with full path files for linking */
-	method getFullStackTrace() native
-	
-	/** Provides programmatic access to the stack trace information printed by printStackTrace(). */
-	method getStackTrace() native
-	
-	/** Answers the cause of the exception, if present */
-	method getCause() = cause
-	
-	/** Answers the detail message string of this exception. */
-	method getMessage() = message
-	
-	/** Overrides the behavior to compare exceptions */
-	override method equals(other) = other.className().equals(self.className()) && other.getMessage() == self.getMessage()
-}
-
-/**
- * Thrown when a stack overflow occurs because an application
- * recurses too deeply.
- *
- * @author jfernandes
- * @since 1.5.1
- */
-class StackOverflowException inherits Exception {
-	constructor() = super()
-}
-
-/**
- * An exception that is thrown when a specified element cannot be found
- */
-class ElementNotFoundException inherits Exception {
-	constructor(_message) = super(_message)
-	constructor(_message, _cause) = super(_message, _cause)
-}
-
-/**
- * An exception that is thrown when an object cannot understand a certain message
- */
-class MessageNotUnderstoodException inherits Exception {
-	constructor()
-	constructor(_message) = super(_message)
-	constructor(_message, _cause) = super(_message, _cause)
-	
-	/*
-	'''«super.getMessage()»
-		«FOR m : wollokStack»
-		«(m as WExpression).method?.declaringContext?.contextName».«(m as WExpression).method?.name»():«NodeModelUtils.findActualNodeFor(m).textRegionWithLineInformation.lineNumber»
-		«ENDFOR»
-		'''
-	*/
-}
-
-/**
- * An element in a stack trace, represented by a context and a location of a method where a message was sent
- */
-class StackTraceElement {
-	const contextDescription
-	const location
-	constructor(_contextDescription, _location) {
-		contextDescription = _contextDescription
-		location = _location
-	}
-	method contextDescription() = contextDescription
-	method location() = location
-}
-
-/**
  *
  * Representation of Wollok Object
  *
@@ -237,6 +124,120 @@ class Object {
 		throw new Exception(message)
 	}
 }
+
+/**
+ * Base class for all Exceptions.
+ * Every exception and its subclasses indicates conditions that a reasonable application might want to catch.
+ * 
+ * @author jfernandes
+ * @since 1.0
+ */
+class Exception {
+	const message
+	const cause
+
+	/** Constructs a new exception with no detailed message. */
+	constructor()
+	/** Constructs a new exception with the specified detail message. */
+	constructor(_message) = self(_message, null)
+	/** Constructs a new exception with the specified detail message and cause. */
+	constructor(_message, _cause) { message = _message ; cause = _cause }
+	
+	/** Prints this exception and its backtrace to the console */
+	method printStackTrace() { self.printStackTrace(console) }
+
+	/** Prints this exception and its backtrace as a string value */
+	method getStackTraceAsString() {
+		const printer = new StringPrinter()
+		self.printStackTrace(printer)
+		return printer.getBuffer()
+	}
+	
+	/** Prints this exception and its backtrace to the specified printer */
+	method printStackTrace(printer) { self.printStackTraceWithPreffix("", printer) }
+	
+	/** @private */
+	method printStackTraceWithPreffix(preffix, printer) {
+		printer.println(preffix +  self.className() + (if (message != null) (": " + message.toString()) else ""))
+		
+		// TODO: eventually we will need a stringbuffer or something to avoid memory consumption
+		self.getStackTrace().forEach { e =>
+			printer.println("\tat " + e.contextDescription() + " [" + e.location() + "]")
+		}
+		
+		if (cause != null)
+			cause.printStackTraceWithPreffix("Caused by: ", printer)
+	}
+	
+	/** @private */
+	method createStackTraceElement(contextDescription, location) = new StackTraceElement(contextDescription, location)
+
+	/** Provides programmatic access to the stack trace information printed by printStackTrace() with full path files for linking */
+	method getFullStackTrace() native
+	
+	/** Provides programmatic access to the stack trace information printed by printStackTrace(). */
+	method getStackTrace() native
+	
+	/** Answers the cause of the exception, if present */
+	method getCause() = cause
+	
+	/** Answers the detail message string of this exception. */
+	method getMessage() = message
+	
+	/** Overrides the behavior to compare exceptions */
+	override method equals(other) = other.className().equals(self.className()) && other.getMessage() == self.getMessage()
+}
+
+/**
+ * Thrown when a stack overflow occurs because an application
+ * recurses too deeply.
+ *
+ * @author jfernandes
+ * @since 1.5.1
+ */
+class StackOverflowException inherits Exception {
+	constructor() = super()
+}
+
+/**
+ * An exception that is thrown when a specified element cannot be found
+ */
+class ElementNotFoundException inherits Exception {
+	constructor(_message) = super(_message)
+	constructor(_message, _cause) = super(_message, _cause)
+}
+
+/**
+ * An exception that is thrown when an object cannot understand a certain message
+ */
+class MessageNotUnderstoodException inherits Exception {
+	constructor()
+	constructor(_message) = super(_message)
+	constructor(_message, _cause) = super(_message, _cause)
+	
+	/*
+	'''«super.getMessage()»
+		«FOR m : wollokStack»
+		«(m as WExpression).method?.declaringContext?.contextName».«(m as WExpression).method?.name»():«NodeModelUtils.findActualNodeFor(m).textRegionWithLineInformation.lineNumber»
+		«ENDFOR»
+		'''
+	*/
+}
+
+/**
+ * An element in a stack trace, represented by a context and a location of a method where a message was sent
+ */
+class StackTraceElement {
+	const contextDescription
+	const location
+	constructor(_contextDescription, _location) {
+		contextDescription = _contextDescription
+		location = _location
+	}
+	method contextDescription() = contextDescription
+	method location() = location
+}
+
 
 /** Representation for methods that only have side effects */
 object void { }

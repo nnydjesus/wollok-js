@@ -4,18 +4,18 @@ import { resolvePath } from './linker/scoping'
 
 import { addDefaultConstructor } from './transformations'
 
-const escape = str => ([
+const escapeId = str => ([
   'abstract', 'arguments', 'await', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const', 'continue', 'debugger', 'default',
   'delete', 'do', 'double', 'else', 'enum', 'eval', 'export', 'extends', 'false', 'final', 'finally', 'float', 'for', 'function', 'goto', 'if',
   'implements', 'import', 'in', 'instanceof', 'int', 'interface', 'let', 'long', 'native', 'new', 'null', 'package', 'private', 'protected',
   'public', 'return', 'short', 'static', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'true', 'try', 'typeof',
   'var', 'void', 'volatile', 'while', 'with', 'yield', 'Object', 'Boolean', 'String', 'Set'
-].indexOf(str) >= 0 ? `$${str}` : str)
+].indexOf(escape(str)) >= 0 ? `$${str}` : (str.value? str.value:str))
 
 const compileWithNatives = (natives = {}) => {
 
   const compileMethodDispatcher = members => ({ name }) =>
-    `this['${escape(name)}'] = (function(){
+    `this['${escapeId(name)}'] = (function(){
     const implementation$ = (...args) => {
       ${members.filter(({ name: n }) => n === name).map(compile).join(';\n')}
     }
@@ -27,7 +27,7 @@ const compileWithNatives = (natives = {}) => {
 
     [Singleton]: ({ name, superclass: superclassName, mixins, superArguments, members }) => {
       const superclass = superclassName.type === Link.name ? superclassName.token : superclassName
-      return `const ${escape(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))} {
+      return `const ${escapeId(name)} = new class extends ${mixins.reduce((parent, mixin) => `${escapeId(mixin)}(${parent})`, escapeId(superclass))} {
       constructor(){
         super(${superArguments.map(compile).join()})
         ${members.filter(m => m.type === 'Field').map(compile).join(';\n')}
@@ -37,7 +37,7 @@ const compileWithNatives = (natives = {}) => {
     },
 
     [Mixin]: ({ name, members }) =>
-      `const ${escape(name)} = ($$superclass) => class extends $$superclass {
+      `const ${escapeId(name)} = ($$superclass) => class extends $$superclass {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
@@ -49,7 +49,7 @@ const compileWithNatives = (natives = {}) => {
 
     [Class]: ({ name, superclass: superclassName, mixins, members }) => {
       const superclass = superclassName && superclassName.type === Link.name ? superclassName.token : superclassName
-      return `class ${escape(name)} extends ${name === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escape(mixin)}(${parent})`, escape(superclass))}`} {
+      return `class ${escapeId(name)} extends ${name.value === 'Object' ? 'Object' : `${mixins.reduce((parent, mixin) => `${escapeId(mixin)}(${parent})`, escapeId(superclass))}`} {
       constructor() {
         let $instance = undefined
         ${members.filter(m => m.type === 'Constructor').map(compile).join('\n')}
@@ -69,9 +69,11 @@ const compileWithNatives = (natives = {}) => {
     [Field]: ({ variable, value }) => `${compile(variable)}=${compile(value)}`,
 
     [Method]: ({ name, parameters, sentences, native, parent }) => {
-      if (native && !(natives[parent.name] && natives[parent.name][name])) throw new TypeError(`Missing native implementation for ${parent.name}.${name}(...)`)
+      var methodName = name.value?name.value:name
+      var parentName = escape(parent.name)
+      if (native && !(natives[parentName] && natives[parentName][methodName])) throw new TypeError(`Missing native implementation for ${parentName}.${methodName}(...)`)
       return `const implementation$$${parameters.length} = ${native
-        ? `(function ${natives[parent.name][name].toString().slice(natives[parent.name][name].toString().indexOf('('))}).bind(this)`
+        ? `(function ${natives[parentName][methodName].toString().slice(natives[parentName][methodName].toString().indexOf('('))}).bind(this)`
         : `(${parameters.map(compile).join()}) => {${compile(sentences)}}`}
         if (args.length ${(parameters.length && parameters.slice(-1)[0].varArg) ? ` >= + ${parameters.length - 1}` : ` === ${parameters.length}`} ) {
           return implementation$$${parameters.length} (...args)
@@ -84,17 +86,17 @@ const compileWithNatives = (natives = {}) => {
 
     [Reference]: ({ name }) => {
       // unresolved
-      if (name.type !== Link.name) return escape(name)
+      if (name.type !== Link.name) return escapeId(name)
       // resolved
       const { token, path } = name
       if (token === 'self') { return 'this' }
       const resolved = resolvePath(name, path)
-      return (`${resolved.type === 'Field' ? 'this.' : ''}${escape(token)}`)
+      return (`${resolved.type === 'Field' ? 'this.' : ''}${escapeId(token)}`)
     },
 
-    [Send]: ({ target, key, parameters }) => `${compile(target)}["${escape(key)}"](${parameters.map(compile).join()})`,
+    [Send]: ({ target, key, parameters }) => `${compile(target)}["${escapeId(key)}"](${parameters.map(compile).join()})`,
 
-    [New]: ({ target, parameters }) => `new ${escape(target.type === Link.name ? target.token : target)}(${parameters.map(compile).join()})`,
+    [New]: ({ target, parameters }) => `new ${escapeId(target.type === Link.name ? target.token : target)}(${parameters.map(compile).join()})`,
 
     [Super]: ({ parameters }) => `super(${parameters.map(compile).join()})`,
 
@@ -185,7 +187,7 @@ const compileWithNatives = (natives = {}) => {
     // TODO: Imports
     // TODO: tests
 
-    [Program]: ({ name, sentences }) => `var ${escape(name)} = function ${escape(name)}(){${compile(sentences)}}; ${escape(name)}()`,
+    [Program]: ({ name, sentences }) => `var ${escapeId(name)} = function ${escapeId(name)}(){${compile(sentences)}}; ${escapeId(name)}()`,
 
     [Block]: ({ sentences }) => {
       const compiledSentences = sentences.map(sentence => `${compile(sentence)};`)
@@ -195,7 +197,7 @@ const compileWithNatives = (natives = {}) => {
       return compiledSentences.join(';\n')
     },
 
-    [Parameter]: ({ name, varArg }) => (varArg ? `...${escape(name)}` : escape(name))
+    [Parameter]: ({ name, varArg }) => (varArg ? `...${escapeId(name)}` : escapeId(name))
   })
 
   return compile

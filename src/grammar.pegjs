@@ -17,6 +17,7 @@
     Field,
     File,
     If,
+    Id,
     Import,
     List,
     Method,
@@ -34,7 +35,7 @@
     Throw,
     Try,
     Reference,
-    VariableDeclaration
+    VariableDeclaration,
   } = model
 }
 
@@ -50,7 +51,7 @@ __ = ([ \t\r\n] / comment)+ { return ' ' }
 comment = '/*' (!'*/' .)* '*/' _  { return '' }
         / '//' (!'\n' .)* '\n'? _ { return '' }
 
-id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return (h || '') + c + cs.join('') }
+id = h:'^'? c:[a-zA-Z_]cs:[a-zA-Z0-9_]* { return Id((h || '') + c + cs.join(''), location())}
 qualifiedName = root:id chain:('.' id)* { return [root, ...chain.map(([,name]) => name)].join('.') }
 
 reference = name:id { return Reference(name, location()) }
@@ -196,17 +197,17 @@ literal = booleanLiteral
         / closure
         / collectionLiteral
 
-booleanLiteral = value:('false' / 'true') { return Literal(value === 'true') }
+booleanLiteral = value:('false' / 'true') { return Literal(value === 'true', location()) }
 
-Literal = 'null' { return Literal(null) }
+Literal = 'null' { return Literal(null, location()) }
 
-stringLiteral = '"' value:( escapedChar  / [^"\\] )* '"' { return Literal(value.join('')) }
-              / "'" value:( escapedChar  / [^'\\] )* "'" { return Literal(value.join('')) }
+stringLiteral = '"' value:( escapedChar  / [^"\\] )* '"' { return Literal(value.join(''), location()) }
+              / "'" value:( escapedChar  / [^'\\] )* "'" { return Literal(value.join(''), location()) }
 escapedChar = '\\b'/'\\t'/'\\n'/'\\f'/'\\r'/'\\u'/'\\"'/"\\'"/'\\\\'
 
-numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.join(''), 16)) }
-              / whole:[0-9]+'.'decimals:[0-9]+ { return Literal(parseFloat(whole.join('')+'.'+decimals.join(''))) }
-              / value:[0-9]+                   { return Literal(parseInt(value.join(''), 10)) }
+numberLiteral = ('0x'/'0X') value:[0-9a-fA-F]+ { return Literal(parseInt(value.join(''), 16), location()) }
+              / whole:[0-9]+'.'decimals:[0-9]+ { return Literal(parseFloat(whole.join('')+'.'+decimals.join('')), location()) }
+              / value:[0-9]+                   { return Literal(parseInt(value.join(''), 10), location()) }
 
 collectionLiteral =  '[' _ values:(expression (_ ',' _ expression)*)? _ ']' { return List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : []) }
                   / '#{' _ values:(expression (_ ',' _ expression)*)? _ '}' { return New('Set')(List(...values ? [values[0],...values[1].map( ([,,,elem]) => elem )] : [])) }

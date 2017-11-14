@@ -47,7 +47,7 @@ const link = (node, feature, linkType, context) => {
   }
 }
 
-const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : typeof refValue !== 'string')
+const alreadyLinked = refValue => (isArray(refValue) ? forAll(refValue, alreadyLinked) : (typeof refValue !== 'string' && refValue.type != "Id"))
 const resolveLink = (node, feature, refValue, context) => {
   if (refValue === 'self') {
     return {

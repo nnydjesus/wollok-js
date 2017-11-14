@@ -49,6 +49,7 @@ export const File = (...content) => node(File)({ content })
 export const Parameter = (name, varArg = false, location={}) => node(Parameter)({ name, varArg, location})
 
 export const Block = (...sentences) => node(Block)({ sentences })
+export const Id = (value, location={}) => node(Id)({ value, location, toString: ()=>value})
 
 //-------------------------------------------------------------------------------------------------------------------------------
 // TOP LEVEL
@@ -87,7 +88,7 @@ export const Assignment = (variable, value, location={}) => node(Assignment)({ v
 //-------------------------------------------------------------------------------------------------------------------------------
 
 export const Reference = (name, location) => node(Reference)({ name, location})
-export const Literal = (value) => node(Literal)({ value })
+export const Literal = (value, location={}) => node(Literal)({ value, location})
 // TODO: Remove: Replace with New to WRE's List
 export const List = (...values) => node(List)({ values })
 export const Closure = (...parameters) => (...sentences) => node(Closure)({ parameters, sentences: Block(...sentences) })
